@@ -28,6 +28,7 @@ import { Token } from 'src/common/decorators/token.decorator';
 import { User } from 'src/common/decorators/user.decorator';
 import { UserEntity } from '../user/dto/user-entity.dto';
 import { Public } from 'src/common/decorators/isPublic.decorator';
+import { TokenResponseDto } from 'src/token/dto/token-response.dto';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -131,7 +132,7 @@ export class AuthController {
   @HttpCode(200)
   async refreshToken(
     @Headers('Authorization') refreshToken: string,
-  ): Promise<RefreshTokenResponse> {
+  ): Promise<TokenResponseDto> {
     try {
       const token = refreshToken.split(' ')[1];
       return await this.authService.refreshToken({ token });
