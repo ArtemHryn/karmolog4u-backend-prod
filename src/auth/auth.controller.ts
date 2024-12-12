@@ -130,10 +130,11 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'something wrong' })
   @HttpCode(200)
   async refreshToken(
-    @Headers('refreshToken') refreshToken: string,
+    @Headers('Authorization') refreshToken: string,
   ): Promise<RefreshTokenResponse> {
     try {
-      return await this.authService.refreshToken({ token: refreshToken });
+      const token = refreshToken.split(' ')[1];
+      return await this.authService.refreshToken({ token });
     } catch (error) {
       throw new HttpException(
         {
