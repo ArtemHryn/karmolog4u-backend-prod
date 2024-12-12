@@ -11,6 +11,7 @@ import { AuthService } from './auth.service';
 import {
   Body,
   Controller,
+  Headers,
   HttpCode,
   HttpException,
   HttpStatus,
@@ -119,7 +120,7 @@ export class AuthController {
     }
   }
 
-  @ApiBearerAuth()
+  @Public()
   @Post('refresh-token')
   @ApiResponse({
     status: 200,
@@ -128,12 +129,11 @@ export class AuthController {
   })
   @ApiResponse({ status: 400, description: 'something wrong' })
   @HttpCode(200)
-  @UsePipes(new JoiValidationPipe(refreshTokenSchema))
   async refreshToken(
-    @Body() refreshTokenDto: RefreshTokenDto,
+    @Headers('refreshToken') refreshToken: string,
   ): Promise<RefreshTokenResponse> {
     try {
-      return await this.authService.refreshToken(refreshTokenDto);
+      return await this.authService.refreshToken({ token: refreshToken });
     } catch (error) {
       throw new HttpException(
         {
