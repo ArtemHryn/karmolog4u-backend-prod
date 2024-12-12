@@ -10,6 +10,9 @@ import { Request } from 'express';
 import { TokenService } from 'src/token/token.service';
 import { UserService } from 'src/user/user.service';
 import { ObjectId } from 'mongodb';
+import { Reflector } from '@nestjs/core';
+import { IS_PUBLIC_KEY } from 'src/common/decorators/isPublic.decorator';
+
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
@@ -17,9 +20,19 @@ export class AuthGuard implements CanActivate {
     private configService: ConfigService,
     private readonly tokenService: TokenService,
     private readonly userService: UserService,
+    private reflector: Reflector,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic) {
+      // 💡 See this condition
+      return true;
+    }
+
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
     const secret = this.configService.get<string>('JWT_SECRET');

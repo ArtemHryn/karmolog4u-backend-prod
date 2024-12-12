@@ -5,6 +5,9 @@ import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { UserModule } from 'src/user/user.module';
 import { TokenModule } from 'src/token/token.module';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from './auth.guard';
+import { RolesGuard } from 'src/role/roles.guard';
 
 @Module({
   imports: [
@@ -17,6 +20,17 @@ import { TokenModule } from 'src/token/token.module';
     ConfigModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [
+    AuthService,
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
+  exports: [AuthService],
 })
 export class AuthModule {}

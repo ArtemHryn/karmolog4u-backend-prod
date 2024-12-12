@@ -70,7 +70,7 @@ export class Meditation {
   })
   status: Status;
 
-  @Prop({ type: Date, default: null })
+  @Prop({ type: Date, default: null, index: { expires: 0 } })
   expiredAt: Date;
 }
 

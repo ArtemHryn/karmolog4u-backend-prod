@@ -10,7 +10,7 @@ import {
   Patch,
   Put,
 } from '@nestjs/common';
-import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JoiValidationPipe } from 'src/common/pipes/JoiValidationPipe';
 import { MeditationEntity } from 'src/products/meditations/dto/meditation-entity.dto';
 import {
@@ -25,9 +25,12 @@ import { ChangeStatusMeditationDto } from './dto/change-status-meditation.dto';
 import { DiscountService } from '../discount/discount.service';
 import { EditMeditationDto } from './dto/edit-meditation.dto';
 import mongoose from 'mongoose';
+import { Roles } from 'src/role/roles.decorator';
+import { Role } from 'src/role/role.enum';
 
-// @ApiBearerAuth()
+@ApiBearerAuth()
 @ApiTags('admin-meditations')
+@Roles(Role.Admin)
 @Controller('admin/products/meditations')
 export class AdminMeditationController {
   constructor(
@@ -38,10 +41,10 @@ export class AdminMeditationController {
   @Post('create')
   @ApiResponse({
     status: 201,
-    description: 'create-meditation',
+    description: 'Успішно',
     type: ResponseSuccessDto,
   })
-  @ApiResponse({ status: 400, description: 'something wrong' })
+  @ApiResponse({ status: 400, description: 'Конфлікт створення медитації' })
   @UsePipes(new JoiValidationPipe(newMeditationSchema))
   async createMeditation(
     @Body() meditationData: CreateMeditationDto,
@@ -58,14 +61,14 @@ export class AdminMeditationController {
         };
         console.log(discount);
         await this.discountService.createDiscount(discountData);
-        return { message: 'success' };
+        return { message: 'Успішно' };
       } else {
         await this.adminMeditationService.createMeditation(meditationData);
       }
 
-      return { message: 'success' };
+      return { message: 'Успішно' };
     } catch (error) {
-      throw new BadRequestException('Meditation conflict create');
+      throw new BadRequestException('Конфлікт створення медитації');
     }
   }
 
@@ -82,7 +85,7 @@ export class AdminMeditationController {
     try {
       return await this.adminMeditationService.findMeditationById(meditationId);
     } catch (error) {
-      throw new NotFoundException('Meditation not found');
+      throw new NotFoundException('Медитацію не знайдено');
     }
   }
 
@@ -97,7 +100,7 @@ export class AdminMeditationController {
     try {
       return await this.adminMeditationService.findAllMeditation();
     } catch (error) {
-      throw new NotFoundException('Meditations not found');
+      throw new NotFoundException('Медитації не знайдено');
     }
   }
 
@@ -126,6 +129,7 @@ export class AdminMeditationController {
           ...discount,
           refId: meditationId,
         });
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { _id, ...modifiedDiscount } = editedDiscount.toObject();
         return {
           ...editedMeditation,
@@ -142,7 +146,7 @@ export class AdminMeditationController {
         );
       }
     } catch (error) {
-      throw new BadRequestException('Meditation conflict edit');
+      throw new BadRequestException('Конфлікт редагування медитації');
     }
   }
 
@@ -159,7 +163,7 @@ export class AdminMeditationController {
     try {
       return await this.adminMeditationService.deleteMeditation(meditationId);
     } catch (error) {
-      throw new BadRequestException('Meditation conflict delete');
+      throw new BadRequestException('Конфлікт видалення медитації');
     }
   }
 
@@ -181,7 +185,7 @@ export class AdminMeditationController {
         status,
       );
     } catch (error) {
-      throw new BadRequestException('Meditation conflict change status');
+      throw new BadRequestException('Конфлікт змінення статусу медитації');
     }
   }
 }

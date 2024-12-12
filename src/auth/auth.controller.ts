@@ -26,12 +26,14 @@ import { AuthGuard } from './auth.guard';
 import { Token } from 'src/common/decorators/token.decorator';
 import { User } from 'src/common/decorators/user.decorator';
 import { UserEntity } from '../user/dto/user-entity.dto';
+import { Public } from 'src/common/decorators/isPublic.decorator';
 
 @Controller('auth')
 @ApiTags('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @Public()
   @Post('register')
   @ApiResponse({
     status: 201,
@@ -59,6 +61,7 @@ export class AuthController {
     }
   }
 
+  @Public()
   @Post('login')
   @ApiResponse({
     status: 200,
@@ -116,6 +119,7 @@ export class AuthController {
     }
   }
 
+  @ApiBearerAuth()
   @Post('refresh-token')
   @ApiResponse({
     status: 200,

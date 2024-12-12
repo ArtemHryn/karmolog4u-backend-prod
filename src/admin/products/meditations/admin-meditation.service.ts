@@ -1,11 +1,11 @@
 import { ObjectId } from 'mongodb';
-import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MeditationEntity } from 'src/products/meditations/dto/meditation-entity.dto';
 
 import { Meditation } from 'src/products/meditations/schemas/meditation.schema';
-import { CreateMeditationDto } from './dto/create-meditation.dto';
+// import { CreateMeditationDto } from './dto/create-meditation.dto';
 import { ResponseSuccessDto } from 'src/products/meditations/dto/response-success.dto';
 import { ChangeStatusMeditationDto } from './dto/change-status-meditation.dto';
 import { FindMeditationByIdDto } from 'src/products/meditations/dto/find-meditation.dto';
@@ -32,6 +32,11 @@ export class AdminMeditationService {
     // return await this.meditationModel.find({}, 'id category status name');
     return await this.meditationModel
       .aggregate([
+        {
+          $match: {
+            toDelete: false, // Виключаємо документи, де toDelete = false
+          },
+        },
         {
           $lookup: {
             from: 'discounts', // Назва другої колекції
@@ -163,7 +168,18 @@ export class AdminMeditationService {
 
   async deleteMeditation(meditationId: string): Promise<ResponseSuccessDto> {
     await this.meditationModel.updateOne({ _id: meditationId }, [
-      { $set: { toDelete: { $not: ['$toDelete'] } } },
+      {
+        $set: {
+          toDelete: { $not: ['$toDelete'] },
+          expiredAt: {
+            $cond: {
+              if: { $eq: ['$toDelete', false] },
+              then: new Date(new Date().setDate(new Date().getDate() + 30)),
+              else: null,
+            },
+          },
+        },
+      },
     ]);
     return { message: 'success' };
   }
