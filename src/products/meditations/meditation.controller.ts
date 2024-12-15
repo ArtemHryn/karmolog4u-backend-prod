@@ -2,12 +2,14 @@ import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
 import { MeditationService } from './meditation.service';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { MeditationEntity } from './dto/meditation-entity.dto';
+import { Public } from 'src/common/decorators/isPublic.decorator';
 
 @ApiTags('meditations')
 @Controller('products/meditations')
 export class MeditationController {
   constructor(private meditationService: MeditationService) {}
 
+  @Public()
   @Get('get-all')
   @ApiOperation({ summary: 'Get meditation prevue' })
   @ApiResponse({
@@ -24,6 +26,7 @@ export class MeditationController {
     }
   }
 
+  @Public()
   @Get('get/:id')
   @ApiOperation({ summary: 'Get meditation by id' })
   @ApiResponse({

@@ -11,6 +11,7 @@ import { AuthService } from './auth.service';
 import {
   Body,
   Controller,
+  Headers,
   HttpCode,
   HttpException,
   HttpStatus,
@@ -26,12 +27,15 @@ import { AuthGuard } from './auth.guard';
 import { Token } from 'src/common/decorators/token.decorator';
 import { User } from 'src/common/decorators/user.decorator';
 import { UserEntity } from '../user/dto/user-entity.dto';
+import { Public } from 'src/common/decorators/isPublic.decorator';
+import { TokenResponseDto } from 'src/token/dto/token-response.dto';
 
 @Controller('auth')
 @ApiTags('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @Public()
   @Post('register')
   @ApiResponse({
     status: 201,
@@ -59,6 +63,7 @@ export class AuthController {
     }
   }
 
+  @Public()
   @Post('login')
   @ApiResponse({
     status: 200,
@@ -116,6 +121,7 @@ export class AuthController {
     }
   }
 
+  @Public()
   @Post('refresh-token')
   @ApiResponse({
     status: 200,
@@ -124,12 +130,12 @@ export class AuthController {
   })
   @ApiResponse({ status: 400, description: 'something wrong' })
   @HttpCode(200)
-  @UsePipes(new JoiValidationPipe(refreshTokenSchema))
   async refreshToken(
-    @Body() refreshTokenDto: RefreshTokenDto,
-  ): Promise<RefreshTokenResponse> {
+    @Headers('Authorization') refreshToken: string,
+  ): Promise<TokenResponseDto> {
     try {
-      return await this.authService.refreshToken(refreshTokenDto);
+      const token = refreshToken.split(' ')[1];
+      return await this.authService.refreshToken({ token });
     } catch (error) {
       throw new HttpException(
         {

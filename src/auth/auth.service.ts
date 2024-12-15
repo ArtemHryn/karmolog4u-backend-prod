@@ -12,6 +12,7 @@ import * as bcrypt from 'bcryptjs';
 import { UserService } from 'src/user/user.service';
 import { UserEntity } from '../user/dto/user-entity.dto';
 import { ConfigService } from '@nestjs/config';
+import { TokenResponseDto } from 'src/token/dto/token-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -107,7 +108,7 @@ export class AuthService {
 
   async refreshToken(
     refreshTokenDto: RefreshTokenDto,
-  ): Promise<RefreshTokenResponse> {
+  ): Promise<TokenResponseDto> {
     const payload = await this.jwtService.verifyAsync(refreshTokenDto.token, {
       secret: 'secretcode',
     });
@@ -153,6 +154,6 @@ export class AuthService {
       accessToken,
       id: tokenInstance._id,
     });
-    return { tokens: newToken };
+    return newToken;
   }
 }

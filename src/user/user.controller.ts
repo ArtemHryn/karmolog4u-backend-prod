@@ -3,14 +3,14 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import {
   Controller,
   HttpException,
-  UseGuards,
+  // UseGuards,
   Post,
   Body,
   UsePipes,
   Get,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { AuthGuard } from 'src/auth/auth.guard';
+// import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/common/decorators/user.decorator';
 import { UserEntity } from 'src/user/dto/user-entity.dto';
 import { JoiValidationPipe } from 'src/common/pipes/JoiValidationPipe';
@@ -21,11 +21,13 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Roles } from 'src/role/roles.decorator';
+import { Role } from 'src/role/role.enum';
 
 @ApiBearerAuth()
 @ApiTags('user')
+@Roles(Role.Admin)
 @Controller('user')
-@UseGuards(AuthGuard)
 export class UserController {
   constructor(private userService: UserService) {}
 
@@ -37,7 +39,7 @@ export class UserController {
     type: UserResponseDto,
   })
   @ApiResponse({ status: 404, description: 'User not found' })
-  @UsePipes(new JoiValidationPipe(UpdateUserSchema))
+  // @UsePipes(new JoiValidationPipe(UpdateUserSchema))
   async findUser(@User() user: UserEntity): Promise<UserResponseDto> {
     try {
       return await this.userService.findUserById({ _id: user._id });
