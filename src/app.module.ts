@@ -1,7 +1,7 @@
 import { DiscountModule } from './admin/products/discount/discount.module';
 import { ProductModule } from './products/product.module';
-import { MaterialModule } from './material/material.module';
-import { GroupModule } from './group/group.module';
+// import { MaterialModule } from './material/material.module';
+// import { GroupModule } from './group/group.module';
 import { AdminUserModule } from './admin/user/admin-user.module';
 import { AdminModule } from './admin/admin.module';
 import { TokenModule } from './token/token.module';
@@ -11,7 +11,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { getEnvPath } from './common/helper/env.helper';
-import { RouterModule } from '@nestjs/core';
+// import { RouterModule } from '@nestjs/core';
 import { validate } from './common/helper/env.validation';
 import { LoggerMiddleware } from './common/middleware/logger.middlvare';
 import { AdminProductModule } from './admin/products/admin-product.module';
@@ -20,7 +20,6 @@ const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
 
 @Module({
   imports: [
-    DiscountModule,
     // ProductModule,
     // MaterialModule,
     ConfigModule.forRoot({ validate, envFilePath, isGlobal: true }),
@@ -31,6 +30,7 @@ const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
         uri: config.get<string>('MONGO_URL'),
       }),
     }),
+    DiscountModule,
     TokenModule,
     UserModule,
     AuthModule,
