@@ -13,8 +13,8 @@ export const newMeditationSchema = Joi.object()
       uk: Joi.string(),
     }),
     video: Joi.string(),
-    cover: Joi.string(),
-    price: Joi.string(),
+    cover: Joi.string().optional(),
+    price: Joi.number(),
     status: Joi.string().valid('DRAFT', 'HIDDEN', 'PUBLISHED').required(),
     discount: Joi.object().optional(),
   })
@@ -37,8 +37,8 @@ export const updateMeditationSchema = Joi.object()
       })
       .required(),
     video: Joi.string().required(),
-    cover: Joi.string().required(),
-    price: Joi.string().required(),
+    cover: Joi.string().optional(),
+    price: Joi.number().required(),
     status: Joi.string().valid('DRAFT', 'HIDDEN', 'PUBLISHED').required(),
     discount: Joi.object().optional(),
   })

@@ -6,9 +6,14 @@ import {
   Get,
   Param,
   Post,
-  UsePipes,
+  // UsePipes,
   Patch,
   Put,
+  UseInterceptors,
+  UploadedFile,
+  // ParseFilePipeBuilder,
+  // HttpStatus,
+  // Req,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JoiValidationPipe } from 'src/common/pipes/JoiValidationPipe';
@@ -20,13 +25,24 @@ import {
 } from 'src/admin/products/meditations/schemas/validation.schema';
 import { ResponseSuccessDto } from 'src/user/dto/response-success.dto';
 import { AdminMeditationService } from './admin-meditation.service';
-import { CreateMeditationDto } from './dto/create-meditation.dto';
+// import { CreateMeditationDto } from './dto/create-meditation.dto';
 import { ChangeStatusMeditationDto } from './dto/change-status-meditation.dto';
 import { DiscountService } from '../discount/discount.service';
-import { EditMeditationDto } from './dto/edit-meditation.dto';
+// import { EditMeditationDto } from './dto/edit-meditation.dto';
 import mongoose from 'mongoose';
 import { Roles } from 'src/role/roles.decorator';
 import { Role } from 'src/role/role.enum';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Express } from 'express';
+// import { Public } from 'src/common/decorators/isPublic.decorator';
+// import * as sharp from 'sharp';
+// import * as fs from 'fs';
+// import * as path from 'path';
+import { ConfigService } from '@nestjs/config';
+import { multerOptions } from 'src/common/helper/multerOptions';
+import { fileCompress } from 'src/common/helper/fileCompress';
+import { parseFields } from 'src/common/helper/parseFields';
+import { fileDelete } from 'src/common/helper/fileDelete';
 
 @ApiBearerAuth()
 @ApiTags('admin-meditations')
@@ -36,6 +52,7 @@ export class AdminMeditationController {
   constructor(
     private discountService: DiscountService,
     private adminMeditationService: AdminMeditationService,
+    private readonly configService: ConfigService,
   ) {}
 
   @Post('create')
@@ -45,29 +62,49 @@ export class AdminMeditationController {
     type: ResponseSuccessDto,
   })
   @ApiResponse({ status: 400, description: 'Конфлікт створення медитації' })
-  @UsePipes(new JoiValidationPipe(newMeditationSchema))
+  @UseInterceptors(FileInterceptor('cover', multerOptions()))
   async createMeditation(
-    @Body() meditationData: CreateMeditationDto,
-  ): Promise<ResponseSuccessDto> {
+    @Body()
+    data: any,
+    @UploadedFile()
+    file?: Express.Multer.File,
+  ): Promise<any> {
     try {
-      if (meditationData.hasOwnProperty('discount')) {
-        const { discount, ...meditation } = meditationData;
+      const parsedData = parseFields(data);
+
+      // console.log(parsedData);
+      // console.log(file);
+
+      //validate data
+      const { error } = newMeditationSchema.validate(parsedData);
+      if (error) {
+        // console.log(error);
+        throw new BadRequestException(error.message);
+      }
+
+      if (file && parsedData.category !== 'ARCANES') {
+        const link = await fileCompress(file, this.configService);
+        parsedData.cover = link;
+      } else if (file) {
+        fileDelete(file.path);
+      }
+
+      if (parsedData.hasOwnProperty('discount')) {
+        const { discount, ...meditation } = parsedData;
         const newMeditation =
           await this.adminMeditationService.createMeditation(meditation);
-
         const discountData = {
           ...discount,
           refId: newMeditation._id,
         };
-        console.log(discount);
         await this.discountService.createDiscount(discountData);
         return { message: 'Успішно' };
       } else {
-        await this.adminMeditationService.createMeditation(meditationData);
+        await this.adminMeditationService.createMeditation(parsedData);
       }
-
       return { message: 'Успішно' };
     } catch (error) {
+      // console.log(error);
       throw new BadRequestException('Конфлікт створення медитації');
     }
   }
@@ -111,15 +148,39 @@ export class AdminMeditationController {
     type: MeditationEntity,
   })
   @ApiResponse({ status: 400, description: 'something wrong' })
+  @UseInterceptors(FileInterceptor('cover', multerOptions()))
   async editMeditation(
     @Param('id') id: string,
-    @Body(new JoiValidationPipe(updateMeditationSchema))
-    meditationData: EditMeditationDto,
+    @Body()
+    data: any,
+    @UploadedFile()
+    file: Express.Multer.File,
   ): Promise<any> {
     try {
+      const parsedData = parseFields(data);
+      const { error } = updateMeditationSchema.validate(parsedData);
+      if (error) {
+        // console.log(error);
+        throw new BadRequestException(error.message);
+      }
+
+      if (file && parsedData.category !== 'ARCANES') {
+        const oldMeditation =
+          await this.adminMeditationService.findMeditationById(id);
+        const parsedUrl = new URL(oldMeditation.cover);
+        // Отримання шляху
+        const filePath = parsedUrl.pathname.slice(1); // Видаляємо початковий "/"
+        fileDelete(filePath);
+        const link = await fileCompress(file, this.configService);
+        parsedData.cover = link;
+        console.log(file);
+      } else if (file) {
+        fileDelete(file.path);
+      }
+
       const meditationId = new mongoose.Types.ObjectId(id.toString());
-      if (meditationData.hasOwnProperty('discount')) {
-        const { discount, ...meditation } = meditationData;
+      if (parsedData.hasOwnProperty('discount')) {
+        const { discount, ...meditation } = parsedData;
         const editedMeditation =
           await this.adminMeditationService.editMeditation(
             meditation,
@@ -139,9 +200,8 @@ export class AdminMeditationController {
         await this.discountService.deleteDiscount({
           refId: meditationId,
         });
-
         return await this.adminMeditationService.editMeditation(
-          meditationData,
+          parsedData,
           meditationId,
         );
       }

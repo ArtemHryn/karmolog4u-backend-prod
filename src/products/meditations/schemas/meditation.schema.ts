@@ -51,8 +51,8 @@ export class Meditation {
   @Prop({ type: String, default: '' })
   cover: string;
 
-  @Prop({ type: String, default: '' })
-  price: string;
+  @Prop({ type: Number, default: 0 })
+  price: number;
 
   // @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Discount', default: '' })
   // discount: Discount;

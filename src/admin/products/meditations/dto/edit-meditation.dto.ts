@@ -39,7 +39,7 @@ export class EditMeditationDto {
   Meditation price
   @example "10"
   */
-  price: string;
+  price: number;
 
   /**
   Meditation status is waiting
