@@ -1,4 +1,3 @@
-import { MeditationDocument } from './../../../products/meditations/schemas/meditation.schema';
 import {
   BadRequestException,
   NotFoundException,
@@ -7,14 +6,14 @@ import {
   Get,
   Param,
   Post,
-  UsePipes,
+  // UsePipes,
   Patch,
   Put,
   UseInterceptors,
   UploadedFile,
-  ParseFilePipeBuilder,
-  HttpStatus,
-  Req,
+  // ParseFilePipeBuilder,
+  // HttpStatus,
+  // Req,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JoiValidationPipe } from 'src/common/pipes/JoiValidationPipe';
@@ -26,29 +25,28 @@ import {
 } from 'src/admin/products/meditations/schemas/validation.schema';
 import { ResponseSuccessDto } from 'src/user/dto/response-success.dto';
 import { AdminMeditationService } from './admin-meditation.service';
-import { CreateMeditationDto } from './dto/create-meditation.dto';
+// import { CreateMeditationDto } from './dto/create-meditation.dto';
 import { ChangeStatusMeditationDto } from './dto/change-status-meditation.dto';
 import { DiscountService } from '../discount/discount.service';
-import { EditMeditationDto } from './dto/edit-meditation.dto';
+// import { EditMeditationDto } from './dto/edit-meditation.dto';
 import mongoose from 'mongoose';
 import { Roles } from 'src/role/roles.decorator';
 import { Role } from 'src/role/role.enum';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
-import { Public } from 'src/common/decorators/isPublic.decorator';
-import * as multer from 'multer';
-// import { uuid } from 'uuidv4';
-import { v4 as uuidv4 } from 'uuid';
-import * as sharp from 'sharp';
-// import { diskStorage } from 'multer';
-import * as fs from 'fs';
-import * as path from 'path';
+// import { Public } from 'src/common/decorators/isPublic.decorator';
+// import * as sharp from 'sharp';
+// import * as fs from 'fs';
+// import * as path from 'path';
 import { ConfigService } from '@nestjs/config';
-import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
+import { multerOptions } from 'src/common/helper/multerOptions';
+import { fileCompress } from 'src/common/helper/fileCompress';
+import { parseFields } from 'src/common/helper/parseFields';
+import { fileDelete } from 'src/common/helper/fileDelete';
 
 @ApiBearerAuth()
 @ApiTags('admin-meditations')
-// @Roles(Role.Admin)
+@Roles(Role.Admin)
 @Controller('admin/products/meditations')
 export class AdminMeditationController {
   constructor(
@@ -57,7 +55,6 @@ export class AdminMeditationController {
     private readonly configService: ConfigService,
   ) {}
 
-  @Public()
   @Post('create')
   @ApiResponse({
     status: 201,
@@ -65,7 +62,7 @@ export class AdminMeditationController {
     type: ResponseSuccessDto,
   })
   @ApiResponse({ status: 400, description: 'Конфлікт створення медитації' })
-  @UseInterceptors(FileInterceptor('cover', multerOptions))
+  @UseInterceptors(FileInterceptor('cover', multerOptions()))
   async createMeditation(
     @Body()
     data: any,
@@ -74,30 +71,9 @@ export class AdminMeditationController {
   ): Promise<any> {
     try {
       const parsedData = parseFields(data);
-      // let parsedData: any;
-      console.log(parsedData);
-      console.log(file);
 
-      // const parsedDiscount = data.discount
-      //   ? JSON.parse(data.discount)
-      //   : undefined;
-
-      // if (parsedDiscount) {
-      //   parsedData = {
-      //     ...data,
-      //     name: JSON.parse(data.name),
-      //     description: JSON.parse(data.description),
-      //     isWaiting: JSON.parse(data.isWaiting),
-      //     discount: JSON.parse(data.discount),
-      //   };
-      // } else {
-      //   parsedData = {
-      //     ...data,
-      //     name: JSON.parse(data.name),
-      //     description: JSON.parse(data.description),
-      //     isWaiting: JSON.parse(data.isWaiting),
-      //   };
-      // }
+      // console.log(parsedData);
+      // console.log(file);
 
       //validate data
       const { error } = newMeditationSchema.validate(parsedData);
@@ -106,49 +82,29 @@ export class AdminMeditationController {
         throw new BadRequestException(error.message);
       }
 
-      if (parsedData.category == 'ARCANES') {
-        if (parsedData.hasOwnProperty('discount')) {
-          const { discount, ...meditation } = parsedData;
-          const newMeditation =
-            await this.adminMeditationService.createMeditation(meditation);
-          const discountData = {
-            ...discount,
-            refId: newMeditation._id,
-          };
-          await this.discountService.createDiscount(discountData);
-          return { message: 'Успішно' };
-        } else {
-          await this.adminMeditationService.createMeditation(parsedData);
-        }
-        console.log('arcane');
+      if (file && parsedData.category !== 'ARCANES') {
+        const link = await fileCompress(file, this.configService);
+        parsedData.cover = link;
+      } else if (file) {
+        fileDelete(file.path);
+      }
 
+      if (parsedData.hasOwnProperty('discount')) {
+        const { discount, ...meditation } = parsedData;
+        const newMeditation =
+          await this.adminMeditationService.createMeditation(meditation);
+        const discountData = {
+          ...discount,
+          refId: newMeditation._id,
+        };
+        await this.discountService.createDiscount(discountData);
         return { message: 'Успішно' };
       } else {
-        if (file) {
-          const link = await fileCompress(file, this.configService);
-          parsedData.cover = link;
-        }
-
-        if (parsedData.hasOwnProperty('discount')) {
-          const { discount, ...meditation } = parsedData;
-          const newMeditation =
-            await this.adminMeditationService.createMeditation(meditation);
-
-          const discountData = {
-            ...discount,
-            refId: newMeditation._id,
-          };
-          await this.discountService.createDiscount(discountData);
-          return { message: 'Успішно' };
-        } else {
-          await this.adminMeditationService.createMeditation(parsedData);
-        }
-        console.log('else');
-
-        return { message: 'Успішно' };
+        await this.adminMeditationService.createMeditation(parsedData);
       }
+      return { message: 'Успішно' };
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       throw new BadRequestException('Конфлікт створення медитації');
     }
   }
@@ -192,7 +148,7 @@ export class AdminMeditationController {
     type: MeditationEntity,
   })
   @ApiResponse({ status: 400, description: 'something wrong' })
-  @UseInterceptors(FileInterceptor('cover', multerOptions))
+  @UseInterceptors(FileInterceptor('cover', multerOptions()))
   async editMeditation(
     @Param('id') id: string,
     @Body()
@@ -201,36 +157,54 @@ export class AdminMeditationController {
     file: Express.Multer.File,
   ): Promise<any> {
     try {
-      if (!file) {
-      } else {
+      const parsedData = parseFields(data);
+      const { error } = updateMeditationSchema.validate(parsedData);
+      if (error) {
+        // console.log(error);
+        throw new BadRequestException(error.message);
       }
-      // const meditationId = new mongoose.Types.ObjectId(id.toString());
-      // if (meditationData.hasOwnProperty('discount')) {
-      //   const { discount, ...meditation } = meditationData;
-      //   const editedMeditation =
-      //     await this.adminMeditationService.editMeditation(
-      //       meditation,
-      //       meditationId,
-      //     );
-      //   const editedDiscount = await this.discountService.editDiscount({
-      //     ...discount,
-      //     refId: meditationId,
-      //   });
-      //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      //   const { _id, ...modifiedDiscount } = editedDiscount.toObject();
-      //   return {
-      //     ...editedMeditation,
-      //     discount: modifiedDiscount,
-      //   };
-      // } else {
-      //   await this.discountService.deleteDiscount({
-      //     refId: meditationId,
-      //   });
-      //   return await this.adminMeditationService.editMeditation(
-      //     meditationData,
-      //     meditationId,
-      //   );
-      // }
+
+      if (file && parsedData.category !== 'ARCANES') {
+        const oldMeditation =
+          await this.adminMeditationService.findMeditationById(id);
+        const parsedUrl = new URL(oldMeditation.cover);
+        // Отримання шляху
+        const filePath = parsedUrl.pathname.slice(1); // Видаляємо початковий "/"
+        fileDelete(filePath);
+        const link = await fileCompress(file, this.configService);
+        parsedData.cover = link;
+        console.log(file);
+      } else if (file) {
+        fileDelete(file.path);
+      }
+
+      const meditationId = new mongoose.Types.ObjectId(id.toString());
+      if (parsedData.hasOwnProperty('discount')) {
+        const { discount, ...meditation } = parsedData;
+        const editedMeditation =
+          await this.adminMeditationService.editMeditation(
+            meditation,
+            meditationId,
+          );
+        const editedDiscount = await this.discountService.editDiscount({
+          ...discount,
+          refId: meditationId,
+        });
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { _id, ...modifiedDiscount } = editedDiscount.toObject();
+        return {
+          ...editedMeditation,
+          discount: modifiedDiscount,
+        };
+      } else {
+        await this.discountService.deleteDiscount({
+          refId: meditationId,
+        });
+        return await this.adminMeditationService.editMeditation(
+          parsedData,
+          meditationId,
+        );
+      }
     } catch (error) {
       throw new BadRequestException('Конфлікт редагування медитації');
     }
@@ -274,70 +248,4 @@ export class AdminMeditationController {
       throw new BadRequestException('Конфлікт змінення статусу медитації');
     }
   }
-}
-export const multerOptions: MulterOptions = {
-  storage: multer.diskStorage({
-    destination: './temporary', // Директорія для збереження файлів
-    filename: (req, file, callback) => {
-      // Зміна імені файлу
-      console.log(file, 'file');
-
-      const [, ext] = file.originalname.split('.');
-      const filename = `${Date.now()}_${uuidv4()}.${ext}`;
-      callback(null, `${filename}`);
-    },
-  }),
-  fileFilter: (req, file, callback) => {
-    // Перевірка MIME-типу
-    if (file.mimetype.match(/\/(jpg|jpeg|png|webp)$/)) {
-      callback(null, true); // Приймаємо тільки зображення
-    } else {
-      callback(new Error('Only image files are allowed!'), false); // Відхиляємо файли
-    }
-  },
-};
-
-export const fileCompress = async (file: any, configService: ConfigService) => {
-  const [name, extention] = file.filename.split('.');
-  const compressedPath = path.join('./covers', `${name}.webp`);
-  fs.mkdirSync(path.dirname(compressedPath), { recursive: true });
-
-  // Стиснення зображення
-  await sharp(file.path)
-    .resize(800) // Змінює ширину до 800 пікселів, зберігаючи співвідношення сторін
-    .webp({ quality: 75 }) // Конвертує в JPEG з якістю 70%
-    .toFile(compressedPath); // Зберігає файл
-
-  //delete temporary image
-  fs.unlink(file.path, (err) => {
-    if (err) {
-      console.error(`Помилка при видаленні файлу: ${err.message}`);
-      new Error(err.message);
-    } else {
-      console.log('Файл успішно видалено');
-    }
-  });
-  //crate link for image
-  const envValue = configService.get<string>('SERVER_IP');
-  return `${envValue}${compressedPath}`;
-};
-
-function parseFields(data: any): Record<string, any> {
-  if (typeof data !== 'object' || data === null) {
-    throw new TypeError('Expected an object for parsing fields.');
-  }
-
-  const parsedData: Record<string, any> = {};
-
-  for (const key in data) {
-    if (Object.prototype.hasOwnProperty.call(data, key)) {
-      try {
-        parsedData[key] = JSON.parse(data[key]);
-      } catch (error) {
-        parsedData[key] = data[key]; // Якщо поле не JSON, залишаємо як є
-      }
-    }
-  }
-
-  return parsedData;
 }

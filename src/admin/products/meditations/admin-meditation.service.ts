@@ -88,7 +88,7 @@ export class AdminMeditationService {
 
   async findMeditationById(meditationId: string): Promise<any> {
     // return await this.meditationModel.findById(meditationId);
-    return await this.meditationModel
+    const response = await this.meditationModel
       .aggregate([
         {
           $match: { _id: new ObjectId(meditationId) }, // Знаходимо користувача за _id
@@ -145,6 +145,7 @@ export class AdminMeditationService {
         },
       ])
       .exec();
+    return response[0];
   }
 
   async createMeditation(meditationData: any): Promise<MeditationEntity> {
@@ -154,7 +155,7 @@ export class AdminMeditationService {
   }
 
   async editMeditation(
-    meditationData: MeditationEntity,
+    meditationData: any,
     meditationId: FindMeditationByIdDto,
   ): Promise<MeditationEntity> {
     return await this.meditationModel
