@@ -112,45 +112,55 @@ export class AuthService {
     const payload = await this.jwtService.verifyAsync(refreshTokenDto.token, {
       secret: 'secretcode',
     });
+
+    console.log('1');
+
     const tokenInstance = await this.tokenService.findToken({
       refreshToken: refreshTokenDto.token,
       deviceId: payload.deviceId,
       owner: payload.sub,
     });
+    console.log('2');
 
-    if (!tokenInstance) {
-      throw new BadRequestException('Something wrong');
-    }
+    // if (!tokenInstance) {
+    //   throw new Error();
+
+    //   // throw new BadRequestException('Something wrong');
+    // }
     const user = await this.userService.findUserById({ _id: payload.sub });
-    if (!user) {
-      throw new BadRequestException('Something wrong with user');
-    }
+    // if (!user) {
+    //   throw new Error();
+
+    //   // throw new BadRequestException('Something wrong with user');
+    // }
+    console.log('3');
+
     const accessPayload = {
       sub: payload.sub,
       user: user,
       deviceId: tokenInstance.deviceId,
     };
-    const refreshPayload = {
-      sub: payload.sub,
-      deviceId: tokenInstance.deviceId,
-    };
+    // const refreshPayload = {
+    //   sub: payload.sub,
+    //   deviceId: tokenInstance.deviceId,
+    // };
 
     const accessToken_expired = this.configService.get<string>(
       'ACCESS_TOKEN_EXPIRED',
     );
-    const refreshToken_expired = this.configService.get<string>(
-      'REFRESH_TOKEN_EXPIRED',
-    );
+    // const refreshToken_expired = this.configService.get<string>(
+    //   'REFRESH_TOKEN_EXPIRED',
+    // );
 
     const accessToken = await this.jwtService.signAsync(accessPayload, {
       expiresIn: accessToken_expired,
     });
-    const refreshToken = await this.jwtService.signAsync(refreshPayload, {
-      expiresIn: refreshToken_expired,
-    });
+    // const refreshToken = await this.jwtService.signAsync(refreshPayload, {
+    //   expiresIn: refreshToken_expired,
+    // });
 
     const newToken = await this.tokenService.updateToken({
-      refreshToken,
+      refreshToken: tokenInstance.refreshToken,
       accessToken,
       id: tokenInstance._id,
     });

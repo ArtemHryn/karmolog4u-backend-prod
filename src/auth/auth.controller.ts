@@ -9,6 +9,7 @@ import {
 } from './schemas/validation.schemas';
 import { AuthService } from './auth.service';
 import {
+  BadRequestException,
   Body,
   Controller,
   Headers,
@@ -16,6 +17,7 @@ import {
   HttpException,
   HttpStatus,
   Post,
+  UnauthorizedException,
   UseGuards,
   UsePipes,
 } from '@nestjs/common';
@@ -137,16 +139,20 @@ export class AuthController {
       const token = refreshToken.split(' ')[1];
       return await this.authService.refreshToken({ token });
     } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
+      console.log(error);
+
+      throw new UnauthorizedException('Unauthorized');
+
+      // throw new HttpException(
+      //   {
+      //     status: error.status,
+      //     message: error.response.message,
+      //   },
+      //   error.status,
+      //   {
+      //     cause: error,
+      //   },
+      // );
     }
   }
 }
