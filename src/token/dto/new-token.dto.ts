@@ -5,4 +5,5 @@ export class NewTokenDto {
   refreshToken: string;
   deviceId: string;
   owner: Types.ObjectId;
+  expiredAt: Date;
 }
