@@ -6,7 +6,8 @@ import * as path from 'path';
 export const fileCompress = async (file: any, configService: ConfigService) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [name, extension] = file.filename.split('.');
-  const compressedPath = path.join('./covers', `${name}.webp`);
+  const outputDir = path.resolve(__dirname, 'covers');
+  const compressedPath = path.join(outputDir, `${name}.webp`);
   fs.mkdirSync(path.dirname(compressedPath), { recursive: true });
 
   // Стиснення зображення
