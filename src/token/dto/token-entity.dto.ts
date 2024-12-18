@@ -36,11 +36,17 @@ export class TokenEntity {
   Indicates if the user is banned
   @example 'created date'
   */
-  createdAt: string;
+  expiredAt: Date;
+
+  /**
+  Indicates if the user is banned
+  @example 'created date'
+  */
+  createdAt?: Date;
 
   /**
   Indicates if the user is banned
   @example 'updated date'
   */
-  updatedAt: string;
+  updatedAt?: Date;
 }

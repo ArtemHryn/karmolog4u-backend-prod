@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 
 export class UpdateTokenDto {
-  refreshToken: string;
+  // refreshToken: string;
   accessToken: string;
   id: Types.ObjectId;
 }

@@ -50,7 +50,7 @@ export class AuthService {
       toDelete,
       createdAt,
       updatedAt,
-      expiredAt,
+      // expiredAt,
     } = user;
     const userData = {
       _id,
@@ -62,7 +62,7 @@ export class AuthService {
       toDelete,
       createdAt,
       updatedAt,
-      expiredAt,
+      // expiredAt,
     };
     const accessPayload = { sub: user._id, user: userData, deviceId };
     const refreshPayload = { sub: user._id, deviceId };
@@ -79,11 +79,19 @@ export class AuthService {
     const refreshToken = await this.jwtService.signAsync(refreshPayload, {
       expiresIn: refreshToken_expired,
     });
+    const daysToAdd = parseInt(
+      this.configService.get<string>('DOCUMENT_TOKEN_EXPIRED'),
+      10,
+    );
+    const expiredAt = new Date(
+      new Date().getTime() + daysToAdd * 24 * 60 * 60 * 1000,
+    );
     const token = await this.tokenService.newToken({
       accessToken,
       refreshToken,
       deviceId,
       owner: user._id,
+      expiredAt,
     });
 
     return {
@@ -160,7 +168,7 @@ export class AuthService {
     // });
 
     const newToken = await this.tokenService.updateToken({
-      refreshToken: tokenInstance.refreshToken,
+      // refreshToken: tokenInstance.refreshToken,
       accessToken,
       id: tokenInstance._id,
     });
