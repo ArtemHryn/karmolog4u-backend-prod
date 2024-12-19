@@ -1,5 +1,4 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-// import { Type } from 'class-transformer';
 import mongoose, { HydratedDocument } from 'mongoose';
 
 export type DiscountDocument = HydratedDocument<Discount>;
