@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Discount } from './schemas/discount.schema';
 import { Discount as DiscountInterface } from './interface/discount.interface';
@@ -14,38 +18,52 @@ export class DiscountService {
   ) {}
 
   async createDiscount(discountData: CreateDiscountDto): Promise<any> {
-    const discount = new this.discountModel(discountData);
-    await discount.save();
-    return { message: 'success' };
+    try {
+      const discount = new this.discountModel(discountData);
+      await discount.save();
+      return { message: 'success' };
+    } catch (error) {
+      throw new BadRequestException(error._message + ', Mongo DB');
+    }
   }
 
   async editDiscount(
     discountData: EditDiscountDto,
   ): Promise<DiscountInterface> {
-    const { refId, ...data } = discountData;
+    try {
+      const { refId, ...data } = discountData;
 
-    return await this.discountModel
-      .findOneAndUpdate({ refId: refId }, data, {
-        upsert: true,
-        new: true,
-        projection: { start: 1, expiredAt: 1, discount: 1 },
-      })
-      .exec();
+      return await this.discountModel
+        .findOneAndUpdate({ refId: refId }, data, {
+          upsert: true,
+          new: true,
+          projection: { start: 1, expiredAt: 1, discount: 1 },
+        })
+        .exec();
+    } catch (error) {
+      throw new BadRequestException(error._message + ', Mongo DB');
+    }
   }
 
   async findDiscount(refId: FindDiscountDto): Promise<DiscountInterface> {
-    return await this.discountModel.findOne(
-      { ...refId },
-      'discount start expiredAt',
-    );
+    try {
+      return await this.discountModel.findOne(
+        { ...refId },
+        'discount start expiredAt',
+      );
+    } catch (error) {
+      throw new NotFoundException(`Знижку з refId ${refId} не знайдено`);
+    }
   }
 
   async deleteDiscount(refId: FindDiscountDto): Promise<any> {
-    console.log(refId.refId, 'sdcsd');
-
-    await this.discountModel.findOneAndDelete({
-      ...refId,
-    });
-    return { message: 'success' };
+    try {
+      await this.discountModel.findOneAndDelete({
+        ...refId,
+      });
+      return { message: 'success' };
+    } catch (error) {
+      throw new BadRequestException(error._message + ', Mongo DB');
+    }
   }
 }

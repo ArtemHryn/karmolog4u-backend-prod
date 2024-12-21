@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
 
-export class FindMeditationByIdDto {
+export class MeditationIdDto {
   _id: Types.ObjectId;
 }

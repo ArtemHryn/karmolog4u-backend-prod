@@ -4,12 +4,12 @@ import * as mongoose from 'mongoose';
 
 export type MeditationDocument = HydratedDocument<Meditation>;
 
-export interface Name {
+export class Name {
   ru: string;
   uk: string;
 }
 
-export interface Description {
+export class Description {
   ru: string;
   uk: string;
 }
@@ -18,6 +18,12 @@ export enum Status {
   PUBLISHED = 'PUBLISHED',
   HIDDEN = 'HIDDEN',
   DRAFT = 'DRAFT',
+}
+
+export enum Category {
+  OPENED = 'OPENED',
+  CLOSED = 'CLOSED',
+  ARCANES = 'ARCANES',
 }
 
 @Schema({
@@ -35,9 +41,9 @@ export class Meditation {
   @Prop({
     type: String,
     enum: ['OPENED', 'CLOSED', 'ARCANES'],
-    required: [true, 'category is required'],
+    required: [true, 'Category is required'],
   })
-  category: string;
+  category: Category;
 
   @Prop({ type: Object, default: { ru: '', uk: '' } })
   name: Name;
@@ -54,9 +60,6 @@ export class Meditation {
   @Prop({ type: Number, default: 0 })
   price: number;
 
-  // @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Discount', default: '' })
-  // discount: Discount;
-
   @Prop({ type: Boolean, default: false })
   isWaiting: boolean;
 
@@ -67,6 +70,7 @@ export class Meditation {
     type: String,
     enum: ['PUBLISHED', 'HIDDEN', 'DRAFT'],
     default: 'DRAFT',
+    required: [true, 'Status is required'],
   })
   status: Status;
 

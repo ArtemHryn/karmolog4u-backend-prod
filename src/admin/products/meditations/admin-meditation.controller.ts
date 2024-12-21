@@ -6,16 +6,20 @@ import {
   Get,
   Param,
   Post,
-  // UsePipes,
   Patch,
   Put,
   UseInterceptors,
   UploadedFile,
-  // ParseFilePipeBuilder,
-  // HttpStatus,
-  // Req,
+  HttpException,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JoiValidationPipe } from 'src/common/pipes/JoiValidationPipe';
 import { MeditationEntity } from 'src/products/meditations/dto/meditation-entity.dto';
 import {
@@ -25,24 +29,20 @@ import {
 } from 'src/admin/products/meditations/schemas/validation.schema';
 import { ResponseSuccessDto } from 'src/user/dto/response-success.dto';
 import { AdminMeditationService } from './admin-meditation.service';
-// import { CreateMeditationDto } from './dto/create-meditation.dto';
 import { ChangeStatusMeditationDto } from './dto/change-status-meditation.dto';
 import { DiscountService } from '../discount/discount.service';
-// import { EditMeditationDto } from './dto/edit-meditation.dto';
 import mongoose from 'mongoose';
 import { Roles } from 'src/role/roles.decorator';
 import { Role } from 'src/role/role.enum';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
-// import { Public } from 'src/common/decorators/isPublic.decorator';
-// import * as sharp from 'sharp';
-// import * as fs from 'fs';
-// import * as path from 'path';
 import { ConfigService } from '@nestjs/config';
 import { multerOptions } from 'src/common/helper/multerOptions';
 import { fileCompress } from 'src/common/helper/fileCompress';
 import { parseFields } from 'src/common/helper/parseFields';
 import { fileDelete } from 'src/common/helper/fileDelete';
+import { CreateMeditationDto } from './dto/create-meditation.dto';
+import { EditMeditationDto } from './dto/edit-meditation.dto';
 
 @ApiBearerAuth()
 @ApiTags('admin-meditations')
@@ -56,6 +56,15 @@ export class AdminMeditationController {
   ) {}
 
   @Post('create')
+  @ApiOperation({
+    summary: 'Admin Create Meditation',
+    description: 'Access restricted to admins',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Upload a file with additional fields',
+    type: CreateMeditationDto,
+  })
   @ApiResponse({
     status: 201,
     description: 'Успішно',
@@ -65,28 +74,23 @@ export class AdminMeditationController {
   @UseInterceptors(FileInterceptor('cover', multerOptions()))
   async createMeditation(
     @Body()
-    data: any,
+    data: CreateMeditationDto,
     @UploadedFile()
     file?: Express.Multer.File,
-  ): Promise<any> {
+  ): Promise<ResponseSuccessDto> {
     try {
       const parsedData = parseFields(data);
-
-      // console.log(parsedData);
-      // console.log(file);
 
       //validate data
       const { error } = newMeditationSchema.validate(parsedData);
       if (error) {
-        // console.log(error);
-        throw new BadRequestException(error.message);
+        throw new BadRequestException(error.details[0].message);
       }
-
       if (file && parsedData.category !== 'ARCANES') {
         const link = await fileCompress(file, this.configService);
         parsedData.cover = link;
       } else if (file) {
-        fileDelete(file.path);
+        await fileDelete(file.path);
       }
 
       if (parsedData.hasOwnProperty('discount')) {
@@ -104,22 +108,34 @@ export class AdminMeditationController {
       }
       return { message: 'Успішно' };
     } catch (error) {
-      // console.log(error);
-      throw new BadRequestException('Конфлікт створення медитації');
+      throw new HttpException(
+        {
+          status: error.status,
+          message: error.response.message,
+          error: error.response.error,
+        },
+        error.status,
+        {
+          cause: error,
+        },
+      );
     }
   }
 
   @Get('get/:id')
+  @ApiOperation({
+    summary: 'Admin Get By Id Meditation',
+    description: 'Access restricted to admins',
+  })
   @ApiResponse({
     status: 200,
     description: 'get-meditation-by-id',
     type: MeditationEntity,
   })
   @ApiResponse({ status: 400, description: 'something wrong' })
-  async getMeditationById(
-    @Param('id') meditationId: string,
-  ): Promise<MeditationEntity> {
+  async getMeditationById(@Param('id') id: string): Promise<MeditationEntity> {
     try {
+      const meditationId = new mongoose.Types.ObjectId(id.toString());
       return await this.adminMeditationService.findMeditationById(meditationId);
     } catch (error) {
       throw new NotFoundException('Медитацію не знайдено');
@@ -127,6 +143,10 @@ export class AdminMeditationController {
   }
 
   @Get('get-all')
+  @ApiOperation({
+    summary: 'Admin Get All Meditation',
+    description: 'Access restricted to admins',
+  })
   @ApiResponse({
     status: 200,
     description: 'get-all-meditation',
@@ -142,6 +162,15 @@ export class AdminMeditationController {
   }
 
   @Put('edit/:id')
+  @ApiOperation({
+    summary: 'Admin Edit Meditation',
+    description: 'Access restricted to admins',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Upload a file with additional fields',
+    type: EditMeditationDto,
+  })
   @ApiResponse({
     status: 200,
     description: 'update-meditation',
@@ -152,33 +181,31 @@ export class AdminMeditationController {
   async editMeditation(
     @Param('id') id: string,
     @Body()
-    data: any,
+    data: EditMeditationDto,
     @UploadedFile()
-    file: Express.Multer.File,
+    file?: Express.Multer.File,
   ): Promise<any> {
     try {
       const parsedData = parseFields(data);
       const { error } = updateMeditationSchema.validate(parsedData);
       if (error) {
-        // console.log(error);
-        throw new BadRequestException(error.message);
+        throw new BadRequestException(error.details[0].message);
       }
+      const meditationId = new mongoose.Types.ObjectId(id.toString());
 
       if (file && parsedData.category !== 'ARCANES') {
         const oldMeditation =
-          await this.adminMeditationService.findMeditationById(id);
+          await this.adminMeditationService.findMeditationById(meditationId);
         const parsedUrl = new URL(oldMeditation.cover);
         // Отримання шляху
         const filePath = parsedUrl.pathname.slice(1); // Видаляємо початковий "/"
-        fileDelete(filePath);
+        await fileDelete(filePath);
         const link = await fileCompress(file, this.configService);
         parsedData.cover = link;
-        console.log(file);
       } else if (file) {
-        fileDelete(file.path);
+        await fileDelete(file.path);
       }
 
-      const meditationId = new mongoose.Types.ObjectId(id.toString());
       if (parsedData.hasOwnProperty('discount')) {
         const { discount, ...meditation } = parsedData;
         const editedMeditation =
@@ -206,28 +233,55 @@ export class AdminMeditationController {
         );
       }
     } catch (error) {
-      throw new BadRequestException('Конфлікт редагування медитації');
+      throw new HttpException(
+        {
+          status: error.status,
+          message: error.response.message,
+          error: error.response.error,
+        },
+        error.status,
+        {
+          cause: error,
+        },
+      );
     }
   }
 
   @Patch('delete/:id')
+  @ApiOperation({
+    summary: 'Admin Delete By Id Meditation',
+    description: 'Access restricted to admins',
+  })
   @ApiResponse({
     status: 200,
     description: 'delete-meditation',
     type: MeditationEntity,
   })
   @ApiResponse({ status: 400, description: 'something wrong' })
-  async deleteMeditation(
-    @Param('id') meditationId: string,
-  ): Promise<ResponseSuccessDto> {
+  async deleteMeditation(@Param('id') id: string): Promise<ResponseSuccessDto> {
     try {
+      const meditationId = new mongoose.Types.ObjectId(id.toString());
       return await this.adminMeditationService.deleteMeditation(meditationId);
     } catch (error) {
-      throw new BadRequestException('Конфлікт видалення медитації');
+      throw new HttpException(
+        {
+          status: error.status,
+          message: error.response.message,
+          error: error.response.error,
+        },
+        error.status,
+        {
+          cause: error,
+        },
+      );
     }
   }
 
   @Patch('status/:id')
+  @ApiOperation({
+    summary: 'Admin Change Status Of Meditation',
+    description: 'Access restricted to admins',
+  })
   @ApiResponse({
     status: 200,
     description: 'change - status -meditation',
@@ -235,17 +289,28 @@ export class AdminMeditationController {
   })
   @ApiResponse({ status: 400, description: 'something wrong' })
   async changeStatusMeditation(
-    @Param('id') meditationId: string,
+    @Param('id') id: string,
     @Body(new JoiValidationPipe(changeStatusMeditationSchema))
     status: ChangeStatusMeditationDto,
   ): Promise<ResponseSuccessDto> {
     try {
+      const meditationId = new mongoose.Types.ObjectId(id.toString());
       return await this.adminMeditationService.changeStatusMeditation(
         meditationId,
         status,
       );
     } catch (error) {
-      throw new BadRequestException('Конфлікт змінення статусу медитації');
+      throw new HttpException(
+        {
+          status: error.status,
+          message: error.response.message,
+          error: error.response.error,
+        },
+        error.status,
+        {
+          cause: error,
+        },
+      );
     }
   }
 }
