@@ -1,4 +1,3 @@
-import { WebinarsModule } from './admin/products/webinars/webinars.module';
 import { ImageModule } from './image/image.module';
 import { DiscountModule } from './admin/products/discount/discount.module';
 import { ProductModule } from './products/product.module';
@@ -24,7 +23,6 @@ const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
 
 @Module({
   imports: [
-    WebinarsModule,
     // ProductModule,
     // MaterialModule,
     ConfigModule.forRoot({ validate, envFilePath, isGlobal: true }),

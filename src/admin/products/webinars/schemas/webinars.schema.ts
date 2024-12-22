@@ -28,10 +28,9 @@ export enum Status {
   DRAFT = 'DRAFT',
 }
 
-export enum Category {
-  OPENED = 'OPENED',
-  CLOSED = 'CLOSED',
-  ARCANES = 'ARCANES',
+export enum CategoryWebinar {
+  WEBINARS = 'WEBINARS',
+  ETHERS = 'ETHERS',
 }
 
 @Schema({
@@ -48,10 +47,10 @@ export enum Category {
 export class Webinar {
   @Prop({
     type: String,
-    enum: ['OPENED', 'CLOSED', 'ARCANES'],
+    enum: ['WEBINARS', 'ETHERS'],
     required: [true, 'Category is required'],
   })
-  category: Category;
+  category: CategoryWebinar;
 
   @Prop({ type: Object, default: { ru: '', uk: '' } })
   name: Name;

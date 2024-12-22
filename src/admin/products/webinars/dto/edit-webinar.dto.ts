@@ -1,4 +1,3 @@
-import { Types } from 'mongoose';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   CategoryWebinar,
@@ -9,19 +8,11 @@ import {
   Status,
 } from '../schemas/webinars.schema';
 
-export class WebinarEntity {
-  @ApiProperty({
-    type: Types.ObjectId,
-    description: 'Id of the meditation',
-    example: '6744d2c8bd8f6d722ff28c49',
-    required: false,
-  })
-  _id?: Types.ObjectId;
-
+export class EditWebinarDto {
   @ApiProperty({
     enum: CategoryWebinar,
     enumName: 'CategoryWebinar',
-    description: 'Category of the meditation',
+    description: 'Category of the webinar',
     example: CategoryWebinar.WEBINARS,
     required: true,
   })
@@ -82,14 +73,6 @@ export class WebinarEntity {
     required: false,
   })
   isWaiting?: boolean;
-
-  @ApiProperty({
-    type: Boolean,
-    description: 'To Delete status of the meditation',
-    example: false,
-    required: false,
-  })
-  toDelete?: boolean;
 
   @ApiProperty({
     enum: Status,

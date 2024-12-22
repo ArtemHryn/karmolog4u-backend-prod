@@ -2,9 +2,10 @@
 // import { ProductController } from './product.controller';
 import { Module } from '@nestjs/common';
 import { MeditationModule } from './meditations/meditation.module';
+import { WebinarModule } from './webinars/webinar.module';
 
 @Module({
-  imports: [MeditationModule],
+  imports: [MeditationModule, WebinarModule],
   controllers: [],
   providers: [],
 })
