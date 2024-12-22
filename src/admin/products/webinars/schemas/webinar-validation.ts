@@ -2,16 +2,12 @@ import * as Joi from 'joi';
 
 export const newWebinarSchema = Joi.object()
   .keys({
-    category: Joi.string()
-      .valid('OPENED', 'CLOSED', 'ARCANES')
-      .required()
-      .messages({
-        'any.required': "category є обов'язковим полем",
-        'string.base': 'category має бути рядком',
-        'string.empty': 'category не може бути порожнім',
-        'any.only':
-          'category має бути одним з таких значень: OPENED, CLOSED, ARCANES',
-      }),
+    category: Joi.string().valid('WEBINARS', 'ETHERS').required().messages({
+      'any.required': "category є обов'язковим полем",
+      'string.base': 'category має бути рядком',
+      'string.empty': 'category не може бути порожнім',
+      'any.only': 'category має бути одним з таких значень: WEBINARS, ETHERS',
+    }),
     name: Joi.object()
       .keys({
         ru: Joi.string().optional().messages({
@@ -97,16 +93,12 @@ export const newWebinarSchema = Joi.object()
 
 export const updateWebinarSchema = Joi.object()
   .keys({
-    category: Joi.string()
-      .valid('OPENED', 'CLOSED', 'ARCANES')
-      .required()
-      .messages({
-        'any.required': "category є обов'язковим полем",
-        'string.base': 'category має бути рядком',
-        'string.empty': 'category не може бути порожнім',
-        'any.only':
-          'category має бути одним з таких значень: OPENED, CLOSED, ARCANES',
-      }),
+    category: Joi.string().valid('WEBINARS', 'ETHERS').required().messages({
+      'any.required': "category є обов'язковим полем",
+      'string.base': 'category має бути рядком',
+      'string.empty': 'category не може бути порожнім',
+      'any.only': 'category має бути одним з таких значень: WEBINARS, ETHERS',
+    }),
     name: Joi.object()
       .keys({
         ru: Joi.string().optional().messages({

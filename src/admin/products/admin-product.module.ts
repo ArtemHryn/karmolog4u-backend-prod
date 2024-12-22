@@ -2,9 +2,10 @@ import { Module } from '@nestjs/common';
 import { AdminMeditationModule } from './meditations/admin-meditation.module';
 import { AdminProductController } from './admin-product.controller';
 import { DiscountModule } from './discount/discount.module';
+import { AdminWebinarsModule } from './webinars/admin-webinars.module';
 
 @Module({
-  imports: [AdminMeditationModule, DiscountModule],
+  imports: [AdminMeditationModule, DiscountModule, AdminWebinarsModule],
   controllers: [AdminProductController],
   providers: [],
   exports: [],
