@@ -1,14 +1,12 @@
 import { InternalServerErrorException } from '@nestjs/common';
-import * as fs from 'fs';
-export const fileDelete = async (filePath: any): Promise<void> => {
+import { promises as fs } from 'fs'; // Importing fs.promises
+
+export const fileDelete = async (filePath: string): Promise<void> => {
   try {
-    return new Promise((resolve, reject) => {
-      fs.unlink(filePath, (err) => {
-        if (err) return reject(err); // Відправляє помилку далі
-        resolve(); // Файл успішно видалено
-      });
-    });
+    await fs.unlink(filePath); // Using fs.promises.unlink
   } catch (error) {
+    console.log(error);
+
     throw new InternalServerErrorException(error);
   }
 };
