@@ -1,12 +1,11 @@
 import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
 import { WebinarService } from './webinar.service';
 import { Public } from 'src/common/decorators/isPublic.decorator';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { WebinarEntity } from 'src/admin/products/webinars/dto/webinar-entity.dto';
 import mongoose from 'mongoose';
 
-@ApiTags('meditations')
-@Controller('products/webinars')
+@Controller()
 export class WebinarController {
   constructor(private webinarService: WebinarService) {}
 
