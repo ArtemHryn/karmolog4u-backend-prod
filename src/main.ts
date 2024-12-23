@@ -12,8 +12,10 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .addBearerAuth()
-    .setTitle('NestJs Demo')
+    .setTitle('Karmolog4u-dev')
+    .setDescription('API description')
     .setVersion('1.0')
+    .addBearerAuth() // Додати підтримку авторизації
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

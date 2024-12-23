@@ -3,7 +3,7 @@ import { DiscountModule } from './admin/products/discount/discount.module';
 import { ProductModule } from './products/product.module';
 // import { MaterialModule } from './material/material.module';
 // import { GroupModule } from './group/group.module';
-import { AdminUserModule } from './admin/user/admin-user.module';
+// import { AdminUserModule } from './admin/user/admin-user.module';
 // import { AdminModule } from './admin/admin.module';
 import { TokenModule } from './token/token.module';
 import { UserModule } from './user/user.module';
@@ -15,16 +15,15 @@ import { getEnvPath } from './common/helper/env.helper';
 // import { RouterModule } from '@nestjs/core';
 import { validate } from './common/helper/env.validation';
 import { LoggerMiddleware } from './common/middleware/logger.middlvare';
-import { AdminProductModule } from './admin/products/admin-product.module';
+// import { AdminProductModule } from './admin/products/admin-product.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import * as path from 'path';
+import { AdminModule } from './admin/admin.module';
 
 const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
 
 @Module({
   imports: [
-    // ProductModule,
-    // MaterialModule,
     ConfigModule.forRoot({ validate, envFilePath, isGlobal: true }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
@@ -39,30 +38,11 @@ const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
     }),
     DiscountModule,
     TokenModule,
-    UserModule,
     AuthModule,
-    // AdminModule,
-    AdminUserModule,
-    AdminProductModule,
+    UserModule,
+    AdminModule,
     ProductModule,
     ImageModule,
-    // GroupModule,
-    // RouterModule.register([
-    //   {
-    //     path: 'admin',
-    //     module: AdminModule,
-    //     children: [
-    //       {
-    //         path: '/',
-    //         module: AdminUserModule,
-    //       },
-    //       {
-    //         // path: '/',
-    //         // module: ,
-    //       },
-    //     ],
-    //   },
-    // ]),
   ],
 })
 export class AppModule implements NestModule {
