@@ -1,24 +1,25 @@
 import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
 import { WebinarService } from './webinar.service';
 import { Public } from 'src/common/decorators/isPublic.decorator';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { WebinarEntity } from 'src/admin/products/webinars/dto/webinar-entity.dto';
 import mongoose from 'mongoose';
 
-@Controller()
+@ApiTags('webinars')
+@Controller('products/webinars')
 export class WebinarController {
   constructor(private webinarService: WebinarService) {}
 
   @Public()
   @Get('get-all')
-  @ApiOperation({ summary: 'Get meditation prevue' })
+  @ApiOperation({ summary: 'Get webinar prevue' })
   @ApiResponse({
     status: 200,
-    description: 'get-meditation',
-    type: Array,
+    description: 'get-webinar',
+    type: [WebinarEntity],
   })
   @ApiResponse({ status: 400, description: 'something wrong' })
-  async getMeditation() {
+  async getMeditation(): Promise<WebinarEntity[]> {
     try {
       return await this.webinarService.findPrevueWebinar();
     } catch (error) {
@@ -28,18 +29,18 @@ export class WebinarController {
 
   @Public()
   @Get('get/:id')
-  @ApiOperation({ summary: 'Get meditation by id' })
+  @ApiOperation({ summary: 'Get webinar by id' })
   @ApiResponse({
     status: 200,
-    description: 'get-meditation',
+    description: 'get-webinar',
     type: WebinarEntity,
   })
   @ApiResponse({ status: 400, description: 'something wrong' })
-  async getMeditationById(@Param('id') id: string) {
+  async getMeditationById(@Param('id') id: string): Promise<WebinarEntity> {
     try {
       const webinarId = new mongoose.Types.ObjectId(id.toString());
-      const meditation = await this.webinarService.findWebinarById(webinarId);
-      return meditation;
+      const webinar = await this.webinarService.findWebinarById(webinarId);
+      return webinar;
     } catch (error) {
       throw new NotFoundException('Webinar not found');
     }
