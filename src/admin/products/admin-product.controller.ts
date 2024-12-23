@@ -6,12 +6,21 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AdminMeditationService } from './meditations/admin-meditation.service';
+import { AdminGuidesAndBooksService } from './guides_and_books/admin-guides_and_books.service';
+import { AdminWebinarsService } from './webinars/admin-webinars.service';
+import { Roles } from 'src/role/roles.decorator';
+import { Role } from 'src/role/role.enum';
 
 @ApiBearerAuth()
 @ApiTags('product')
+@Roles(Role.Admin)
 @Controller('admin/products')
 export class AdminProductController {
-  constructor(private meditationService: AdminMeditationService) {}
+  constructor(
+    private adminMeditationService: AdminMeditationService,
+    private adminWebinarService: AdminWebinarsService,
+    private adminGuidesAndBooksService: AdminGuidesAndBooksService,
+  ) {}
 
   @Get('product-count')
   @ApiOperation({ summary: 'Get count of each product' })
@@ -23,9 +32,18 @@ export class AdminProductController {
   @ApiResponse({ status: 400, description: 'something wrong' })
   async getProductCount(): Promise<any> {
     try {
-      const meditations = await this.meditationService.getMeditationCount();
+      const meditations =
+        await this.adminMeditationService.getMeditationCount();
+      const webinars = await this.adminWebinarService.getWebinarCount();
+      const guidesAndBooks =
+        await this.adminGuidesAndBooksService.getGuidesAndBooksCount();
 
-      return { meditations, vebinars: 0, 'guides-and-books': 0, gifts: 0 };
+      return {
+        meditations,
+        webinars,
+        'guides-and-books': guidesAndBooks,
+        gifts: 0,
+      };
     } catch (error) {
       throw new BadRequestException('Something wrong');
     }

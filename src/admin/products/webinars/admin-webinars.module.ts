@@ -16,5 +16,6 @@ import { DiscountModule } from '../discount/discount.module';
   ],
   controllers: [AdminWebinarsController],
   providers: [AdminWebinarsService],
+  exports: [AdminWebinarsService],
 })
 export class AdminWebinarsModule {}
