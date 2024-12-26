@@ -26,7 +26,7 @@ export class AdminGuidesAndBooksService {
         toDelete: false,
       });
     } catch (error) {
-      throw new NotFoundException('Вебінари не знайдено');
+      throw new NotFoundException('Гайди не знайдено');
     }
   }
 
@@ -87,7 +87,7 @@ export class AdminGuidesAndBooksService {
         ])
         .exec();
     } catch (error) {
-      throw new NotFoundException('Вебінари не знайдено');
+      throw new NotFoundException('Гайди не знайдено');
     }
   }
 
@@ -157,7 +157,7 @@ export class AdminGuidesAndBooksService {
       }
       return response[0];
     } catch (error) {
-      throw new NotFoundException(`Вебінар ${guidesAndBooksId} не знайдено`);
+      throw new NotFoundException(`Гайди ${guidesAndBooksId} не знайдено`);
     }
   }
 
