@@ -14,14 +14,19 @@ export const newMeditationSchema = Joi.object()
       }),
     name: Joi.object()
       .keys({
-        ru: Joi.string().optional().messages({
+        ru: Joi.string().required().messages({
           'string.base': 'ru має бути рядком',
+          'any.required': "ru є обов'язковим полем",
         }),
-        uk: Joi.string().optional().messages({
+        uk: Joi.string().required().messages({
           'string.base': 'uk має бути рядком',
+          'any.required': "uk є обов'язковим полем",
         }),
       })
-      .optional()
+      .required()
+      .messages({
+        'any.required': "name є обов'язковим полем",
+      })
       .unknown(false),
     isWaiting: Joi.bool().optional().messages({
       'bool.base': 'isWaiting має бути рядком',
