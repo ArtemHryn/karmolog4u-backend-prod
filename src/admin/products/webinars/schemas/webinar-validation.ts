@@ -60,8 +60,9 @@ export const newWebinarSchema = Joi.object()
     isWaiting: Joi.bool().optional().messages({
       'bool.base': 'isWaiting має бути рядком',
     }),
-    video: Joi.string().optional().messages({
+    video: Joi.string().required().messages({
       'string.base': 'video має бути рядком',
+      'any.required': "video є обов'язковим полем",
     }),
     cover: Joi.string().optional().messages({
       'string.base': 'cover має бути рядком',
