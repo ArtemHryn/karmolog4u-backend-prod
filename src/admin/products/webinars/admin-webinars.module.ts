@@ -10,12 +10,12 @@ import { DiscountModule } from '../discount/discount.module';
   imports: [
     MongooseModule.forFeature([
       { name: Webinar.name, schema: WebinarSchema },
-      { name: Discount.name, schema: DiscountSchema },
+      // { name: Discount.name, schema: DiscountSchema },
     ]),
     DiscountModule,
   ],
   controllers: [AdminWebinarsController],
   providers: [AdminWebinarsService],
-  exports: [AdminWebinarsService],
+  exports: [AdminWebinarsService, MongooseModule],
 })
 export class AdminWebinarsModule {}
