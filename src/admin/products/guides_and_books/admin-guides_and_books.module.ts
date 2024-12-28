@@ -13,12 +13,12 @@ import { DiscountModule } from '../discount/discount.module';
   imports: [
     MongooseModule.forFeature([
       { name: GuidesAndBooks.name, schema: GuidesAndBooksSchema },
-      { name: Discount.name, schema: DiscountSchema },
+      // { name: Discount.name, schema: DiscountSchema },
     ]),
     DiscountModule,
   ],
   controllers: [AdminGuidesAndBooksController],
   providers: [AdminGuidesAndBooksService],
-  exports: [AdminGuidesAndBooksService],
+  exports: [AdminGuidesAndBooksService, MongooseModule],
 })
 export class AdminGuidesAndBooksModule {}
