@@ -15,12 +15,12 @@ import { Discount, DiscountSchema } from '../discount/schemas/discount.schema';
   imports: [
     MongooseModule.forFeature([
       { name: Meditation.name, schema: MeditationSchema },
-      { name: Discount.name, schema: DiscountSchema },
+      // { name: Discount.name, schema: DiscountSchema },
     ]),
     DiscountModule,
   ],
   controllers: [AdminMeditationController],
   providers: [AdminMeditationService],
-  exports: [AdminMeditationService],
+  exports: [AdminMeditationService, MongooseModule],
 })
 export class AdminMeditationModule {}
