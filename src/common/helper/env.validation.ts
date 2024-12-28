@@ -17,11 +17,11 @@ class EnvironmentVariables {
   @IsEnum(Environment)
   NODE_ENV: Environment;
 
-  @IsString()
-  DATABASE_HOST: string;
+  // @IsString()
+  // DATABASE_HOST: string;
 
-  @IsString()
-  DATABASE_NAME: string;
+  // @IsString()
+  // DATABASE_NAME: string;
 
   @IsString()
   MONGO_URL: string;
