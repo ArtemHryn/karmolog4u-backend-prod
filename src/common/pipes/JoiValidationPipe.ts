@@ -4,11 +4,11 @@ import {
   ArgumentMetadata,
   BadRequestException,
 } from '@nestjs/common';
-import { ObjectSchema } from 'joi';
+import { Schema } from 'joi';
 
 @Injectable()
 export class JoiValidationPipe implements PipeTransform {
-  constructor(private schema: ObjectSchema) {}
+  constructor(private schema: Schema) {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   transform(value: any, metadata: ArgumentMetadata) {
