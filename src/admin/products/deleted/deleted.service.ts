@@ -111,22 +111,23 @@ export class DeletedService {
               },
             ]
           : []),
-        // Pagination: Skip and limit
-        { $skip: skip },
-        { $limit: limit },
-        // Optionally add a $count stage for total results (if required)
         {
           $facet: {
-            data: [], // Aggregated data
-            total: [{ $count: 'count' }], // Count of total results
+            paginatedData: [
+              { $skip: skip }, // Apply skip for pagination
+              { $limit: limit }, // Apply limit for pagination
+            ],
+            totalCount: [
+              { $count: 'count' }, // Count the total number of documents
+            ],
           },
         },
         {
           $project: {
-            data: 1,
-            total: { $arrayElemAt: ['$total.count', 0] },
-            page: { $literal: page },
-            limit: { $literal: limit },
+            data: '$paginatedData', // Paginated data
+            totalProducts: {
+              $arrayElemAt: ['$totalCount.count', 0], // Total count of products
+            },
           },
         },
       ]);
