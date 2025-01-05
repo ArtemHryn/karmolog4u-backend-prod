@@ -66,21 +66,18 @@ export class PromoCodeService {
       const response = await this.promoCodeModel
         .aggregate([
           {
-            $match: { _id: id }, // Знаходимо користувача за _id
+            $match: { _id: id }, // Знаходимо промокод за _id
           },
           {
             $lookup: {
-              from: 'discounts', // Назва другої колекції
-              localField: 'refId', // Поле в першій колекції
-              foreignField: 'refId', // Поле у другій колекції
-              as: 'discount', // Ім'я поля для результату
+              from: 'discounts', // Назва колекції зі знижками
+              localField: 'refId', // Поле для зв’язку
+              foreignField: 'refId',
+              as: 'discount',
               pipeline: [
                 {
                   $project: {
-                    // Вибір конкретних полів
-                    _id: 0, // Виключити _id
-                    start: 0, // Залишити поле product
-                    expiredAt: 0, // Залишити поле price
+                    _id: 0,
                     discount: 1,
                   },
                 },
@@ -91,7 +88,7 @@ export class PromoCodeService {
             $addFields: {
               discount: {
                 $cond: {
-                  if: { $gt: [{ $size: '$discount' }, 0] }, // Якщо масив не порожній
+                  if: { $gt: [{ $size: '$discount' }, 0] },
                   then: { $arrayElemAt: ['$discount', 0] },
                   else: null,
                 },
@@ -100,11 +97,14 @@ export class PromoCodeService {
           },
           {
             $project: {
+              name: 1,
+              start: 1,
+              end: 1,
               discount: {
                 $cond: {
-                  if: { $ne: ['$discount', null] }, // Якщо discount не дорівнює null
-                  then: '$discount', // Залишити поле
-                  else: '$$REMOVE', // Виключити поле з результату
+                  if: { $ne: ['$discount', null] },
+                  then: '$discount',
+                  else: '$$REMOVE',
                 },
               },
             },
@@ -130,17 +130,14 @@ export class PromoCodeService {
         .aggregate([
           {
             $lookup: {
-              from: 'discounts', // Назва другої колекції
-              localField: 'refId', // Поле в першій колекції
-              foreignField: 'refId', // Поле у другій колекції
-              as: 'discount', // Ім'я поля для результату
+              from: 'discounts',
+              localField: 'refId',
+              foreignField: 'refId',
+              as: 'discount',
               pipeline: [
                 {
                   $project: {
-                    // Вибір конкретних полів
-                    _id: 0, // Виключити _id
-                    start: 0, // Залишити поле product
-                    expiredAt: 0, // Залишити поле price
+                    _id: 0,
                     discount: 1,
                   },
                 },
@@ -149,13 +146,7 @@ export class PromoCodeService {
           },
           {
             $addFields: {
-              discount: {
-                $cond: {
-                  if: { $gt: [{ $size: '$discount' }, 0] }, // Якщо масив не порожній
-                  then: { $arrayElemAt: ['$discount', 0] },
-                  else: null,
-                },
-              },
+              discount: { $first: '$discount' },
             },
           },
           {
@@ -168,49 +159,36 @@ export class PromoCodeService {
               end: 1,
               blocked: 1,
               promoDiscount: 1,
-              discount: {
-                $cond: {
-                  if: { $ne: ['$discount', null] }, // Якщо discount не дорівнює null
-                  then: '$discount', // Залишити поле
-                  else: '$$REMOVE', // Виключити поле з результату
-                },
-              },
+              discount: { $ifNull: ['$discount', '$$REMOVE'] },
             },
           },
-
-          ...(searchQuery
+          ...(searchQuery?.trim()
             ? [
                 {
                   $match: {
-                    $or: [
-                      { name: { $regex: searchQuery, $options: 'i' } }, // Пошук в "name.ru"
-                    ],
+                    $or: [{ name: { $regex: searchQuery, $options: 'i' } }],
                   },
                 },
               ]
             : []),
           {
             $facet: {
-              paginatedData: [
-                { $skip: skip }, // Apply skip for pagination
-                { $limit: limit }, // Apply limit for pagination
-              ],
-              totalCount: [
-                { $count: 'count' }, // Count the total number of documents
-              ],
+              paginatedData: [{ $skip: skip }, { $limit: limit }],
+              totalCount: [{ $count: 'count' }],
             },
           },
           {
             $project: {
-              data: '$paginatedData', // Paginated data
-              totalProducts: {
-                $arrayElemAt: ['$totalCount.count', 0], // Total count of products
+              data: '$paginatedData',
+              totalPromo: {
+                $ifNull: [{ $arrayElemAt: ['$totalCount.count', 0] }, 0],
               },
             },
           },
         ])
         .exec();
-      return response;
+
+      return response[0];
     } catch (error) {
       throw new BadRequestException(error._message + ', Mongo DB');
     }
