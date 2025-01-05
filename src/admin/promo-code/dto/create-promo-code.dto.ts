@@ -22,7 +22,7 @@ export class CreatePromoCodeDto {
     type: Date,
     description: 'Start date of the promo code',
     example: '2024-12-23T19:40:37.539+00:00',
-    required: false,
+    required: true,
   })
   start: Date;
 

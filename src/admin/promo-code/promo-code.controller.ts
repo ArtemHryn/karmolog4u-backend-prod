@@ -29,12 +29,10 @@ import {
 } from './schemas/promo-code-validation';
 import mongoose from 'mongoose';
 import { EditPromoCodeDto } from './dto/edit-promo-code.dto';
-import { Public } from 'src/common/decorators/isPublic.decorator';
 
-// @ApiBearerAuth()
+@ApiBearerAuth()
 @ApiTags('admin-promo-code')
-// @Roles(Role.Admin)
-@Public()
+@Roles(Role.Admin)
 @Controller('admin/promo-code')
 export class PromoCodeController {
   constructor(private promoCodeService: PromoCodeService) {}

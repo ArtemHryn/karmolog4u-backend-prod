@@ -6,16 +6,16 @@ export const createPromoCodeSchema = Joi.object()
       'string.base': 'name має бути рядком',
       'any.required': "name є обов'язковим полем",
     }),
-    discount: Joi.number().required().messages({
-      'number.base': 'discount має бути числом',
-      'any.required': 'start є обов’язковим',
+    promoDiscount: Joi.number().required().messages({
+      'number.base': 'promoDiscount має бути числом',
+      'any.required': 'promoDiscount є обов’язковим',
     }),
     start: Joi.date().required().messages({
       'date.base': 'start має бути валідною датою',
       'any.required': 'start є обов’язковим',
     }),
-    end: Joi.date().required().messages({
-      'date.base': 'start має бути валідною датою',
+    end: Joi.date().required().min(Joi.ref('start')).messages({
+      'date.min': 'end не може бути раніше за start',
       'any.required': 'start є обов’язковим',
     }),
     productName: Joi.string().required().messages({
@@ -39,16 +39,16 @@ export const editPromoCodeSchema = Joi.object()
       'string.base': 'name має бути рядком',
       'any.required': "name є обов'язковим полем",
     }),
-    discount: Joi.number().required().messages({
-      'number.base': 'discount має бути числом',
-      'any.required': 'start є обов’язковим',
+    promoDiscount: Joi.number().required().messages({
+      'number.base': 'promoDiscount має бути числом',
+      'any.required': 'promoDiscount є обов’язковим',
     }),
     start: Joi.date().required().messages({
       'date.base': 'start має бути валідною датою',
       'any.required': 'start є обов’язковим',
     }),
-    end: Joi.date().required().messages({
-      'date.base': 'start має бути валідною датою',
+    end: Joi.date().required().min(Joi.ref('start')).messages({
+      'date.min': 'end не може бути раніше за start',
       'any.required': 'start є обов’язковим',
     }),
     // blocked: Joi.boolean().required().messages({
