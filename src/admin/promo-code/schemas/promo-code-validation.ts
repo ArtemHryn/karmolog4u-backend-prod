@@ -51,10 +51,10 @@ export const editPromoCodeSchema = Joi.object()
       'date.min': 'end не може бути раніше за start',
       'any.required': 'start є обов’язковим',
     }),
-    // blocked: Joi.boolean().required().messages({
-    //   'boolean.base': 'blocked має бути boolean',
-    //   'any.required': "blocked є обов'язковим полем",
-    // }),
+    productName: Joi.string().required().messages({
+      'string.base': 'productName має бути рядком',
+      'any.required': 'productName є обов’язковим',
+    }),
     collectionName: Joi.string().required().messages({
       'string.base': 'collectionName має бути рядком',
       'any.required': 'collectionName є обов’язковим',
