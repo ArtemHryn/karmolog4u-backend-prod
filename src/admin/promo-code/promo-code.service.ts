@@ -159,6 +159,7 @@ export class PromoCodeService {
               end: 1,
               blocked: 1,
               promoDiscount: 1,
+              refId: 1,
               discount: { $ifNull: ['$discount', '$$REMOVE'] },
             },
           },
