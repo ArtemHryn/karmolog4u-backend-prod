@@ -17,11 +17,14 @@ export type UserDocument = HydratedDocument<User>;
   },
 })
 export class User {
-  @Prop({ type: String, required: [true, 'First name is required'] })
-  fullName: string;
+  @Prop({
+    type: String,
+    required: [true, 'name is required'],
+  })
+  name: string;
 
-  // @Prop({ type: String, required: [true, 'Last name is required'] })
-  // lastName: string;
+  @Prop({ type: String, required: [true, 'Last name is required'] })
+  lastName: string;
 
   @Prop({ type: String, required: [true, 'Phone is required'] })
   mobPhone: string;
