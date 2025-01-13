@@ -5,7 +5,13 @@ export class UserResponseDto {
   User's first name
   @example "John Johnson"
   */
-  fullName: string;
+  name: string;
+
+  /**
+  User's first name
+  @example "John Johnson"
+  */
+  lastName: string;
 
   /**
   User's email
