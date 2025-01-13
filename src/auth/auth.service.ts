@@ -41,7 +41,8 @@ export class AuthService {
     }
     const deviceId = uuidv4();
     const {
-      fullName,
+      name,
+      lastName,
       email,
       banned,
       role,
@@ -54,7 +55,8 @@ export class AuthService {
     } = user;
     const userData = {
       _id,
-      fullName,
+      name,
+      lastName,
       email,
       banned,
       role,
