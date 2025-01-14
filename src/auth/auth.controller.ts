@@ -5,11 +5,11 @@ import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   registerUserSchema,
   loginUserSchema,
-  refreshTokenSchema,
+  // refreshTokenSchema,
 } from './schemas/validation.schemas';
 import { AuthService } from './auth.service';
 import {
-  BadRequestException,
+  // BadRequestException,
   Body,
   Controller,
   Headers,
@@ -24,7 +24,7 @@ import {
 import { RegisterUserDto } from './dto/register-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { JoiValidationPipe } from 'src/common/pipes/JoiValidationPipe';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
+// import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { AuthGuard } from './auth.guard';
 import { Token } from 'src/common/decorators/token.decorator';
 import { User } from 'src/common/decorators/user.decorator';

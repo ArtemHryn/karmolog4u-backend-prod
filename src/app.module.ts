@@ -17,7 +17,7 @@ import { validate } from './common/helper/env.validation';
 import { LoggerMiddleware } from './common/middleware/logger.middlvare';
 // import { AdminProductModule } from './admin/products/admin-product.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import * as path from 'path';
+// import * as path from 'path';
 import { AdminModule } from './admin/admin.module';
 
 const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
@@ -34,7 +34,6 @@ const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
     }),
     ServeStaticModule.forRoot({
       rootPath: 'covers',
-      // rootPath: path.join(__dirname, '..', 'covers'), // Path to your static files
       serveRoot: '/covers', // Optional: URL prefix for accessing the files
     }),
     DiscountModule,

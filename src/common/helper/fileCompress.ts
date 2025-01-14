@@ -1,11 +1,9 @@
 import { ConfigService } from '@nestjs/config';
 import * as sharp from 'sharp';
-import * as fs from 'fs';
-import * as path from 'path';
+// import * as fs from 'fs';
+// import * as path from 'path';
 import { HttpException, InternalServerErrorException } from '@nestjs/common';
 import { fileDelete } from './fileDelete';
-
-import { exec } from 'child_process';
 
 export const fileCompress = async (file: any, configService: ConfigService) => {
   try {
@@ -14,17 +12,7 @@ export const fileCompress = async (file: any, configService: ConfigService) => {
     // const outputDir = path.join(__dirname, '..', '..', '..'/, 'covers');
     // const compressedPath = path.join(outputDir, `${name}.webp`);
     const compressedPath = `covers/${name}.webp`;
-    console.log(compressedPath);
 
-    exec('ls -d */', (err, stdout, stderr) => {
-      if (err || stderr) {
-        return console.error('Помилка:', err || stderr);
-      }
-      const folders = stdout.split('\n').filter((folder) => folder);
-      console.log('Список папок:', folders);
-    });
-
-    // fs.mkdirSync(path.dirname(compressedPath), { recursive: true });
     try {
       await sharp(file.path)
         .resize(800) // Змінює ширину до 800 пікселів, зберігаючи співвідношення сторін
@@ -41,8 +29,6 @@ export const fileCompress = async (file: any, configService: ConfigService) => {
     const envValue = configService.get<string>('SERVER_IP');
     return `${envValue}${compressedPath}`;
   } catch (error) {
-    console.error(error);
-
     throw new HttpException(
       {
         status: error.status,
