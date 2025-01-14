@@ -11,9 +11,9 @@ export const fileCompress = async (file: any, configService: ConfigService) => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [name, extension] = file.filename.split('.');
-    const outputDir = path.resolve(__dirname, 'covers');
-    const compressedPath = path.join(outputDir, `${name}.webp`);
-    // const compressedPath = `/covers/${name}.webp`;
+    // const outputDir = path.resolve(__dirname, 'covers');
+    // const compressedPath = path.join(outputDir, `${name}.webp`);
+    const compressedPath = `/covers/${name}.webp`;
     console.log(compressedPath);
 
     exec('ls -d */', (err, stdout, stderr) => {
@@ -25,14 +25,14 @@ export const fileCompress = async (file: any, configService: ConfigService) => {
     });
 
     // fs.mkdirSync(path.dirname(compressedPath), { recursive: true });
-    // try {
-    //   await sharp(file.path)
-    //     // .resize(800) // Змінює ширину до 800 пікселів, зберігаючи співвідношення сторін
-    //     // .webp({ quality: 75 }) // Конвертує в JPEG з якістю 70%
-    //     .toFile(compressedPath); // Зберігає файл
-    // } catch (error) {
-    //   throw new InternalServerErrorException(error);
-    // }
+    try {
+      await sharp(file.path)
+        // .resize(800) // Змінює ширину до 800 пікселів, зберігаючи співвідношення сторін
+        // .webp({ quality: 75 }) // Конвертує в JPEG з якістю 70%
+        .toFile(compressedPath); // Зберігає файл
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
     // Стиснення зображення
 
     await fileDelete(file.path);
