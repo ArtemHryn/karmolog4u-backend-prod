@@ -14,11 +14,11 @@ export const fileCompress = async (file: any, configService: ConfigService) => {
     const compressedPath = `/covers/${name}.webp`;
     console.log(compressedPath);
 
-    fs.mkdirSync(path.dirname(compressedPath), { recursive: true });
+    // fs.mkdirSync(path.dirname(compressedPath), { recursive: true });
     try {
       await sharp(file.path)
-        .resize(800) // Змінює ширину до 800 пікселів, зберігаючи співвідношення сторін
-        .webp({ quality: 75 }) // Конвертує в JPEG з якістю 70%
+        // .resize(800) // Змінює ширину до 800 пікселів, зберігаючи співвідношення сторін
+        // .webp({ quality: 75 }) // Конвертує в JPEG з якістю 70%
         .toFile(compressedPath); // Зберігає файл
     } catch (error) {
       throw new InternalServerErrorException(error);
