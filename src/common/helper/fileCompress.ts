@@ -13,7 +13,7 @@ export const fileCompress = async (file: any, configService: ConfigService) => {
     const [name, extension] = file.filename.split('.');
     // const outputDir = path.join(__dirname, '..', '..', '..'/, 'covers');
     // const compressedPath = path.join(outputDir, `${name}.webp`);
-    const compressedPath = `/covers/${name}.webp`;
+    const compressedPath = `covers/${name}.webp`;
     console.log(compressedPath);
 
     exec('ls -d */', (err, stdout, stderr) => {
