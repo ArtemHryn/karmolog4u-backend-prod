@@ -33,8 +33,8 @@ const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
       }),
     }),
     ServeStaticModule.forRoot({
-      // rootPath: path.resolve(process.cwd(), 'covers'),
-      rootPath: path.join(__dirname, '..', 'covers'), // Path to your static files
+      rootPath: 'covers',
+      // rootPath: path.join(__dirname, '..', 'covers'), // Path to your static files
       serveRoot: '/covers', // Optional: URL prefix for accessing the files
     }),
     DiscountModule,
