@@ -14,6 +14,21 @@ export const fileCompress = async (file: any, configService: ConfigService) => {
     const compressedPath = `/covers/${name}.webp`;
     console.log(compressedPath);
 
+    const rootDir = path.resolve(__dirname, '..'); // '..' для підняття на рівень вище, якщо потрібно
+
+    fs.readdir(rootDir, { withFileTypes: true }, (err, files) => {
+      if (err) {
+        return console.error('Помилка при читанні директорії:', err);
+      }
+
+      // Фільтруємо тільки папки
+      const folders = files
+        .filter((file) => file.isDirectory())
+        .map((folder) => folder.name);
+
+      console.log('Список папок:', folders);
+    });
+
     // fs.mkdirSync(path.dirname(compressedPath), { recursive: true });
     try {
       await sharp(file.path)
