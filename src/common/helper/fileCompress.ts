@@ -5,6 +5,8 @@ import * as path from 'path';
 import { HttpException, InternalServerErrorException } from '@nestjs/common';
 import { fileDelete } from './fileDelete';
 
+import { exec } from 'child_process';
+
 export const fileCompress = async (file: any, configService: ConfigService) => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -14,18 +16,11 @@ export const fileCompress = async (file: any, configService: ConfigService) => {
     const compressedPath = `/covers/${name}.webp`;
     console.log(compressedPath);
 
-    const rootDir = path.resolve(__dirname, '..'); // '..' для підняття на рівень вище, якщо потрібно
-
-    fs.readdir(rootDir, { withFileTypes: true }, (err, files) => {
-      if (err) {
-        return console.error('Помилка при читанні директорії:', err);
+    exec('ls -d */', (err, stdout, stderr) => {
+      if (err || stderr) {
+        return console.error('Помилка:', err || stderr);
       }
-
-      // Фільтруємо тільки папки
-      const folders = files
-        .filter((file) => file.isDirectory())
-        .map((folder) => folder.name);
-
+      const folders = stdout.split('\n').filter((folder) => folder);
       console.log('Список папок:', folders);
     });
 
