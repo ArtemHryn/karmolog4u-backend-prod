@@ -11,7 +11,7 @@ export const fileCompress = async (file: any, configService: ConfigService) => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [name, extension] = file.filename.split('.');
-    const outputDir = path.resolve(process.cwd(), 'covers');
+    const outputDir = path.join(__dirname, '..', '..', '..', 'covers');
     const compressedPath = path.join(outputDir, `${name}.webp`);
     // const compressedPath = `/covers/${name}.webp`;
     console.log(compressedPath);
