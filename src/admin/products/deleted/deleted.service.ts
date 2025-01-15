@@ -13,6 +13,7 @@ import { GetAllResponseDto } from './dto/get-all.dto';
 import { RestoreDto } from './dto/restore.dto';
 import { ResponseSuccessDto } from 'src/common/dto/response-success.dto';
 import { DeleteForeverDto } from './dto/delete-forever.dto';
+import { PromoCodeService } from 'src/admin/promo-code/promo-code.service';
 
 @Injectable()
 export class DeletedService {
@@ -22,6 +23,7 @@ export class DeletedService {
     @InjectModel(Discount.name) private discountModel: Model<Discount>,
     @InjectModel(GuidesAndBooks.name)
     private guidesAndBooksModel: Model<GuidesAndBooks>,
+    private promoCodeService: PromoCodeService,
     @InjectConnection() private readonly connection: Connection,
   ) {}
   async getAll(
@@ -220,6 +222,7 @@ export class DeletedService {
             $set: { toDelete: false },
           },
         );
+        await this.promoCodeService.deleteByRefIdPromoCodes(webinars);
       }
       if (meditation.length !== 0) {
         await this.meditationModel.deleteMany(
@@ -228,6 +231,7 @@ export class DeletedService {
             $set: { toDelete: false },
           },
         );
+        await this.promoCodeService.deleteByRefIdPromoCodes(meditation);
       }
       if (guidesAndBooks.length !== 0) {
         await this.guidesAndBooksModel.deleteMany(
@@ -236,6 +240,7 @@ export class DeletedService {
             $set: { toDelete: false },
           },
         );
+        await this.promoCodeService.deleteByRefIdPromoCodes(guidesAndBooks);
       }
       return { message: 'success' };
     } catch (error) {
