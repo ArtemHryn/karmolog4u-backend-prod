@@ -25,6 +25,7 @@ import { ResponseSuccessDto } from 'src/common/dto/response-success.dto';
 import { JoiValidationPipe } from 'src/common/pipes/JoiValidationPipe';
 import {
   createPromoCodeSchema,
+  DeletePromoCodesValidationSchema,
   editPromoCodeSchema,
 } from './schemas/promo-code-validation';
 import mongoose from 'mongoose';
@@ -113,19 +114,29 @@ export class PromoCodeController {
 
   @Delete('delete/:id')
   @ApiOperation({
-    summary: 'Admin Delete PromoCode',
+    summary: 'Admin Delete PromoCodes',
     description: 'Access restricted to admins',
   })
+  @ApiBody({
+    // description: 'Upload a file with additional fields',
+    type: [String],
+    isArray: true,
+  })
   @ApiResponse({
-    status: 201,
+    status: 200,
     description: 'Успішно',
     type: ResponseSuccessDto,
   })
-  @ApiResponse({ status: 400, description: 'Конфлікт створення промокоду' })
-  async deletePromoCode(@Param('id') id: string) {
+  @ApiResponse({ status: 400, description: 'Конфлікт видалення промокодів' })
+  async deletePromoCodes(
+    @Body(new JoiValidationPipe(DeletePromoCodesValidationSchema))
+    data: string[],
+  ): Promise<ResponseSuccessDto> {
     try {
-      const promoCodeId = new mongoose.Types.ObjectId(id.toString());
-      return await this.promoCodeService.deletePromoCode(promoCodeId);
+      const promoCodeIDs = data.map(
+        (id) => new mongoose.Types.ObjectId(id.toString()),
+      );
+      return await this.promoCodeService.deletePromoCodes(promoCodeIDs);
     } catch (error) {
       throw new HttpException(
         {
