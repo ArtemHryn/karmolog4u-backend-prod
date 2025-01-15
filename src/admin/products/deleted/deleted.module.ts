@@ -6,6 +6,7 @@ import { AdminWebinarsModule } from '../webinars/admin-webinars.module';
 import { DeletedController } from './deleted.controller';
 
 import { Module } from '@nestjs/common';
+import { PromoCodeModule } from 'src/admin/promo-code/promo-code.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { Module } from '@nestjs/common';
     DiscountModule,
     AdminWebinarsModule,
     AdminGuidesAndBooksModule,
+    PromoCodeModule,
   ],
   controllers: [DeletedController],
   providers: [DeletedService],
