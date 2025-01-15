@@ -112,7 +112,7 @@ export class PromoCodeController {
     }
   }
 
-  @Delete('delete/:id')
+  @Delete('delete')
   @ApiOperation({
     summary: 'Admin Delete PromoCodes',
     description: 'Access restricted to admins',
@@ -120,7 +120,7 @@ export class PromoCodeController {
   @ApiBody({
     // description: 'Upload a file with additional fields',
     type: [String],
-    isArray: true,
+    // isArray: true,
   })
   @ApiResponse({
     status: 200,
