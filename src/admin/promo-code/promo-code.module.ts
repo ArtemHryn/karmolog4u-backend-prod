@@ -22,5 +22,6 @@ import { AdminGuidesAndBooksModule } from '../products/guides_and_books/admin-gu
   ],
   controllers: [PromoCodeController],
   providers: [PromoCodeService],
+  exports: [PromoCodeService, MongooseModule],
 })
 export class PromoCodeModule {}
