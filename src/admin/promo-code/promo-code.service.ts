@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { PromoCode } from './schemas/promo-code.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { CreatePromoCodeDto } from './dto/create-promo-code.dto';
 import { ResponseSuccessDto } from 'src/common/dto/response-success.dto';
 import { EditPromoCodeDto } from './dto/edit-promo-code.dto';
@@ -53,14 +53,27 @@ export class PromoCodeService {
       throw new BadRequestException(error._message + ', Mongo DB');
     }
   }
-  async deletePromoCode(id: IdDto): Promise<ResponseSuccessDto> {
+
+  async deletePromoCodes(ids: Types.ObjectId[]): Promise<ResponseSuccessDto> {
     try {
-      await this.promoCodeModel.findByIdAndDelete(id);
+      await this.promoCodeModel.deleteMany({ _id: { $in: ids } });
       return { message: 'success' };
     } catch (error) {
       throw new BadRequestException(error._message + ', Mongo DB');
     }
   }
+
+  async deleteByRefIdPromoCodes(
+    ids: Types.ObjectId[],
+  ): Promise<ResponseSuccessDto> {
+    try {
+      await this.promoCodeModel.deleteMany({ refId: { $in: ids } });
+      return { message: 'success' };
+    } catch (error) {
+      throw new BadRequestException(error._message + ', Mongo DB');
+    }
+  }
+
   async findPromoCodeById(id: IdDto): Promise<any> {
     try {
       const response = await this.promoCodeModel
