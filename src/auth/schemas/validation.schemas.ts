@@ -22,3 +22,9 @@ export const registerUserSchema = Joi.object()
     password: Joi.string().min(8).max(20).required(),
   })
   .unknown(false);
+
+export const resetPasswordSchema = Joi.object()
+  .keys({
+    email: Joi.string().email().required(),
+  })
+  .unknown(false);

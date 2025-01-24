@@ -38,23 +38,17 @@ export class User {
   @Prop({ type: Array, enum: ['ADMIN', 'USER'], default: 'USER' })
   role: Role[];
 
-  // @Prop({ type: String, default: '' })
-  // avatarUrl: string;
-
-  // @Prop({ type: Array, default: [] })
-  // supplies: [];
-
   @Prop({ type: Boolean, default: false })
   banned: boolean;
 
   @Prop({ type: Boolean, default: false })
   toDelete: boolean;
 
-  @Prop({ type: String })
-  createdAt: string;
+  @Prop({ type: Boolean, default: false })
+  verified: boolean;
 
-  @Prop({ type: String })
-  updatedAt: string;
+  @Prop({ type: Date, default: null })
+  lastLogin: Date;
 
   @Prop({ type: Date, default: null })
   expiredAt: Date;

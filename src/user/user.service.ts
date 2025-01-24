@@ -1,4 +1,3 @@
-import { ResponseSuccessDto } from './dto/response-success.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserIdDto } from './dto/user-id.dto';
@@ -27,7 +26,7 @@ export class UserService {
   }
 
   async findUserByEmail(userData: FindUserByEmailDto): Promise<UserEntity> {
-    const user = await this.userModel.findOne({ ...userData });
+    const user = await this.userModel.findOne({ ...userData }).exec();
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -42,13 +41,13 @@ export class UserService {
     return users;
   }
 
-  async newUser(userData: NewUserDto): Promise<ResponseSuccessDto> {
+  async newUser(userData: NewUserDto) {
     const user = new this.userModel(userData);
     await user.save();
     if (!user) {
       throw new BadRequestException('User conflict');
     }
-    return { message: 'success' };
+    return user;
   }
 
   async updateUser(
@@ -66,5 +65,20 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
     return user;
+  }
+
+  async updateUserPassword(_id: UserIdDto, password: string) {
+    try {
+      const user = await this.userModel.findByIdAndUpdate(
+        _id,
+        {
+          $set: { password },
+        },
+        { new: true, projection: { _id: 0 } },
+      );
+      return user;
+    } catch (error) {
+      throw new NotFoundException('User not found');
+    }
   }
 }

@@ -68,18 +68,32 @@ export class FindAllUserDto {
   */
   toDelete: boolean;
 
-  /**
-  Indicates when user is created
-  @example true
-  */
-  createdAt: string;
+  // /**
+  // Indicates when user is created
+  // @example true
+  // */
+  // createdAt: string;
+
+  // /**
+  // Indicates when user is updated
+  // @example true
+  // */
+  // updatedAt: string;
+
+  // /**
+  // Indicates if the user is banned
+  // @example 'created date'
+  // */
+  // // createdAt: string;
+  // verified: boolean;
 
   /**
-  Indicates when user is updated
-  @example true
+  Indicates if the user is banned
+  @example 'updated date'
   */
-  updatedAt: string;
+  // updatedAt: string;
 
+  lastLogin: Date;
   /**
   Indicates when user is deleted
   @example true

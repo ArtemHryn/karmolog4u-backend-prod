@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { AdminUserModule } from './user/admin-user.module';
 import { AdminProductModule } from './products/admin-product.module';
 import { PromoCodeModule } from './promo-code/promo-code.module';
+import { UserModule } from './user/user.module';
 
 @Module({
-  imports: [AdminUserModule, AdminProductModule, PromoCodeModule],
+  imports: [UserModule, AdminProductModule, PromoCodeModule],
   controllers: [],
   providers: [],
 })
