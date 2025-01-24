@@ -264,10 +264,9 @@ export class UserController {
   })
   @ApiResponse({ status: 400, description: 'Щось пішло не так(' })
   @ApiParam({ name: 'id', type: String })
-  @UsePipes(new JoiValidationPipe(UpdateAdminUserSchema))
   async updateUser(
     @Param('id') id: string,
-    @Body() data: UpdateUserDto,
+    @Body(new JoiValidationPipe(UpdateAdminUserSchema)) data: UpdateUserDto,
   ): Promise<ResponseSuccessDto> {
     try {
       return await this.userService.updateUser(id, data);
