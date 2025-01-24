@@ -6,13 +6,13 @@ export class GetQueryDto {
   //name , email
 
   @ApiPropertyOptional({ description: 'pages ', type: String })
-  page?: 1;
+  page?: number;
 
   @ApiPropertyOptional({
     description: 'Limit the number of results ',
     type: String,
   })
-  limit?: 10;
+  limit?: number;
 
   @ApiPropertyOptional({
     description: 'filter by education ',
