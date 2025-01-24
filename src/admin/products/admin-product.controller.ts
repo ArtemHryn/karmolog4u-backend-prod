@@ -10,6 +10,7 @@ import { AdminGuidesAndBooksService } from './guides_and_books/admin-guides_and_
 import { AdminWebinarsService } from './webinars/admin-webinars.service';
 import { Roles } from 'src/role/roles.decorator';
 import { Role } from 'src/role/role.enum';
+import { GiftService } from './gift/gift.service';
 
 @ApiBearerAuth()
 @ApiTags('product')
@@ -20,6 +21,7 @@ export class AdminProductController {
     private adminMeditationService: AdminMeditationService,
     private adminWebinarService: AdminWebinarsService,
     private adminGuidesAndBooksService: AdminGuidesAndBooksService,
+    private giftService: GiftService,
   ) {}
 
   @Get('product-count')
@@ -37,12 +39,12 @@ export class AdminProductController {
       const webinars = await this.adminWebinarService.getWebinarCount();
       const guidesAndBooks =
         await this.adminGuidesAndBooksService.getGuidesAndBooksCount();
-
+      const gifts = await this.giftService.getGiftsCount();
       return {
         meditations,
         webinars,
         'guides-and-books': guidesAndBooks,
-        gifts: 0,
+        gifts,
       };
     } catch (error) {
       throw new BadRequestException('Something wrong');
