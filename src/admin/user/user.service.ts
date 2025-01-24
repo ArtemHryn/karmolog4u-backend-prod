@@ -32,7 +32,9 @@ export class UserService {
   ) {}
   async getAllUsers(query: GetQueryDto): Promise<GetAlUserDto[]> {
     try {
-      const skip = (query.page - 1) * query.limit;
+      const page = +query.page || 1;
+      const limit = +query.limit || 10;
+      const skip = (page - 1) * limit;
       return await this.userModel
         .aggregate([
           {
@@ -79,7 +81,7 @@ export class UserService {
             : []),
           {
             $facet: {
-              paginatedData: [{ $skip: skip }, { $limit: query.limit }],
+              paginatedData: [{ $skip: skip }, { $limit: limit }],
               totalCount: [{ $count: 'count' }],
             },
           },
@@ -247,11 +249,11 @@ export class UserService {
 
   async exportAllUser(res: Response) {
     try {
-      const users = await this.userModel.find({
-        password: 0,
-        toDelete: 0,
-        expiredAt: 0,
-      });
+      const users = await this.userModel.find(
+        {},
+        { password: 0, toDelete: 0, expiredAt: 0 },
+      );
+
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet('Users');
 
@@ -286,11 +288,11 @@ export class UserService {
   async exportUsersByEducation(id: string, res: Response) {
     try {
       //todo find users in education
-      const users = await this.userModel.find({
-        password: 0,
-        toDelete: 0,
-        expiredAt: 0,
-      });
+      const users = await this.userModel.find(
+        {},
+        { password: 0, toDelete: 0, expiredAt: 0 },
+      );
+
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet('Users');
 
