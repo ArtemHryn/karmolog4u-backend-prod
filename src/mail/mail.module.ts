@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MailService } from './mail.service';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { MailService } from './mail.service';
         transport: {
           host: config.get<string>('MAIL_HOST'), // SMTP server
           port: config.get<number>('MAIL_PORT'), // SMTP port
+          secure: true, // upgrade later with STARTTLS
           auth: {
             user: config.get<string>('MAIL_USER'), // SMTP user
             pass: config.get<string>('MAIL_PASSWORD'), // SMTP password
@@ -22,7 +24,7 @@ import { MailService } from './mail.service';
           from: `"No Reply" <${config.get<string>('MAIL_FROM')}>`, // Default sender address
         },
         template: {
-          dir: '/src/common/mailTemplates', // Directory for templates
+          dir: join(process.cwd(), 'templates'),
           adapter: new HandlebarsAdapter(),
           options: { strict: true },
         },
