@@ -32,6 +32,7 @@ import { TokenResponseDto } from 'src/token/dto/token-response.dto';
 import { HeadersDataDto } from './dto/headers-data.dto';
 import { ResponseSuccessDto } from 'src/common/dto/response-success.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { UAParser } from 'ua-parser-js';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -86,11 +87,12 @@ export class AuthController {
   @UsePipes(new JoiValidationPipe(loginUserSchema))
   async login(
     @Body() loginUserDto: LoginUserDto,
-    @Headers('sec-ch-ua-platform') platform: any,
     @Headers('user-agent') userAgent: any,
     @Ip() ip: any,
   ): Promise<LoginResponseDto> {
     try {
+      const parser = new UAParser(userAgent);
+      const platform = parser.getOS().name || 'undefined';
       const headersData: HeadersDataDto = { platform, userAgent, ip };
       const login = await this.authService.singIn(loginUserDto, headersData);
       return login;
