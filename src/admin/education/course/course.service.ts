@@ -16,7 +16,7 @@ export class CourseService {
     private readonly contractService: ContractService,
   ) {}
 
-  async createCourse(data: any) {
+  async createCourse(data: CreateCourseDto) {
     try {
       const { contract, ...course } = data;
       const contractID = await this.contractService.createContract(contract);

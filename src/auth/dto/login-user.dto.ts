@@ -4,7 +4,7 @@ export class LoginUserDto {
   @ApiProperty({
     type: String,
     description: 'User email',
-    example: 'ZALUPA@mail.com',
+    example: 'wled@mail.com',
     required: true,
   })
   email: string;
@@ -12,7 +12,7 @@ export class LoginUserDto {
   @ApiProperty({
     type: String,
     description: 'User password',
-    example: 'ZALUPA12345',
+    example: 'string12345',
     required: true,
   })
   password: string;

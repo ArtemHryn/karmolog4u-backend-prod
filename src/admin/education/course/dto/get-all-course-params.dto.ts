@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum } from 'class-validator';
 
-export class UpdateStatusCourseDto {
+export class GetAllCourseParams {
   @ApiProperty({
-    description: 'New status for the courses',
-    example: 'PUBLISHED',
+    description: 'Course status',
     enum: ['DRAFT', 'PUBLISHED', 'ARCHIVE'],
+    example: 'DRAFT',
   })
   @IsEnum(['DRAFT', 'PUBLISHED', 'ARCHIVE'])
   status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVE';

@@ -1,4 +1,13 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsArray,
+  IsNumber,
+  IsDate,
+} from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class Access {
   @ApiProperty({
@@ -6,100 +15,94 @@ export class Access {
     enum: ['PERMANENT', 'FOR_PERIOD', 'TO_DATE'],
     example: 'PERMANENT',
   })
+  @IsEnum(['PERMANENT', 'FOR_PERIOD', 'TO_DATE'])
   type: 'PERMANENT' | 'FOR_PERIOD' | 'TO_DATE';
 
-  @ApiProperty({
-    description: 'Access start date (if needed)',
+  @ApiPropertyOptional({
+    description: 'Access start date',
     example: '2025-06-01T00:00:00.000Z',
-    required: false,
   })
+  @IsOptional()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
   dateStart?: Date;
 
-  @ApiProperty({
-    description: 'Access end date (if needed)',
+  @ApiPropertyOptional({
+    description: 'Access end date',
     example: '2025-12-31T00:00:00.000Z',
-    required: false,
   })
+  @IsOptional()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
   dateEnd?: Date;
 }
 
 export class Point {
-  @ApiProperty({
-    description: 'Name of the point',
-    example: 'Early Access',
-  })
+  @ApiProperty({ description: 'Name of the point', example: 'Early Access' })
+  @IsString()
   name: string;
 
   @ApiProperty({
     description: 'Description of the point',
     example: 'You will get early access to materials.',
   })
+  @IsString()
   description: string;
 }
+
 export class Contract {
   @ApiProperty({
     description: 'Date of the contract',
     example: '2025-07-01T00:00:00.000Z',
   })
+  @IsDate()
   date: Date;
 
   @ApiProperty({
-    description: 'Sign up deadline date',
+    description: 'Sign-up deadline',
     example: '2025-06-30T00:00:00.000Z',
   })
+  @IsDate()
   signUpTo: Date;
 
-  @ApiProperty({
-    description: 'Optional price for the contract',
-    example: 299.99,
-    required: false,
-  })
+  @ApiPropertyOptional({ description: 'Optional price', example: 299.99 })
+  @IsOptional()
+  @IsNumber()
   price?: number;
 
   @ApiProperty({
-    description: 'Contract header or title',
+    description: 'Contract header',
     example: 'Special Summer Offer',
   })
+  @IsString()
   header: string;
 
-  @ApiProperty({
-    description: 'List of important points',
-    type: [Point],
-    example: [
-      {
-        name: 'Guarantee',
-        description: 'Full money-back guarantee within 30 days.',
-      },
-      { name: 'Support', description: '24/7 customer support.' },
-    ],
-  })
+  @ApiProperty({ description: 'List of contract points', type: [Point] })
+  @IsArray()
   points: Point[];
 }
 
 export class Literature {
-  @ApiProperty({
-    description: 'Author of the literature piece',
-    example: 'John Doe',
-  })
+  @ApiProperty({ description: 'Author', example: 'John Doe' })
+  @IsString()
   author: string;
 
   @ApiProperty({
-    description: 'Link to the literature resource',
+    description: 'Resource link',
     example: 'https://example.com/book',
   })
+  @IsString()
   link: string;
 }
 
 export class CreateCourseDto {
-  @ApiProperty({
-    example: 'Advanced JavaScript',
-    description: 'The name of the course',
-  })
+  @ApiProperty({ example: 'Advanced JavaScript', description: 'Course name' })
+  @IsString()
   name: string;
 
   @ApiProperty({
     example: 'SSK_WITH_CURATOR',
-    description: 'The type of course',
+    description: 'Course type',
     enum: [
       'SSK_INDEPENDENT',
       'SSK_WITH_CURATOR',
@@ -108,122 +111,101 @@ export class CreateCourseDto {
       'CONSULTING',
     ],
   })
+  @IsEnum([
+    'SSK_INDEPENDENT',
+    'SSK_WITH_CURATOR',
+    'SSK_WITH_SERGIY',
+    'ADVANCED',
+    'CONSULTING',
+  ])
   type: string;
 
   @ApiProperty({
     example: 'ALL',
-    description: 'Course completeness mode',
+    description: 'Completeness mode',
     enum: ['ALL', 'BY_LESSON'],
   })
+  @IsEnum(['ALL', 'BY_LESSON'])
   completeness: string;
 
-  @ApiProperty({
-    description: 'Access to course',
-    type: Access,
-    example: {
-      type: 'PERMANENT',
-      dateStart: '2025-03-10T17:20:14.504+00:00',
-      dateEnd: '2025-03-10T17:20:14.504+00:00',
-    },
-  })
+  @ApiProperty({ description: 'Access details', type: Access })
   access: Access;
 
-  @ApiProperty({
-    description: 'Contract details',
-    type: Contract,
-    example: {
-      date: '2025-07-01T00:00:00.000Z',
-      signUpTo: '2025-06-30T00:00:00.000Z',
-      price: 299.99,
-      header: 'Special Summer Offer',
-      points: [
-        {
-          name: 'Guarantee',
-          description: 'Full money-back guarantee within 30 days.',
-        },
-        {
-          name: 'Support',
-          description: '24/7 customer support available.',
-        },
-      ],
-    },
-  })
+  @ApiProperty({ description: 'Contract details', type: Contract })
   contract: Contract;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'https://chat.example.com',
-    description: 'Link to course chat',
-    required: false,
+    description: 'Chat link',
   })
+  @IsOptional()
+  @IsString()
   chat?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: ['https://example.com/file1.pdf'],
-    description: 'Additional course files',
-    required: false,
+    description: 'Additional files',
   })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
   additionalFiles?: string[];
 
-  @ApiProperty({
-    description: 'Optional links related to the course',
-    type: [String],
-    example: ['https://example.com/resource1', 'https://example.com/resource2'],
-    required: false,
+  @ApiPropertyOptional({
+    example: ['https://example.com/resource'],
+    description: 'Optional links',
   })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
   optionalLink?: string[];
 
-  @ApiProperty({
-    description: 'Optional file links related to the course',
-    type: [String],
-    example: ['https://example.com/file1.pdf', 'https://example.com/file2.pdf'],
-    required: false,
+  @ApiPropertyOptional({
+    example: ['https://example.com/file1.pdf'],
+    description: 'Optional files',
   })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
   optionalFiles?: string[];
 
-  @ApiProperty({
-    description: 'Link to the practice invoice',
-    type: String,
+  @ApiPropertyOptional({
     example: 'https://example.com/invoice',
+    description: 'Invoice link',
   })
-  practiceInvoice: string;
+  @IsOptional()
+  @IsString()
+  practiceInvoice?: string;
 
-  @ApiProperty({
-    description: 'Stream number of the course',
-    type: Number,
-    example: 1,
-  })
+  @ApiProperty({ example: 1, description: 'Stream number' })
+  @IsNumber()
   stream: number;
 
-  @ApiProperty({
-    description: 'Price of the course',
-    type: Number,
-    example: 199.99,
-  })
+  @ApiProperty({ example: 199.99, description: 'Course price' })
+  @IsNumber()
   price: number;
 
-  @ApiProperty({
-    description: 'List of recommended literature',
+  @ApiPropertyOptional({
+    description: 'Recommended literature',
     type: [Literature],
-    example: [
-      { author: 'John Doe', link: 'https://example.com/book' },
-      { author: 'Jane Smith', link: 'https://example.com/article' },
-    ],
-    required: false,
   })
+  @IsOptional()
+  @IsArray()
   literature?: Literature[];
 
-  @ApiProperty({
-    description: 'Cover image URL',
-    type: String,
+  @ApiPropertyOptional({
     example: 'https://example.com/cover.jpg',
-    required: false,
+    description: 'Cover image URL',
   })
+  @IsOptional()
+  @IsString()
   cover?: string;
 
   @ApiProperty({
-    description: 'Status of the course',
-    enum: ['DRAFT', 'published', 'ARCHIVE'],
+    description: 'Course status',
+    enum: ['DRAFT', 'PUBLISHED', 'ARCHIVE'],
     example: 'DRAFT',
   })
-  status: 'DRAFT' | 'published' | 'ARCHIVE';
+  @IsEnum(['DRAFT', 'PUBLISHED', 'ARCHIVE'])
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVE';
 }

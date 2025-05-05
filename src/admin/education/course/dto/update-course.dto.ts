@@ -1,4 +1,14 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsOptional,
+  IsString,
+  IsEnum,
+  IsArray,
+  IsNumber,
+  IsDate,
+  IsUrl,
+} from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class Access {
   @ApiPropertyOptional({
@@ -6,20 +16,26 @@ export class Access {
     enum: ['PERMANENT', 'FOR_PERIOD', 'TO_DATE'],
     example: 'PERMANENT',
   })
+  @IsOptional()
+  @IsEnum(['PERMANENT', 'FOR_PERIOD', 'TO_DATE'])
   type?: 'PERMANENT' | 'FOR_PERIOD' | 'TO_DATE';
 
   @ApiPropertyOptional({
-    description: 'Access start date (if needed)',
+    description: 'Access start date',
     example: '2025-06-01T00:00:00.000Z',
-    required: false,
   })
+  @IsOptional()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
   dateStart?: Date;
 
   @ApiPropertyOptional({
-    description: 'Access end date (if needed)',
+    description: 'Access end date',
     example: '2025-12-31T00:00:00.000Z',
-    required: false,
   })
+  @IsOptional()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
   dateEnd?: Date;
 }
 
@@ -28,78 +44,88 @@ export class Point {
     description: 'Name of the point',
     example: 'Early Access',
   })
+  @IsOptional()
+  @IsString()
   name?: string;
 
   @ApiPropertyOptional({
     description: 'Description of the point',
     example: 'You will get early access to materials.',
   })
+  @IsOptional()
+  @IsString()
   description?: string;
 }
+
 export class Contract {
   @ApiPropertyOptional({
     description: 'Date of the contract',
     example: '2025-07-01T00:00:00.000Z',
   })
+  @IsOptional()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
   date?: Date;
 
   @ApiPropertyOptional({
-    description: 'Sign up deadline date',
+    description: 'Sign-up deadline',
     example: '2025-06-30T00:00:00.000Z',
   })
+  @IsOptional()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
   signUpTo?: Date;
 
-  @ApiPropertyOptional({
-    description: 'Optional price for the contract',
-    example: 299.99,
-    required: false,
-  })
+  @ApiPropertyOptional({ description: 'Optional price', example: 299.99 })
+  @IsOptional()
+  @IsNumber()
+  @Transform(({ value }) => parseFloat(value))
   price?: number;
 
   @ApiPropertyOptional({
-    description: 'Contract header or title',
+    description: 'Contract header',
     example: 'Special Summer Offer',
   })
+  @IsOptional()
+  @IsString()
   header?: string;
 
   @ApiPropertyOptional({
-    description: 'List of important points',
+    description: 'List of contract points',
     type: [Point],
-    example: [
-      {
-        name: 'Guarantee',
-        description: 'Full money-back guarantee within 30 days.',
-      },
-      { name: 'Support', description: '24/7 customer support.' },
-    ],
   })
+  @IsOptional()
+  @IsArray()
   points?: Point[];
 }
 
 export class Literature {
-  @ApiPropertyOptional({
-    description: 'Author of the literature piece',
-    example: 'John Doe',
-  })
+  @ApiPropertyOptional({ description: 'Author', example: 'John Doe' })
+  @IsOptional()
+  @IsString()
   author?: string;
 
   @ApiPropertyOptional({
-    description: 'Link to the literature resource',
+    description: 'Resource link',
     example: 'https://example.com/book',
   })
+  @IsOptional()
+  @IsUrl()
   link?: string;
 }
 
 export class UpdateCourseDto {
   @ApiPropertyOptional({
     example: 'Advanced JavaScript',
-    description: 'The name of the course',
+    description: 'Course name',
   })
+  @IsOptional()
+  @IsString()
   name?: string;
 
   @ApiPropertyOptional({
     example: 'SSK_WITH_CURATOR',
-    description: 'The type of course',
+    description: 'Course type',
     enum: [
       'SSK_INDEPENDENT',
       'SSK_WITH_CURATOR',
@@ -108,122 +134,110 @@ export class UpdateCourseDto {
       'CONSULTING',
     ],
   })
+  @IsOptional()
+  @IsEnum([
+    'SSK_INDEPENDENT',
+    'SSK_WITH_CURATOR',
+    'SSK_WITH_SERGIY',
+    'ADVANCED',
+    'CONSULTING',
+  ])
   type?: string;
 
   @ApiPropertyOptional({
     example: 'ALL',
-    description: 'Course completeness mode',
+    description: 'Completeness mode',
     enum: ['ALL', 'BY_LESSON'],
   })
+  @IsOptional()
+  @IsEnum(['ALL', 'BY_LESSON'])
   completeness?: string;
 
-  @ApiPropertyOptional({
-    description: 'Access to course',
-    type: Access,
-    example: {
-      type: 'PERMANENT',
-      dateStart: '2025-03-10T17:20:14.504+00:00',
-      dateEnd: '2025-03-10T17:20:14.504+00:00',
-    },
-  })
+  @ApiPropertyOptional({ description: 'Access details', type: Access })
+  @IsOptional()
   access?: Access;
 
-  @ApiPropertyOptional({
-    description: 'Contract details',
-    type: Contract,
-    example: {
-      date: '2025-07-01T00:00:00.000Z',
-      signUpTo: '2025-06-30T00:00:00.000Z',
-      price: 299.99,
-      header: 'Special Summer Offer',
-      points: [
-        {
-          name: 'Guarantee',
-          description: 'Full money-back guarantee within 30 days.',
-        },
-        {
-          name: 'Support',
-          description: '24/7 customer support available.',
-        },
-      ],
-    },
-  })
+  @ApiPropertyOptional({ description: 'Contract details', type: Contract })
+  @IsOptional()
   contract?: Contract;
 
   @ApiPropertyOptional({
     example: 'https://chat.example.com',
-    description: 'Link to course chat',
-    required: false,
+    description: 'Chat link',
   })
+  @IsOptional()
+  @IsUrl()
   chat?: string;
 
   @ApiPropertyOptional({
     example: ['https://example.com/file1.pdf'],
-    description: 'Additional course files',
-    required: false,
+    description: 'Additional files',
   })
+  @IsOptional()
+  @IsArray()
+  @IsUrl({}, { each: true })
   additionalFiles?: string[];
 
   @ApiPropertyOptional({
-    description: 'Optional links related to the course',
-    type: [String],
-    example: ['https://example.com/resource1', 'https://example.com/resource2'],
-    required: false,
+    example: ['https://example.com/resource'],
+    description: 'Optional links',
   })
+  @IsOptional()
+  @IsArray()
+  @IsUrl({}, { each: true })
   optionalLink?: string[];
 
   @ApiPropertyOptional({
-    description: 'Optional file links related to the course',
-    type: [String],
-    example: ['https://example.com/file1.pdf', 'https://example.com/file2.pdf'],
-    required: false,
+    example: ['https://example.com/file1.pdf'],
+    description: 'Optional files',
   })
+  @IsOptional()
+  @IsArray()
+  @IsUrl({}, { each: true })
   optionalFiles?: string[];
 
   @ApiPropertyOptional({
-    description: 'Link to the practice invoice',
-    type: String,
     example: 'https://example.com/invoice',
+    description: 'Invoice link',
   })
+  @IsOptional()
+  @IsUrl()
   practiceInvoice?: string;
 
-  @ApiPropertyOptional({
-    description: 'Stream number of the course',
-    type: Number,
-    example: 1,
-  })
+  @ApiPropertyOptional({ example: 1, description: 'Stream number' })
+  @IsOptional()
+  @IsNumber()
+  @Transform(({ value }) => parseInt(value))
   stream?: number;
 
-  @ApiPropertyOptional({
-    description: 'Price of the course',
-    type: Number,
-    example: 199.99,
-  })
+  @ApiPropertyOptional({ example: 199.99, description: 'Course price' })
+  @IsOptional()
+  @IsNumber()
+  @Transform(({ value }) => parseFloat(value))
   price?: number;
 
   @ApiPropertyOptional({
-    description: 'List of recommended literature',
+    description: 'Recommended literature',
     type: [Literature],
-    example: [
-      { author: 'John Doe', link: 'https://example.com/book' },
-      { author: 'Jane Smith', link: 'https://example.com/article' },
-    ],
-    required: false,
   })
+  @IsOptional()
+  @IsArray()
   literature?: Literature[];
 
   @ApiPropertyOptional({
-    description: 'Cover image URL',
-    type: String,
     example: 'https://example.com/cover.jpg',
-    required: false,
+    description: 'Cover image URL',
   })
+  @IsOptional()
+  @IsUrl()
   cover?: string;
 
   @ApiPropertyOptional({
-    description: 'Status of the course',
-    enum: ['DRAFT', 'published', 'ARCHIVE'],
+    description: 'Course status',
+    enum: ['DRAFT', 'PUBLISHED', 'ARCHIVE'],
     example: 'DRAFT',
   })
-  status: 'DRAFT' | 'published' | 'ARCHIVE';
+  @IsOptional()
+  @IsEnum(['DRAFT', 'PUBLISHED', 'ARCHIVE'])
+  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVE';
 }

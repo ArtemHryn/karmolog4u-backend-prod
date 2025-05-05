@@ -1,7 +1,6 @@
 import {
   ApiBearerAuth,
   ApiBody,
-  ApiConsumes,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -17,7 +16,6 @@ import {
   Post,
   Put,
   Query,
-  UseInterceptors,
 } from '@nestjs/common';
 import mongoose from 'mongoose';
 import { Roles } from 'src/role/roles.decorator';
@@ -26,13 +24,16 @@ import { ResponseSuccessDto } from 'src/common/dto/response-success.dto';
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { parseFields } from 'src/common/helper/parseFields';
-import { NoFilesInterceptor } from '@nestjs/platform-express';
 import { GetAllCoursesQueryDto } from './dto/get-all-course-query.dto';
 import { GetAllCourseResponseDto } from './dto/get-all-course-response.dto';
 import { GetCourseByIdDto } from './dto/get-couse-by-id.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { DeleteCoursesDto } from './dto/delete-courses.dto';
 import { UpdateStatusCourseDto } from './dto/update-status-course.dto';
+import { GetAllCourseParams } from './dto/get-all-course-params.dto';
+import { GetByIdCourseParams } from './dto/get-by-id-course-params.dto';
+import { UpdateCourseParamsDto } from './dto/update-course-params.dto';
+import { UpdateStatusCourseParamsDto } from './dto/update-status-course-params.dto';
 
 @ApiBearerAuth()
 @ApiTags('admin-course')
@@ -46,7 +47,6 @@ export class CourseController {
     summary: 'Admin Create Course',
     description: 'Access restricted to admins',
   })
-  @ApiConsumes('multipart/form-data')
   @ApiBody({
     description: 'Upload a file with additional fields',
     type: CreateCourseDto,
@@ -57,14 +57,12 @@ export class CourseController {
     type: ResponseSuccessDto,
   })
   @ApiResponse({ status: 400, description: 'Конфлікт створення курсу' })
-  @UseInterceptors(NoFilesInterceptor())
   async createCourse(
     @Body()
     data: CreateCourseDto,
   ) {
     try {
-      const parsedData = parseFields(data);
-      return await this.courseService.createCourse(parsedData);
+      return await this.courseService.createCourse(data);
     } catch (error) {
       throw new HttpException(
         {
@@ -79,6 +77,7 @@ export class CourseController {
       );
     }
   }
+
   @Get('get-all/:status')
   @ApiOperation({
     summary: 'Admin Get All Course',
@@ -91,11 +90,14 @@ export class CourseController {
   })
   @ApiResponse({ status: 400, description: 'something wrong' })
   async getAllCourse(
-    @Param('status') status: string,
+    @Param() params: GetAllCourseParams,
     @Query() query: GetAllCoursesQueryDto,
   ) {
     try {
-      return await this.courseService.getAllCourse({ ...query, status });
+      return await this.courseService.getAllCourse({
+        ...query,
+        status: params.status,
+      });
     } catch (error) {
       throw new HttpException(
         {
@@ -122,9 +124,9 @@ export class CourseController {
     type: GetCourseByIdDto,
   })
   @ApiResponse({ status: 400, description: 'something wrong' })
-  async getCourseById(@Param('id') id: string) {
+  async getCourseById(@Param() params: GetByIdCourseParams) {
     try {
-      const courseId = new mongoose.Types.ObjectId(id.toString());
+      const courseId = new mongoose.Types.ObjectId(params.id.toString());
       return await this.courseService.getCourseById(courseId);
     } catch (error) {
       throw new HttpException(
@@ -146,7 +148,6 @@ export class CourseController {
     summary: 'Admin Edit Course',
     description: 'Access restricted to admins',
   })
-  @ApiConsumes('multipart/form-data')
   @ApiBody({
     description: 'Upload a file with additional fields',
     type: UpdateCourseDto,
@@ -157,10 +158,12 @@ export class CourseController {
     type: ResponseSuccessDto,
   })
   @ApiResponse({ status: 400, description: 'something wrong' })
-  @UseInterceptors(NoFilesInterceptor())
-  async updateCourse(@Param('id') id: string, @Body() data: UpdateCourseDto) {
+  async updateCourse(
+    @Param() params: UpdateCourseParamsDto,
+    @Body() data: UpdateCourseDto,
+  ) {
     try {
-      const courseId = new mongoose.Types.ObjectId(id.toString());
+      const courseId = new mongoose.Types.ObjectId(params.id.toString());
       const parsedData = parseFields(data);
       return await this.courseService.updateCourse({
         id: courseId,
@@ -233,11 +236,11 @@ export class CourseController {
   })
   @ApiResponse({ status: 400, description: 'something wrong' })
   async updateStatusCourse(
-    @Param('id') id: string,
+    @Param() params: UpdateStatusCourseParamsDto,
     @Body() data: UpdateStatusCourseDto,
   ) {
     try {
-      const courseId = new mongoose.Types.ObjectId(id.toString());
+      const courseId = new mongoose.Types.ObjectId(params.id.toString());
       return await this.courseService.updateStatusCourse({
         id: courseId,
         status: data.status,
