@@ -2,7 +2,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 
 export async function createExternalStorageFolder(): Promise<string> {
-  const folderPath = path.join(process.cwd(), 'storage'); // Шлях до папки
+  const folderPath = path.join(process.cwd(), '..','storage'); // Шлях до папки
 
   try {
     // Перевіряємо, чи існує папка
