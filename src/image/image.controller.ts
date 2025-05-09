@@ -38,12 +38,8 @@ export class ImageController {
     @Param() params: DownloadImageParamsDto,
     @Res() res: Response,
   ) {
-    console.log(params);
-
     const dir = await findFile(params.imageName);
-    console.log(dir);
-
-    const imagePath = path.join(__dirname, '..', dir, params.imageName);
+    const imagePath = path.join(__dirname, '..', '..', dir, params.imageName);
     return res.sendFile(imagePath);
   }
 

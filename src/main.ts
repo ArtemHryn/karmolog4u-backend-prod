@@ -4,6 +4,7 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import 'reflect-metadata';
+import { createExternalStorageFolder } from './common/helper/createFolder';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { abortOnError: false });
@@ -24,5 +25,9 @@ async function bootstrap() {
   app.enableCors();
   app.useLogger(new Logger());
   await app.listen(port || 4499);
+
+  createExternalStorageFolder()
+    .then((folderPath) => console.log(`Folder at: ${folderPath}`))
+    .catch((error) => console.error(error));
 }
 bootstrap();

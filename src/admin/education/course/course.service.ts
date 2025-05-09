@@ -8,6 +8,7 @@ import { Model } from 'mongoose';
 import { Course } from './schemas/course.schema';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { ContractService } from '../contract/contract.service';
+// import { createFolderOutsideProject } from 'src/common/helper/createFolder';
 
 @Injectable()
 export class CourseService {
@@ -25,6 +26,13 @@ export class CourseService {
         contract: contractID.id,
       });
       await newCourse.save();
+      if (!newCourse) {
+        throw new Error('error write to db');
+      }
+      // const folderPath = await createFolderOutsideProject(
+      //   newCourse._id.toString(),
+      // );
+
       return { message: 'success' };
     } catch (error) {
       throw new BadRequestException('Помилка створення курсу :(');
