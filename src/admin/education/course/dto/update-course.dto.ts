@@ -1,4 +1,4 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsOptional,
   IsString,
@@ -10,7 +10,7 @@ import {
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
-export class Access {
+class Access {
   @ApiPropertyOptional({
     description: 'Access type',
     enum: ['PERMANENT', 'FOR_PERIOD', 'TO_DATE'],
@@ -39,7 +39,7 @@ export class Access {
   dateEnd?: Date;
 }
 
-export class Point {
+class Point {
   @ApiPropertyOptional({
     description: 'Name of the point',
     example: 'Early Access',
@@ -57,7 +57,7 @@ export class Point {
   description?: string;
 }
 
-export class Contract {
+class Contract {
   @ApiPropertyOptional({
     description: 'Date of the contract',
     example: '2025-07-01T00:00:00.000Z',
@@ -99,7 +99,7 @@ export class Contract {
   points?: Point[];
 }
 
-export class Literature {
+class Literature {
   @ApiPropertyOptional({ description: 'Author', example: 'John Doe' })
   @IsOptional()
   @IsString()
@@ -112,6 +112,20 @@ export class Literature {
   @IsOptional()
   @IsUrl()
   link?: string;
+}
+
+class OptionalLink {
+  @ApiProperty({
+    description: 'Назва посилання',
+    example: 'Документація',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: 'URL посилання',
+    example: 'https://example.com/doc',
+  })
+  link: string;
 }
 
 export class UpdateCourseDto {
@@ -179,13 +193,11 @@ export class UpdateCourseDto {
   additionalFiles?: string[];
 
   @ApiPropertyOptional({
-    example: ['https://example.com/resource'],
-    description: 'Optional links',
+    type: [OptionalLink],
   })
   @IsOptional()
   @IsArray()
-  @IsUrl({}, { each: true })
-  optionalLink?: string[];
+  optionalLink?: OptionalLink[];
 
   @ApiPropertyOptional({
     example: ['https://example.com/file1.pdf'],

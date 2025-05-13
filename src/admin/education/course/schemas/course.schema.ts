@@ -13,6 +13,12 @@ export class literature {
   author: string;
   link: string;
 }
+
+export class optionalLink {
+  name: string;
+  link: string;
+}
+
 @Schema({
   timestamps: true,
   toJSON: {
@@ -58,8 +64,16 @@ export class Course {
   @Prop({ type: String, default: '' })
   chat: string;
 
-  @Prop({ type: [String], default: [] })
-  optionalLink: string[];
+  @Prop({
+    type: [
+      {
+        name: String,
+        link: String,
+      },
+    ],
+    default: [],
+  })
+  optionalLink: optionalLink[];
 
   @Prop({ type: [String], default: [] })
   optionalFiles?: string[];

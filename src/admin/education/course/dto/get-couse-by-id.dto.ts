@@ -48,6 +48,20 @@ class ContractDto {
   points: ContractPointDto[];
 }
 
+class OptionalLinkDto {
+  @ApiProperty({
+    description: 'Назва посилання',
+    example: 'Документація',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: 'URL посилання',
+    example: 'https://example.com/doc',
+  })
+  link: string;
+}
+
 export class GetCourseByIdDto {
   @ApiProperty({ example: 'Advanced JavaScript' })
   name: string;
@@ -76,8 +90,8 @@ export class GetCourseByIdDto {
   @ApiProperty({ example: 'some-chat-id' })
   chat: string;
 
-  @ApiProperty({ example: ['https://example.com/resource'] })
-  optionalLink: string[];
+  @ApiProperty({ type: OptionalLinkDto })
+  optionalLink: OptionalLinkDto[];
 
   @ApiProperty({ example: ['file1.pdf', 'file2.docx'] })
   optionalFiles: string[];

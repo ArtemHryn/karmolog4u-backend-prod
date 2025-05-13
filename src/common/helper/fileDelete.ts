@@ -5,8 +5,6 @@ export const fileDelete = async (filePath: string): Promise<void> => {
   try {
     await fs.unlink(filePath); // Using fs.promises.unlink
   } catch (error) {
-    console.log(error);
-
-    throw new InternalServerErrorException(error);
+    throw new InternalServerErrorException('Помилка обробки зображення :(');
   }
 };

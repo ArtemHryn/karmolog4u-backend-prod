@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Contract } from './schemas/contract.schema';
 import { Model } from 'mongoose';
@@ -15,7 +15,7 @@ export class ContractService {
       await newContract.save();
       return { id: newContract._id };
     } catch (error) {
-      console.log(error);
+      throw new BadRequestException('Помилка створення контракту :(');
     }
   }
 

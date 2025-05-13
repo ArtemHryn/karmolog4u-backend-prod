@@ -9,7 +9,7 @@ import {
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
-export class Access {
+class Access {
   @ApiProperty({
     description: 'Access type',
     enum: ['PERMANENT', 'FOR_PERIOD', 'TO_DATE'],
@@ -37,7 +37,7 @@ export class Access {
   dateEnd?: Date;
 }
 
-export class Point {
+class Point {
   @ApiProperty({ description: 'Name of the point', example: 'Early Access' })
   @IsString()
   name: string;
@@ -50,7 +50,7 @@ export class Point {
   description: string;
 }
 
-export class Contract {
+class Contract {
   @ApiProperty({
     description: 'Date of the contract',
     example: '2025-07-01T00:00:00.000Z',
@@ -82,7 +82,7 @@ export class Contract {
   points: Point[];
 }
 
-export class Literature {
+class Literature {
   @ApiProperty({ description: 'Author', example: 'John Doe' })
   @IsString()
   author: string;
@@ -92,6 +92,20 @@ export class Literature {
     example: 'https://example.com/book',
   })
   @IsString()
+  link: string;
+}
+
+class OptionalLink {
+  @ApiProperty({
+    description: 'Назва посилання',
+    example: 'Документація',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: 'URL посилання',
+    example: 'https://example.com/doc',
+  })
   link: string;
 }
 
@@ -152,13 +166,11 @@ export class CreateCourseDto {
   additionalFiles?: string[];
 
   @ApiPropertyOptional({
-    example: ['https://example.com/resource'],
-    description: 'Optional links',
+    type: [OptionalLink],
   })
   @IsOptional()
   @IsArray()
-  @IsString({ each: true })
-  optionalLink?: string[];
+  optionalLink?: OptionalLink[];
 
   @ApiPropertyOptional({
     example: ['https://example.com/file1.pdf'],

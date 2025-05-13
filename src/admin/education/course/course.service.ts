@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  HttpException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -8,34 +9,79 @@ import { Model } from 'mongoose';
 import { Course } from './schemas/course.schema';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { ContractService } from '../contract/contract.service';
-// import { createFolderOutsideProject } from 'src/common/helper/createFolder';
+import { StorageService } from 'src/storage/storage.service';
+import { isValidUrl } from 'src/common/helper/validateUrl';
+import { ConfigService } from '@nestjs/config';
+import { coverCompress } from 'src/common/helper/coverCompress';
 
 @Injectable()
 export class CourseService {
   constructor(
     @InjectModel(Course.name) private courseModel: Model<Course>,
     private readonly contractService: ContractService,
+    private readonly storageService: StorageService,
+    private readonly configService: ConfigService,
   ) {}
 
   async createCourse(data: CreateCourseDto) {
     try {
-      const { contract, ...course } = data;
+      const { contract, cover, optionalFiles, ...course } = data;
       const contractID = await this.contractService.createContract(contract);
+
       const newCourse = new this.courseModel({
         ...course,
         contract: contractID.id,
       });
       await newCourse.save();
       if (!newCourse) {
-        throw new Error('error write to db');
+        throw new Error('Помилка створення курсу :(');
       }
-      // const folderPath = await createFolderOutsideProject(
-      //   newCourse._id.toString(),
-      // );
+
+      const folderPath = await this.storageService.createCourseStorage(
+        newCourse._id.toString(),
+      );
+
+      const updateData: Record<string, any> = {}; // Store all updates
+
+      if (isValidUrl(cover)) {
+        const coverLink = await coverCompress(
+          cover,
+          this.storageService.getSubFolderPath(folderPath, 'covers'),
+          this.configService,
+        );
+        updateData.cover = coverLink; // Add cover update
+      }
+
+      if (optionalFiles?.length != 0) {
+        const filesLink = await this.storageService.moveFiles(
+          optionalFiles,
+          this.storageService.getTempFilesFolder(),
+          this.storageService.getSubFolderPath(folderPath, 'materials'),
+        );
+        updateData.optionalFiles = filesLink; // Add optionalFiles update
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        await this.courseModel.findByIdAndUpdate(newCourse._id, {
+          $set: updateData,
+        });
+      }
 
       return { message: 'success' };
     } catch (error) {
-      throw new BadRequestException('Помилка створення курсу :(');
+      throw new HttpException(
+        {
+          status: error.status || 500,
+          message:
+            error.response?.message ||
+            'An error occurred while processing the file',
+          error: error.response?.error || 'Internal Server Error',
+        },
+        error.status || 500,
+        {
+          cause: error,
+        },
+      );
     }
   }
 

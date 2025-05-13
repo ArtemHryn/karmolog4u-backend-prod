@@ -4,7 +4,6 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import 'reflect-metadata';
-import { createExternalStorageFolder } from './common/helper/createFolder';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { abortOnError: false });
@@ -20,14 +19,20 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('swagger', app, document);
+  SwaggerModule.setup('swagger', app, document, {
+    customSiteTitle: 'Swagger API',
+    swaggerOptions: {
+      defaultModelRendering: 'example',
+      docExpansion: 'none',
+      requestInterceptor: (req) => {
+        req.headers['Accept-Charset'] = 'utf-8'; // Ensure UTF-8 headers are set
+        return req;
+      },
+    },
+  });
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors();
   app.useLogger(new Logger());
   await app.listen(port || 4499);
-
-  createExternalStorageFolder()
-    .then((folderPath) => console.log(`Folder at: ${folderPath}`))
-    .catch((error) => console.error(error));
 }
 bootstrap();

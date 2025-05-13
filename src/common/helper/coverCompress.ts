@@ -4,26 +4,16 @@ import { HttpException, InternalServerErrorException } from '@nestjs/common';
 import { fileDelete } from './fileDelete';
 import * as path from 'path';
 
-export const fileCompress = async (
-  fileName: string,
-  configService: ConfigService,
+export const coverCompress = async (
+  fileLink: string,
   destination: string,
+  configService: ConfigService,
 ) => {
   try {
-    const tempDir = path.join(process.cwd(), 'temporary'); // Define the temporary folder path
-    const filePath = path.join(tempDir, fileName); // Get full file path in temporary folder
-
-    // Ensure the filename has an extension before splitting
-    if (!fileName.includes('.')) {
-      throw new HttpException('Invalid file name format', 400);
-    }
-
+    const fileName = getCoverNameFromUrl(fileLink);
+    const filePath = path.join('temporaryCovers', fileName);
     const [name] = fileName.split('.');
-    const compressedPath = path.join(
-      process.cwd(),
-      'dist/covers',
-      `${name}.webp`,
-    );
+    const compressedPath = path.join(destination, `${name}.webp`);
 
     try {
       await sharp(filePath)
@@ -32,16 +22,15 @@ export const fileCompress = async (
         .toFile(compressedPath); // Save compressed file
     } catch (error) {
       throw new InternalServerErrorException(
-        `Compression failed: ${error.message}`,
+        `Помилка стискання зображення: ${error.message}`,
       );
     }
-
-    // Delete the original file after compression
     await fileDelete(filePath);
 
     // Generate the accessible link for the compressed image
     const envValue = configService.get<string>('SERVER_IP');
-    return `${envValue}/covers/${name}.webp`;
+    const coverPath = path.join(envValue, 'covers', `${name}.webp`);
+    return coverPath;
   } catch (error) {
     throw new HttpException(
       {
@@ -58,3 +47,8 @@ export const fileCompress = async (
     );
   }
 };
+
+function getCoverNameFromUrl(url: string): string {
+  const parts = url.split('/'); // Split by "/"
+  return parts[parts.length - 1]; // Get the last part (filename)
+}
