@@ -89,9 +89,9 @@ export class CourseService {
     searchQuery?: string;
     status?: string;
     name?: 1 | -1;
-    type?: 1 | -1;
-    access?: 1 | -1;
-    completeness?: 1 | -1;
+    type?: string;
+    access?: string;
+    completeness?: string;
     limit?: number;
     page?: number;
   }) {
@@ -99,21 +99,28 @@ export class CourseService {
     const limit = +query.limit || 10;
     const skip = (page - 1) * limit;
 
-    const sortFields = ['name', 'type', 'access', 'completeness'] as const;
+    const sortFields = ['name'] as const;
 
+    // Construct sorting object dynamically
     const sort = sortFields.reduce((acc, field) => {
-      const value = Number(query[field]);
-      if (query[field] !== undefined) {
-        const sortKey = field === 'access' ? 'access.type' : field;
-        acc[sortKey] = value;
+      const value = query[field];
+      if (value !== undefined) {
+        acc[field] = value;
       }
       return acc;
-    }, {} as Record<number, 1 | -1>);
+    }, {} as Record<string, 1 | -1>);
+
+    // Construct the filter object dynamically
+    const filters: Record<string, any> = {};
+    if (query.status) filters.status = query.status;
+    if (query.type) filters.type = query.type;
+    if (query.access) filters['access.type'] = query.access;
+    if (query.completeness) filters.completeness = query.completeness;
 
     try {
       return await this.courseModel.aggregate([
         {
-          $match: { status: query.status }, // Filter for webinars
+          $match: filters, // Apply dynamic filters
         },
         {
           $project: {
