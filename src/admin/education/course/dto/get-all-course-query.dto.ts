@@ -1,6 +1,25 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsInt, Min, Max } from 'class-validator';
+import { IsOptional, IsString, IsInt, Min, Max, IsEnum } from 'class-validator';
 import { Transform } from 'class-transformer';
+
+// Define an enum for course types
+enum AccessType {
+  PERMANENT = 'PERMANENT',
+  FOR_PERIOD = 'FOR_PERIOD',
+  TO_DATE = 'TO_DATE',
+}
+enum CourseType {
+  SSK_INDEPENDENT = 'SSK_INDEPENDENT',
+  SSK_WITH_CURATOR = 'SSK_WITH_CURATOR',
+  SSK_WITH_SERGIY = 'SSK_WITH_SERGIY',
+  ADVANCED = 'ADVANCED',
+  CONSULTING = 'CONSULTING',
+}
+
+enum CompletenessType {
+  ALL = 'ALL',
+  BY_LESSON = 'BY_LESSON',
+}
 
 export class GetAllCoursesQueryDto {
   @ApiPropertyOptional({
@@ -25,39 +44,30 @@ export class GetAllCoursesQueryDto {
 
   @ApiPropertyOptional({
     description: 'Сортування за типом курсу',
-    example: -1,
-    enum: [1, -1],
+    example: CourseType.ADVANCED,
+    enum: CourseType,
   })
   @IsOptional()
-  @Transform(({ value }) => parseInt(value)) // Converts string to number
-  @IsInt()
-  @Min(-1)
-  @Max(1)
-  type?: 1 | -1;
+  @IsEnum(CourseType) // Ensures value matches an enum type
+  type?: CourseType;
 
   @ApiPropertyOptional({
     description: 'Сортування за типом доступу',
-    example: 1,
-    enum: [1, -1],
+    example: AccessType.PERMANENT,
+    enum: AccessType,
   })
   @IsOptional()
-  @Transform(({ value }) => parseInt(value)) // Converts string to number
-  @IsInt()
-  @Min(-1)
-  @Max(1)
-  access?: 1 | -1;
+  @IsEnum(AccessType) // Ensures value is valid enum type
+  access?: AccessType;
 
   @ApiPropertyOptional({
     description: 'Сортування за повнотою курсу',
-    example: -1,
-    enum: [1, -1],
+    example: CompletenessType.ALL,
+    enum: CompletenessType,
   })
   @IsOptional()
-  @Transform(({ value }) => parseInt(value)) // Converts string to number
-  @IsInt()
-  @Min(-1)
-  @Max(1)
-  completeness?: 1 | -1;
+  @IsEnum(CompletenessType) // Ensures only valid enum values
+  completeness?: CompletenessType;
 
   @ApiPropertyOptional({
     description: 'Кількість елементів на сторінці',
