@@ -129,7 +129,7 @@ export class StorageService {
         console.log(`Moved: ${fileName} → ${storagePath}`);
 
         // Update the link to replace "temporaryCovers" with "covers"
-        const updatedLink = fileLink.replace('/temporaryCovers/', '/covers/');
+        const updatedLink = fileLink.replace('/temporaryFiles/', '/file/');
         updatedLinks.push(updatedLink);
       }
 
