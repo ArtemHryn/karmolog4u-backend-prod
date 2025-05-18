@@ -24,13 +24,18 @@ async function bootstrap() {
     swaggerOptions: {
       defaultModelRendering: 'example',
       docExpansion: 'none',
+      persistAuthorization: true, // 👈 Зберігає токен у sessionStorage
       requestInterceptor: (req) => {
         req.headers['Accept-Charset'] = 'utf-8'; // Ensure UTF-8 headers are set
         return req;
       },
     },
   });
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true, // Enables transformations
+    }),
+  );
   app.enableCors();
   app.useLogger(new Logger());
   await app.listen(port || 4499);

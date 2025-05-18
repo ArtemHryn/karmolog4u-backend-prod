@@ -1,5 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsInt, Min, Max, IsEnum } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsInt,
+  Min,
+  Max,
+  IsEnum,
+  IsArray,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 
 // Define an enum for course types
@@ -44,12 +52,20 @@ export class GetAllCoursesQueryDto {
 
   @ApiPropertyOptional({
     description: 'Сортування за типом курсу',
-    example: CourseType.ADVANCED,
+    example: [CourseType.ADVANCED, CourseType.CONSULTING], // Array Example
     enum: CourseType,
+    isArray: true, // Mark as array in Swagger docs
+  })
+  @Transform(({ value }) => {
+    if (!value) return [];
+    if (typeof value === 'string') return [value]; // Force single values into an array
+    if (Array.isArray(value)) return value; // Keep arrays unchanged
+    return [];
   })
   @IsOptional()
-  @IsEnum(CourseType) // Ensures value matches an enum type
-  type?: CourseType;
+  @IsArray()
+  @IsEnum(CourseType, { each: true })
+  type?: CourseType[];
 
   @ApiPropertyOptional({
     description: 'Сортування за типом доступу',

@@ -205,7 +205,7 @@ export class UpdateCourseDto {
   })
   @IsOptional()
   @IsArray()
-  @IsUrl({}, { each: true })
+  // @IsUrl({}, { each: true })
   optionalFiles?: string[];
 
   @ApiPropertyOptional({
@@ -241,7 +241,7 @@ export class UpdateCourseDto {
     description: 'Cover image URL',
   })
   @IsOptional()
-  @IsUrl()
+  // @IsUrl()
   cover?: string;
 
   @ApiPropertyOptional({

@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import {
@@ -8,7 +9,7 @@ import {
 
 @Injectable()
 export class StorageService {
-  //   constructor() {}
+  constructor(private readonly configService: ConfigService) {}
 
   async getCover(fileName: string) {
     const rootFolder = path.join(process.cwd(), '..', 'storage'); // Коренева папка для пошуку
@@ -154,6 +155,96 @@ export class StorageService {
 
   getPathTempCover(fileName: string) {
     const filePath = path.join('temporaryCovers', fileName);
+    return filePath;
+  }
+
+  async fileExists(folderPath: string, fileName: string): Promise<boolean> {
+    const filePath = path.join(folderPath, fileName);
+
+    try {
+      await fs.access(filePath); // Check if the file is accessible
+      return true; // File exists
+    } catch {
+      return false; // File does not exist
+    }
+  }
+
+  async filterExistingFiles(
+    folderPath: string,
+    fileNames: string[],
+  ): Promise<string[]> {
+    const existingFiles: string[] = [];
+
+    for (const fileName of fileNames) {
+      const filePath = path.join(folderPath, fileName);
+
+      try {
+        await fs.access(filePath); // Check if the file exists
+        existingFiles.push(fileName); // Add to the result array if it exists
+      } catch {
+        // File does not exist, do nothing
+      }
+    }
+
+    return existingFiles;
+  }
+
+  async copyFiles(
+    sourceFolder: string,
+    destinationFolder: string,
+    fileNames: string[],
+  ): Promise<string[]> {
+    try {
+      await fs.mkdir(destinationFolder, { recursive: true }); // Ensure destination exists
+
+      const fileLinks: string[] = [];
+
+      for (const fileName of fileNames) {
+        const sourcePath = path.join(sourceFolder, fileName);
+        const destinationPath = path.join(destinationFolder, fileName);
+
+        try {
+          await fs.copyFile(sourcePath, destinationPath); // Copy file
+          console.log(`Copied: ${fileName}`);
+          const updatedLink = path.join(
+            this.configService.get<string>('SERVER_IP'),
+            'file',
+            fileName,
+          );
+          fileLinks.push(updatedLink);
+        } catch (error) {
+          console.error(`Failed to copy ${fileName}: ${error.message}`);
+        }
+      }
+      return fileLinks;
+    } catch (error) {
+      console.error(`Error creating destination folder: ${error.message}`);
+    }
+  }
+  async deleteFiles(folderPath: string, fileNames: string[]): Promise<void> {
+    const existingFiles = await this.filterExistingFiles(folderPath, fileNames);
+
+    for (const existingFile of existingFiles) {
+      const filePath = path.join(folderPath, existingFile);
+
+      try {
+        await fs.unlink(filePath); // Deletes the file
+        console.log(`🗑️ Deleted: ${existingFile}`);
+      } catch (error) {
+        console.error(`❌ Error deleting ${existingFile}: ${error.message}`);
+      }
+    }
+  }
+  getCourseFilePath(courseId: any, subFolder: string) {
+    const filePath = path.join(
+      process.cwd(),
+      '..',
+      'storage',
+      'education',
+      courseId,
+      subFolder,
+    ); // Коренева папка для пошуку
+
     return filePath;
   }
 }

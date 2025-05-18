@@ -164,11 +164,7 @@ export class CourseController {
   ) {
     try {
       const courseId = new mongoose.Types.ObjectId(params.id.toString());
-      const parsedData = parseFields(data);
-      return await this.courseService.updateCourse({
-        id: courseId,
-        ...parsedData,
-      });
+      return await this.courseService.updateCourse(courseId, data);
     } catch (error) {
       throw new HttpException(
         {

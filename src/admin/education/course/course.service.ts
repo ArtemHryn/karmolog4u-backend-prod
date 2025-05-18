@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { Course } from './schemas/course.schema';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { ContractService } from '../contract/contract.service';
@@ -13,6 +13,9 @@ import { StorageService } from 'src/storage/storage.service';
 import { isValidUrl } from 'src/common/helper/validateUrl';
 import { ConfigService } from '@nestjs/config';
 import { coverCompress } from 'src/common/helper/coverCompress';
+import { getFileNameFromUrl } from 'src/common/helper/getFileNameFromUrl';
+import { getDifference } from 'src/common/helper/getDifferenceArray';
+import { UpdateCourseDto } from './dto/update-course.dto';
 
 @Injectable()
 export class CourseService {
@@ -44,21 +47,38 @@ export class CourseService {
       const updateData: Record<string, any> = {}; // Store all updates
 
       if (isValidUrl(cover)) {
-        const coverLink = await coverCompress(
-          cover,
-          this.storageService.getSubFolderPath(folderPath, 'covers'),
-          this.configService,
+        const coverName = getFileNameFromUrl(cover);
+        const fileExist = await this.storageService.fileExists(
+          this.storageService.getTempCoversFolder(),
+          coverName,
         );
-        updateData.cover = coverLink; // Add cover update
+        if (fileExist) {
+          const coverLink = await coverCompress(
+            cover,
+            this.storageService.getSubFolderPath(folderPath, 'covers'),
+            this.configService,
+          );
+          updateData.cover = coverLink; // Add cover update
+        }
       }
 
       if (optionalFiles?.length != 0) {
-        const filesLink = await this.storageService.moveFiles(
+        const existingFiles = await this.storageService.filterExistingFiles(
+          'temporaryFiles',
           optionalFiles,
-          this.storageService.getTempFilesFolder(),
-          this.storageService.getSubFolderPath(folderPath, 'materials'),
         );
-        updateData.optionalFiles = filesLink; // Add optionalFiles update
+        if (existingFiles.length > 0) {
+          const filesLink = await this.storageService.copyFiles(
+            this.storageService.getTempFilesFolder(),
+            this.storageService.getSubFolderPath(folderPath, 'materials'),
+            existingFiles,
+          );
+          await this.storageService.deleteFiles(
+            this.storageService.getTempFilesFolder(),
+            existingFiles,
+          );
+          updateData.optionalFiles = filesLink; // Add optionalFiles update
+        }
       }
 
       if (Object.keys(updateData).length > 0) {
@@ -89,7 +109,7 @@ export class CourseService {
     searchQuery?: string;
     status?: string;
     name?: 1 | -1;
-    type?: string;
+    type?: any;
     access?: string;
     completeness?: string;
     limit?: number;
@@ -99,23 +119,18 @@ export class CourseService {
     const limit = +query.limit || 10;
     const skip = (page - 1) * limit;
 
-    const sortFields = ['name'] as const;
-
-    // Construct sorting object dynamically
-    const sort = sortFields.reduce((acc, field) => {
-      const value = query[field];
-      if (value !== undefined) {
-        acc[field] = value;
-      }
-      return acc;
-    }, {} as Record<string, 1 | -1>);
+    // Ensure sorting is properly structured
+    const sort: Record<string, 1 | -1> = {};
+    if (query.name !== undefined) {
+      sort.name = query.name; // Apply sorting correctly
+    }
 
     // Construct the filter object dynamically
     const filters: Record<string, any> = {};
     if (query.status) filters.status = query.status;
-    if (query.type) filters.type = query.type;
-    if (query.access) filters['access.type'] = query.access;
-    if (query.completeness) filters.completeness = query.completeness;
+    if (query.type) filters.type = { $in: query.type }; // Supports multiple course types
+    if (query.access) filters['access.type'] = query.access; // Filters inside the access object
+    if (query.completeness) filters.completeness = query.completeness; // Supports multiple completeness values
 
     try {
       return await this.courseModel.aggregate([
@@ -142,7 +157,8 @@ export class CourseService {
               },
             ]
           : []),
-        ...(Object.keys(sort).length ? [{ $sort: sort }] : []),
+        ...(Object.keys(sort).length ? [{ $sort: sort }] : []), // Ensuring proper sorting
+
         {
           $facet: {
             paginatedData: [
@@ -186,26 +202,129 @@ export class CourseService {
     }
   }
 
-  async updateCourse(data: any) {
+  async updateCourse(id: mongoose.Types.ObjectId, data: UpdateCourseDto) {
     try {
-      const [id, contract = {}, ...course] = data;
-      //update contract if available
-      if (Object.keys(contract).length != 0) {
-        const contractId = await this.courseModel.findById(id, 'contract');
-        await this.contractService.updateContract({
-          id: contractId,
-          ...contract,
-        });
+      const { contract, ...newCourse } = data;
+      console.log('data', data);
+      const oldCourse = await this.courseModel.findById(id).exec();
+      if (!oldCourse) {
+        throw new NotFoundException('Курс не знайдено :(');
       }
-      if (Object.keys(course).length != 0) {
-        await this.courseModel.findByIdAndUpdate(id, course, {
+
+      console.log('old course', oldCourse);
+
+      if (
+        (newCourse?.cover && oldCourse.cover !== newCourse?.cover) ||
+        newCourse.cover == ''
+      ) {
+        console.log('new cover');
+        console.log('hhh', oldCourse.cover !== newCourse?.cover);
+
+        if (oldCourse.cover) {
+          console.log('delete old');
+
+          const oldCoverName = getFileNameFromUrl(oldCourse.cover);
+          await this.storageService.deleteFiles(
+            this.storageService.getCourseFilePath(id.toHexString(), 'covers'),
+            [oldCoverName],
+          );
+        }
+        if (newCourse.cover) {
+          console.log('add new cover');
+
+          const coverName = getFileNameFromUrl(newCourse.cover);
+          const fileExist = await this.storageService.fileExists(
+            this.storageService.getTempCoversFolder(),
+            coverName,
+          );
+          if (fileExist) {
+            const coverLink = await coverCompress(
+              newCourse.cover,
+              this.storageService.getCourseFilePath(id.toHexString(), 'covers'),
+              this.configService,
+            );
+            newCourse.cover = coverLink;
+          }
+        }
+      }
+
+      const difference = getDifference(
+        oldCourse.optionalFiles,
+        newCourse?.optionalFiles || [],
+        getFileNameFromUrl,
+      );
+      console.log('difference between old-new', difference);
+
+      if (difference.onlyInArr1.length != 0) {
+        await this.storageService.deleteFiles(
+          this.storageService.getCourseFilePath(id.toHexString(), 'materials'),
+          difference.onlyInArr1,
+        );
+      }
+      if (difference.onlyInArr2.length != 0) {
+        const existingFiles = await this.storageService.filterExistingFiles(
+          this.storageService.getTempFilesFolder(),
+          difference.onlyInArr2,
+        );
+        console.log('exist', existingFiles);
+
+        if (existingFiles.length > 0) {
+          const newFiles = await this.storageService.copyFiles(
+            this.storageService.getTempFilesFolder(),
+            this.storageService.getCourseFilePath(
+              id.toHexString(),
+              'materials',
+            ),
+            existingFiles,
+          );
+          await this.storageService.deleteFiles(
+            this.storageService.getTempFilesFolder(),
+            existingFiles,
+          );
+          newCourse.optionalFiles = difference.inBoth.concat(newFiles);
+        }
+      }
+      //update contract if available
+      // if (Object.keys(contract).length != 0) {
+      //   const course = await this.courseModel.findById(id).select('contract');
+
+      //   if (!course?.contract)
+      //     throw new NotFoundException('Contract not found in course');
+
+      //   await this.contractService.updateContract({
+      //     id: course.contract._id,
+      //     contract,
+      //   });
+
+      //   // const contractId = await this.courseModel.findById(id, 'contract');
+      //   // await this.contractService.updateContract({
+      //   //   id: contractId,
+      //   //   ...contract,
+      //   // });
+      // }
+      if (Object.keys(newCourse).length != 0) {
+        await this.courseModel.findByIdAndUpdate(id, newCourse, {
           new: true, // Return the updated document
           runValidators: true, // Run validation checks
         });
       }
       return { message: 'success' };
     } catch (error) {
-      throw new BadRequestException('Помилка в оновленні курсу :(');
+      console.log('error', error);
+
+      throw new HttpException(
+        {
+          status: error.status || 500,
+          message:
+            error.response?.message ||
+            'An error occurred while processing the file',
+          error: error.response?.error || 'Internal Server Error',
+        },
+        error.status || 500,
+        {
+          cause: error,
+        },
+      );
     }
   }
 

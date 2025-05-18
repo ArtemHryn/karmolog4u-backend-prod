@@ -26,11 +26,13 @@ export class ContractService {
   async updateContract(data: any) {
     const [id, ...contract] = data;
     try {
-      await this.contractModel.findByIdAndUpdate(id, contract, {
+      return await this.contractModel.findByIdAndUpdate(id, contract, {
         new: true, // Return the updated document
         runValidators: true, // Run validation checks
       });
-    } catch (error) {}
+    } catch (error) {
+      throw new BadRequestException('Помилка оновлення контракту :(');
+    }
   }
   async deleteContract(data: any) {
     try {
