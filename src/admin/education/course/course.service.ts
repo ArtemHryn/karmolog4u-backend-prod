@@ -13,7 +13,10 @@ import { StorageService } from 'src/storage/storage.service';
 import { isValidUrl } from 'src/common/helper/validateUrl';
 import { ConfigService } from '@nestjs/config';
 import { coverCompress } from 'src/common/helper/coverCompress';
-import { getFileNameFromUrl } from 'src/common/helper/getFileNameFromUrl';
+import {
+  getFileNameFromUrl,
+  getFileNamesFromUrls,
+} from 'src/common/helper/getFileNameFromUrl';
 import { getDifference } from 'src/common/helper/getDifferenceArray';
 import { UpdateCourseDto } from './dto/update-course.dto';
 
@@ -29,8 +32,10 @@ export class CourseService {
   async createCourse(data: CreateCourseDto) {
     try {
       const { contract, cover, optionalFiles, ...course } = data;
-      const contractID = await this.contractService.createContract(contract);
 
+      //cerate contract
+      const contractID = await this.contractService.createContract(contract);
+      //create course
       const newCourse = new this.courseModel({
         ...course,
         contract: contractID.id,
@@ -39,34 +44,42 @@ export class CourseService {
       if (!newCourse) {
         throw new Error('Помилка створення курсу :(');
       }
-
+      //create folder to course material
       const folderPath = await this.storageService.createCourseStorage(
         newCourse._id.toString(),
       );
 
       const updateData: Record<string, any> = {}; // Store all updates
 
-      if (isValidUrl(cover)) {
+      if (cover) {
+        //get name from url
         const coverName = getFileNameFromUrl(cover);
+        //check exist
         const fileExist = await this.storageService.fileExists(
           this.storageService.getTempCoversFolder(),
           coverName,
         );
+        //if exist, compress
         if (fileExist) {
           const coverLink = await coverCompress(
             cover,
             this.storageService.getSubFolderPath(folderPath, 'covers'),
             this.configService,
           );
+          // add cover link to update
           updateData.cover = coverLink; // Add cover update
         }
       }
 
-      if (optionalFiles?.length != 0) {
+      if (optionalFiles?.length > 0) {
+        // get array of name
+        const fileNames = getFileNamesFromUrls(optionalFiles);
+        //check exist
         const existingFiles = await this.storageService.filterExistingFiles(
-          'temporaryFiles',
-          optionalFiles,
+          this.storageService.getTempFilesFolder(),
+          fileNames,
         );
+        //if exist, copy
         if (existingFiles.length > 0) {
           const filesLink = await this.storageService.copyFiles(
             this.storageService.getTempFilesFolder(),

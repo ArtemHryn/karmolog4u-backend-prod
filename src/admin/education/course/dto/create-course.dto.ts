@@ -6,6 +6,7 @@ import {
   IsArray,
   IsNumber,
   IsDate,
+  IsUrl,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
@@ -179,6 +180,14 @@ export class CreateCourseDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
+  @IsUrl(
+    {
+      require_tld: false, // ❗ дозволити локальні домени типу localhost
+      require_protocol: true,
+      protocols: ['http', 'https'],
+    },
+    { each: true },
+  )
   optionalFiles?: string[];
 
   @ApiPropertyOptional({
@@ -211,6 +220,14 @@ export class CreateCourseDto {
   })
   @IsOptional()
   @IsString()
+  @IsUrl(
+    {
+      require_tld: false, // ❗ дозволити локальні домени типу localhost
+      require_protocol: true,
+      protocols: ['http', 'https'],
+    },
+    { message: 'Cover must be a valid URL' },
+  )
   cover?: string;
 
   @ApiProperty({
