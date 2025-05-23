@@ -52,38 +52,60 @@ export class GetAllCoursesQueryDto {
 
   @ApiPropertyOptional({
     description: 'Сортування за типом курсу',
-    example: [CourseType.ADVANCED, CourseType.CONSULTING], // Array Example
-    enum: CourseType,
-    isArray: true, // Mark as array in Swagger docs
+    example: 'SSK_INDEPENDENT,SSK_WITH_CURATOR,SSK_WITH_SERGIY', // Now as a comma-separated string
   })
   @Transform(({ value }) => {
     if (!value) return [];
-    if (typeof value === 'string') return [value]; // Force single values into an array
-    if (Array.isArray(value)) return value; // Keep arrays unchanged
+    if (typeof value === 'string') {
+      return value
+        .split(',')
+        .map((v) => v.trim())
+        .filter(Boolean); // Splits & removes empty values
+    }
     return [];
   })
   @IsOptional()
   @IsArray()
-  @IsEnum(CourseType, { each: true })
+  @IsEnum(CourseType, { each: true }) // Ensures all values are valid CourseType enums
   type?: CourseType[];
 
   @ApiPropertyOptional({
     description: 'Сортування за типом доступу',
-    example: AccessType.PERMANENT,
-    enum: AccessType,
+    example: 'PERMANENT,FOR_PERIOD',
+  })
+  @Transform(({ value }) => {
+    if (!value) return [];
+    if (typeof value === 'string') {
+      return value
+        .split(',')
+        .map((v) => v.trim())
+        .filter(Boolean); // Splits & removes empty values
+    }
+    return [];
   })
   @IsOptional()
-  @IsEnum(AccessType) // Ensures value is valid enum type
-  access?: AccessType;
+  @IsArray()
+  @IsEnum(AccessType, { each: true }) // Ensures value is valid enum type
+  access?: AccessType[];
 
   @ApiPropertyOptional({
     description: 'Сортування за повнотою курсу',
-    example: CompletenessType.ALL,
-    enum: CompletenessType,
+    example: 'ALL,BY_LESSON',
+  })
+  @Transform(({ value }) => {
+    if (!value) return [];
+    if (typeof value === 'string') {
+      return value
+        .split(',')
+        .map((v) => v.trim())
+        .filter(Boolean); // Splits & removes empty values
+    }
+    return [];
   })
   @IsOptional()
-  @IsEnum(CompletenessType) // Ensures only valid enum values
-  completeness?: CompletenessType;
+  @IsArray()
+  @IsEnum(CompletenessType, { each: true }) // Ensures only valid enum values
+  completeness?: CompletenessType[];
 
   @ApiPropertyOptional({
     description: 'Кількість елементів на сторінці',

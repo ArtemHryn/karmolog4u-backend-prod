@@ -23,7 +23,6 @@ import { Role } from 'src/role/role.enum';
 import { ResponseSuccessDto } from 'src/common/dto/response-success.dto';
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
-import { parseFields } from 'src/common/helper/parseFields';
 import { GetAllCoursesQueryDto } from './dto/get-all-course-query.dto';
 import { GetAllCourseResponseDto } from './dto/get-all-course-response.dto';
 import { GetCourseByIdDto } from './dto/get-couse-by-id.dto';

@@ -24,7 +24,7 @@ export class ContractService {
     } catch (error) {}
   }
   async updateContract(data: any) {
-    const [id, ...contract] = data;
+    const { id, contract } = data;
     try {
       return await this.contractModel.findByIdAndUpdate(id, contract, {
         new: true, // Return the updated document

@@ -10,7 +10,6 @@ import { Course } from './schemas/course.schema';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { ContractService } from '../contract/contract.service';
 import { StorageService } from 'src/storage/storage.service';
-import { isValidUrl } from 'src/common/helper/validateUrl';
 import { ConfigService } from '@nestjs/config';
 import { coverCompress } from 'src/common/helper/coverCompress';
 import {
@@ -90,6 +89,7 @@ export class CourseService {
             this.storageService.getTempFilesFolder(),
             existingFiles,
           );
+          //add file link to update
           updateData.optionalFiles = filesLink; // Add optionalFiles update
         }
       }
@@ -123,8 +123,8 @@ export class CourseService {
     status?: string;
     name?: 1 | -1;
     type?: any;
-    access?: string;
-    completeness?: string;
+    access?: any;
+    completeness?: any;
     limit?: number;
     page?: number;
   }) {
@@ -142,8 +142,8 @@ export class CourseService {
     const filters: Record<string, any> = {};
     if (query.status) filters.status = query.status;
     if (query.type) filters.type = { $in: query.type }; // Supports multiple course types
-    if (query.access) filters['access.type'] = query.access; // Filters inside the access object
-    if (query.completeness) filters.completeness = query.completeness; // Supports multiple completeness values
+    if (query.access) filters['access.type'] = { $in: query.access }; // Filters inside the access object
+    if (query.completeness) filters.completeness = { $in: query.completeness }; // Supports multiple completeness values
 
     try {
       return await this.courseModel.aggregate([
@@ -158,6 +158,7 @@ export class CourseService {
             stream: 1,
             access: 1,
             completeness: 1,
+            chat: 1,
             _id: 0,
           },
         },
@@ -218,33 +219,29 @@ export class CourseService {
   async updateCourse(id: mongoose.Types.ObjectId, data: UpdateCourseDto) {
     try {
       const { contract, ...newCourse } = data;
-      console.log('data', data);
+      console.log(newCourse);
+      //search course
       const oldCourse = await this.courseModel.findById(id).exec();
       if (!oldCourse) {
         throw new NotFoundException('Курс не знайдено :(');
       }
 
-      console.log('old course', oldCourse);
-
       if (
         (newCourse?.cover && oldCourse.cover !== newCourse?.cover) ||
         newCourse.cover == ''
       ) {
-        console.log('new cover');
-        console.log('hhh', oldCourse.cover !== newCourse?.cover);
+        console.log('old');
 
+        //if old cover true, delete
         if (oldCourse.cover) {
-          console.log('delete old');
-
           const oldCoverName = getFileNameFromUrl(oldCourse.cover);
           await this.storageService.deleteFiles(
             this.storageService.getCourseFilePath(id.toHexString(), 'covers'),
             [oldCoverName],
           );
         }
+        //if new cover, add to course folder
         if (newCourse.cover) {
-          console.log('add new cover');
-
           const coverName = getFileNameFromUrl(newCourse.cover);
           const fileExist = await this.storageService.fileExists(
             this.storageService.getTempCoversFolder(),
@@ -260,27 +257,25 @@ export class CourseService {
           }
         }
       }
-
+      //check difference between old & new array of files
       const difference = getDifference(
         oldCourse.optionalFiles,
         newCourse?.optionalFiles || [],
         getFileNameFromUrl,
       );
-      console.log('difference between old-new', difference);
-
+      //delete file witch not exist in new data course
       if (difference.onlyInArr1.length != 0) {
         await this.storageService.deleteFiles(
           this.storageService.getCourseFilePath(id.toHexString(), 'materials'),
           difference.onlyInArr1,
         );
       }
+      //add files to course folder if exist
       if (difference.onlyInArr2.length != 0) {
         const existingFiles = await this.storageService.filterExistingFiles(
           this.storageService.getTempFilesFolder(),
           difference.onlyInArr2,
         );
-        console.log('exist', existingFiles);
-
         if (existingFiles.length > 0) {
           const newFiles = await this.storageService.copyFiles(
             this.storageService.getTempFilesFolder(),
@@ -290,31 +285,28 @@ export class CourseService {
             ),
             existingFiles,
           );
+          //delete files from temp folder
           await this.storageService.deleteFiles(
             this.storageService.getTempFilesFolder(),
             existingFiles,
           );
+          //concat old and new file links to course
           newCourse.optionalFiles = difference.inBoth.concat(newFiles);
         }
       }
-      //update contract if available
-      // if (Object.keys(contract).length != 0) {
-      //   const course = await this.courseModel.findById(id).select('contract');
 
-      //   if (!course?.contract)
-      //     throw new NotFoundException('Contract not found in course');
+      // update contract if available
+      if (Object.keys(contract).length != 0) {
+        const course = await this.courseModel.findById(id).select('contract');
 
-      //   await this.contractService.updateContract({
-      //     id: course.contract._id,
-      //     contract,
-      //   });
+        if (!course?.contract)
+          throw new NotFoundException('Contract not found in course');
 
-      //   // const contractId = await this.courseModel.findById(id, 'contract');
-      //   // await this.contractService.updateContract({
-      //   //   id: contractId,
-      //   //   ...contract,
-      //   // });
-      // }
+        await this.contractService.updateContract({
+          id: course.contract._id,
+          contract,
+        });
+      }
       if (Object.keys(newCourse).length != 0) {
         await this.courseModel.findByIdAndUpdate(id, newCourse, {
           new: true, // Return the updated document
@@ -323,8 +315,6 @@ export class CourseService {
       }
       return { message: 'success' };
     } catch (error) {
-      console.log('error', error);
-
       throw new HttpException(
         {
           status: error.status || 500,

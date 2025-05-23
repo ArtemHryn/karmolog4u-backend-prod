@@ -183,14 +183,14 @@ export class UpdateCourseDto {
   @IsUrl()
   chat?: string;
 
-  @ApiPropertyOptional({
-    example: ['https://example.com/file1.pdf'],
-    description: 'Additional files',
-  })
-  @IsOptional()
-  @IsArray()
-  @IsUrl({}, { each: true })
-  additionalFiles?: string[];
+  // @ApiPropertyOptional({
+  //   example: ['https://example.com/file1.pdf'],
+  //   description: 'Additional files',
+  // })
+  // @IsOptional()
+  // @IsArray()
+  // @IsUrl({}, { each: true })
+  // additionalFiles?: string[];
 
   @ApiPropertyOptional({
     type: [OptionalLink],
@@ -205,7 +205,14 @@ export class UpdateCourseDto {
   })
   @IsOptional()
   @IsArray()
-  // @IsUrl({}, { each: true })
+  @IsUrl(
+    {
+      require_tld: false, // ❗ дозволити локальні домени типу localhost
+      require_protocol: true,
+      protocols: ['http', 'https'],
+    },
+    { each: true },
+  )
   optionalFiles?: string[];
 
   @ApiPropertyOptional({
@@ -241,7 +248,14 @@ export class UpdateCourseDto {
     description: 'Cover image URL',
   })
   @IsOptional()
-  // @IsUrl()
+  @IsUrl(
+    {
+      require_tld: false, // ❗ дозволити локальні домени типу localhost
+      require_protocol: true,
+      protocols: ['http', 'https'],
+    },
+    { message: 'Cover must be a valid URL' },
+  )
   cover?: string;
 
   @ApiPropertyOptional({
