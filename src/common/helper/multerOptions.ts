@@ -9,9 +9,8 @@ export const multerOptions = (): MulterOptions => ({
     destination: './temporaryCovers', // Директорія для збереження файлів
     filename: (req, file, callback) => {
       // Зміна імені файлу
-      const [, ext] = file.originalname.split('.');
-      const filename = `${Date.now()}_${uuidv4()}.${ext}`;
-      // const filePath = path.join('temporaryFiles', filename);
+      const ext = file.originalname.split('.');
+      const filename = `${Date.now()}_${uuidv4()}.${ext[ext.length - 1]}`;
       callback(null, `${filename}`);
     },
   }),

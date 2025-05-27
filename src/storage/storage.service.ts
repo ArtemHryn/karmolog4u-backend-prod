@@ -204,13 +204,13 @@ export class StorageService {
         const destinationPath = path.join(destinationFolder, fileName);
 
         try {
+          // copy file to destination folder
           await fs.copyFile(sourcePath, destinationPath); // Copy file
           console.log(`Copied: ${fileName}`);
-          const updatedLink = path.join(
-            this.configService.get<string>('SERVER_IP'),
-            'file',
-            fileName,
-          );
+          const updatedLink = `${this.configService.get<string>(
+            'SERVER_IP',
+          )}file${fileName}`;
+          // add to array link of copied file
           fileLinks.push(updatedLink);
         } catch (error) {
           console.error(`Failed to copy ${fileName}: ${error.message}`);
@@ -246,5 +246,24 @@ export class StorageService {
     ); // Коренева папка для пошуку
 
     return filePath;
+  }
+  async deleteCourseFolder(id: string) {
+    const folderPath = path.join(
+      process.cwd(),
+      '..',
+      'storage',
+      'education',
+      id,
+    ); // Шлях до папки
+    try {
+      await fs.access(folderPath);
+      console.log(`Папка курсу: ${folderPath}`);
+      this.logFilesInFolder(folderPath);
+      await fs.rm(folderPath, { recursive: true, force: true }); // Recursively deletes folder
+      console.log(`🗑️ Deleted folder: ${folderPath}`);
+    } catch (error) {
+      console.error(`❌ Error deleting folder: ${error.message}`);
+      throw new BadRequestException('Не вдалося видалити файли курсу');
+    }
   }
 }

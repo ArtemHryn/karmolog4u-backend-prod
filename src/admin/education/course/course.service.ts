@@ -93,7 +93,7 @@ export class CourseService {
           updateData.optionalFiles = filesLink; // Add optionalFiles update
         }
       }
-
+      // update course document with new cover & files
       if (Object.keys(updateData).length > 0) {
         await this.courseModel.findByIdAndUpdate(newCourse._id, {
           $set: updateData,
@@ -146,52 +146,101 @@ export class CourseService {
     if (query.completeness) filters.completeness = { $in: query.completeness }; // Supports multiple completeness values
 
     try {
+      const STATUSES = ['DRAFT', 'PUBLISHED', 'ARCHIVE'];
       return await this.courseModel.aggregate([
-        {
-          $match: filters, // Apply dynamic filters
-        },
-        {
-          $project: {
-            id: '$_id',
-            name: 1,
-            type: 1,
-            stream: 1,
-            access: 1,
-            completeness: 1,
-            chat: 1,
-            _id: 0,
-          },
-        },
-        ...(query.searchQuery
-          ? [
-              {
-                $match: {
-                  $or: [{ name: { $regex: query.searchQuery, $options: 'i' } }],
-                },
-              },
-            ]
-          : []),
-        ...(Object.keys(sort).length ? [{ $sort: sort }] : []), // Ensuring proper sorting
-
         {
           $facet: {
             paginatedData: [
-              { $skip: skip }, // Apply skip for pagination
-              { $limit: limit }, // Apply limit for pagination
+              { $match: filters }, // Apply filters only to paginated data
+              {
+                $project: {
+                  id: '$_id',
+                  name: 1,
+                  status: 1,
+                  stream: 1,
+                  access: 1,
+                  completeness: 1,
+                  chat: 1,
+                  _id: 0,
+                },
+              },
+              ...(query.searchQuery
+                ? [
+                    {
+                      $match: {
+                        $or: [
+                          {
+                            name: { $regex: query.searchQuery, $options: 'i' },
+                          },
+                        ],
+                      },
+                    },
+                  ]
+                : []),
+              ...(Object.keys(sort).length ? [{ $sort: sort }] : []),
+              { $skip: skip },
+              { $limit: limit },
             ],
-            totalCount: [
-              { $count: 'count' }, // Count the total number of documents
+            totalCount: [{ $match: filters }, { $count: 'count' }], // Total count respects filters
+            statusCounts: [
+              {
+                $group: {
+                  _id: '$status', // Count all statuses across the collection (no filtering)
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $project: {
+                  status: '$_id',
+                  count: 1,
+                  _id: 0,
+                },
+              },
+              {
+                $group: {
+                  _id: null,
+                  statusMap: { $push: { k: '$status', v: '$count' } },
+                },
+              },
+              {
+                $project: {
+                  _id: 0,
+                  statusCounters: {
+                    $map: {
+                      input: STATUSES,
+                      as: 'status',
+                      in: {
+                        status: '$$status',
+                        count: {
+                          $ifNull: [
+                            {
+                              $toInt: {
+                                $getField: {
+                                  field: '$$status',
+                                  input: { $arrayToObject: '$statusMap' },
+                                },
+                              },
+                            },
+                            0,
+                          ],
+                        },
+                      },
+                    },
+                  },
+                },
+              },
             ],
           },
         },
         {
           $project: {
-            data: '$paginatedData', // Paginated data
+            data: '$paginatedData',
             totalPages: {
               $ceil: {
                 $divide: [{ $arrayElemAt: ['$totalCount.count', 0] }, limit],
               },
-            }, // Calculate total pages
+            },
+            statusCounters: '$statusCounts', // Moved outside filtering, ensuring global status counts
           },
         },
       ]);
@@ -340,7 +389,10 @@ export class CourseService {
       await this.courseModel.deleteMany({
         _id: { $in: data },
       });
-
+      data.map(
+        async (id: any) =>
+          await this.storageService.deleteCourseFolder(id.toHexString()),
+      );
       return;
     } catch (error) {
       throw new NotFoundException('Помилка, курсів не знайдено');
