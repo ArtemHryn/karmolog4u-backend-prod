@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { Model, Types } from 'mongoose';
 import { Course } from './schemas/course.schema';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { ContractService } from '../contract/contract.service';
@@ -268,19 +268,15 @@ export class CourseService {
   async updateCourse(id: mongoose.Types.ObjectId, data: UpdateCourseDto) {
     try {
       const { contract, ...newCourse } = data;
-      console.log(newCourse);
       //search course
       const oldCourse = await this.courseModel.findById(id).exec();
       if (!oldCourse) {
         throw new NotFoundException('Курс не знайдено :(');
       }
-
       if (
         (newCourse?.cover && oldCourse.cover !== newCourse?.cover) ||
         newCourse.cover == ''
       ) {
-        console.log('old');
-
         //if old cover true, delete
         if (oldCourse.cover) {
           const oldCoverName = getFileNameFromUrl(oldCourse.cover);
@@ -382,34 +378,78 @@ export class CourseService {
 
   async deleteCourse(data: any) {
     try {
-      const contractIds = await this.courseModel
-        .find({ _id: { $in: data } })
-        .select('contract');
-      await this.contractService.deleteContract(contractIds);
-      await this.courseModel.deleteMany({
-        _id: { $in: data },
-      });
-      data.map(
-        async (id: any) =>
-          await this.storageService.deleteCourseFolder(id.toHexString()),
+      console.log(data);
+
+      //check if ids exist in db and return witch exist
+      const existingDocs = await this.courseModel
+        .find({ _id: { $in: data } }, { _id: 1 })
+        .lean()
+        .exec();
+      const existingIds: Types.ObjectId[] = existingDocs.map(
+        (doc) => new Types.ObjectId(doc._id),
       );
-      return;
+      if (existingIds.length <= 0) {
+        throw new NotFoundException('Помилка, курсів не знайдено');
+      }
+      //search array of contract ids
+      const contractIds = await this.courseModel
+        .find({ _id: { $in: existingIds } })
+        .select('contract');
+      //delete contract by array of contract id
+      await this.contractService.deleteContract(contractIds);
+      //delete course by array of existing course id
+      await this.courseModel.deleteMany({
+        _id: { $in: existingIds },
+      });
+      //delete course folder by exist id
+      await this.storageService.deleteCourseFolder(existingIds);
+
+      return { message: 'success' };
     } catch (error) {
-      throw new NotFoundException('Помилка, курсів не знайдено');
+      console.error(error);
+      throw new HttpException(
+        {
+          status: error.status || 500,
+          message:
+            error.response?.message ||
+            'An error occurred while processing the course',
+          error: error.response?.error || 'Internal Server Error',
+        },
+        error.status || 500,
+        {
+          cause: error,
+        },
+      );
     }
   }
 
   async updateStatusCourse(data: any) {
-    const [id, ...status] = data;
+    const { id, ...status } = data;
     try {
+      const exists = await this.courseModel.exists({ _id: id });
+      if (!exists) {
+        throw new NotFoundException(`Курсу з ід "${id}" не знайдено`);
+      }
       await this.courseModel.findByIdAndUpdate(
         id,
-        { $set: { status } },
+        { $set: { ...status } },
         { new: true, runValidators: true },
       );
-      return;
+      return { message: 'success' };
     } catch (error) {
-      throw new NotFoundException('Помилка, курсів не знайдено');
+      throw new HttpException(
+        {
+          status: error.status || 500,
+          message:
+            error.response?.message ||
+            'An error occurred while processing the course',
+          error: error.response?.error || 'Internal Server Error',
+        },
+        error.status || 500,
+        {
+          cause: error,
+        },
+      );
     }
   }
 }

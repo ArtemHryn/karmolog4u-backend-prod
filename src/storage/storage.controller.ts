@@ -44,8 +44,7 @@ export class StorageController {
     private readonly configService: ConfigService,
   ) {}
 
-  @ApiBearerAuth()
-  @Roles(Role.Admin)
+  @Public()
   @Post('uploadCover')
   @ApiOperation({
     summary: 'Admin Upload Cover',

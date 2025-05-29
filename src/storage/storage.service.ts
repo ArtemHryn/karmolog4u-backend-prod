@@ -247,23 +247,61 @@ export class StorageService {
 
     return filePath;
   }
-  async deleteCourseFolder(id: string) {
-    const folderPath = path.join(
-      process.cwd(),
-      '..',
-      'storage',
-      'education',
-      id,
-    ); // Шлях до папки
+  async deleteCourseFolder(ids: any) {
+    //convert mongo id to string
+    const folderNames = ids.map((id) => id.toHexString());
+    const basePath = path.join(process.cwd(), '..', 'storage', 'education'); // Шлях до папки
     try {
-      await fs.access(folderPath);
-      console.log(`Папка курсу: ${folderPath}`);
-      this.logFilesInFolder(folderPath);
-      await fs.rm(folderPath, { recursive: true, force: true }); // Recursively deletes folder
-      console.log(`🗑️ Deleted folder: ${folderPath}`);
+      //check exist folders in storage
+      const existingFolder = await this.getExistingFolders(
+        basePath,
+        folderNames,
+      );
+      //delete existing folder
+      await this.deleteFolders(existingFolder);
+      return;
     } catch (error) {
       console.error(`❌ Error deleting folder: ${error.message}`);
       throw new BadRequestException('Не вдалося видалити файли курсу');
     }
+  }
+
+  async getExistingFolders(
+    basePath: string,
+    folderNames: string[],
+  ): Promise<string[]> {
+    const existingFolders: string[] = [];
+
+    await Promise.all(
+      folderNames.map(async (folderName) => {
+        const folderPath = path.join(basePath, folderName);
+        try {
+          const stat = await fs.stat(folderPath);
+          if (stat.isDirectory()) {
+            existingFolders.push(folderPath);
+          }
+        } catch {
+          // Ігноруємо, якщо папки не існує або не доступна
+        }
+      }),
+    );
+
+    return existingFolders;
+  }
+
+  async deleteFolders(folders: string[]): Promise<string[]> {
+    const deleted: string[] = [];
+
+    for (const folder of folders) {
+      try {
+        await fs.rm(folder, { recursive: true, force: true });
+        console.log(`🗑️ Deleted folder: ${folder}`);
+        deleted.push(folder);
+      } catch (err) {
+        console.warn(`❗ Не вдалося видалити ${folder}:`, err);
+      }
+    }
+
+    return deleted;
   }
 }

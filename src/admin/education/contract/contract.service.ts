@@ -35,10 +35,13 @@ export class ContractService {
     }
   }
   async deleteContract(data: any) {
+    const contractIds = data.map((data) => data.contract.toHexString());
     try {
       await this.contractModel.deleteMany({
-        _id: { $in: data },
+        _id: { $in: contractIds },
       });
-    } catch (error) {}
+    } catch (error) {
+      throw new BadRequestException('Не  вдалося видалити контракти');
+    }
   }
 }

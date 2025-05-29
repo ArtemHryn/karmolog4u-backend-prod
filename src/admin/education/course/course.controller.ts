@@ -8,7 +8,6 @@ import {
 import {
   Body,
   Controller,
-  Delete,
   Get,
   HttpException,
   Param,
@@ -179,7 +178,7 @@ export class CourseController {
     }
   }
 
-  @Delete('delete')
+  @Post('delete')
   @ApiOperation({
     summary: 'Admin Delete Courses',
     description: 'Access restricted to admins',

@@ -17,9 +17,9 @@ export class LoggerMiddleware implements NestMiddleware {
       this.logger.debug(
         `${method} ${originalUrl}   ${statusCode}   ${contentLength} - ${userAgent} ${ip}`,
       );
-      if (method !== 'GET') {
-        this.logger.debug(request.body);
-      }
+      // if (method !== 'GET') {
+      //   this.logger.debug(request.body);
+      // }
     });
 
     next();
