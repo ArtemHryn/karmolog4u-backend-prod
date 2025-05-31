@@ -205,6 +205,9 @@ export class UpdateCourseDto {
   })
   @IsOptional()
   @IsArray()
+  @Transform(({ value }) =>
+    Array.isArray(value) ? value.map((v) => encodeURI(v)) : [],
+  )
   @IsUrl(
     {
       require_tld: false, // ❗ дозволити локальні домени типу localhost
@@ -248,6 +251,10 @@ export class UpdateCourseDto {
     description: 'Cover image URL',
   })
   @IsOptional()
+  @IsString()
+  @Transform(({ value }) =>
+    typeof value === 'string' ? encodeURI(value) : value,
+  )
   @IsUrl(
     {
       require_tld: false, // ❗ дозволити локальні домени типу localhost

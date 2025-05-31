@@ -179,6 +179,9 @@ export class CreateCourseDto {
   })
   @IsOptional()
   @IsArray()
+  @Transform(({ value }) =>
+    Array.isArray(value) ? value.map((v) => encodeURI(v)) : [],
+  )
   @IsString({ each: true })
   @IsUrl(
     {
@@ -220,6 +223,9 @@ export class CreateCourseDto {
   })
   @IsOptional()
   @IsString()
+  @Transform(({ value }) =>
+    typeof value === 'string' ? encodeURI(value) : value,
+  )
   @IsUrl(
     {
       require_tld: false, // ❗ дозволити локальні домени типу localhost
