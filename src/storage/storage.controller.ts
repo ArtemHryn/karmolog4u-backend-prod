@@ -164,7 +164,7 @@ export class StorageController {
   }
 
   @Public()
-  @Get('cover/:imageName')
+  @Get('covers/:imageName')
   async serveCover(
     @Param() params: DownloadImageParamsDto,
     @Res() res: Response,
