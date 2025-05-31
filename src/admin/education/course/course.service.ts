@@ -161,6 +161,7 @@ export class CourseService {
                   access: 1,
                   completeness: 1,
                   chat: 1,
+                  type: 1,
                   _id: 0,
                 },
               },
