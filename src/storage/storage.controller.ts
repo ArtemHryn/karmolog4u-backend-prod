@@ -44,7 +44,8 @@ export class StorageController {
     private readonly configService: ConfigService,
   ) {}
 
-  @Public()
+  @ApiBearerAuth()
+  @Roles(Role.Admin)
   @Post('uploadCover')
   @ApiOperation({
     summary: 'Admin Upload Cover',
@@ -141,8 +142,7 @@ export class StorageController {
     }
   }
 
-  @ApiBearerAuth()
-  @Roles(Role.Admin)
+  @Public()
   @Get('temporaryCovers/:imageName')
   async serveTemporaryCover(
     @Res() res: Response,
