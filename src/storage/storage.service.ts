@@ -209,7 +209,7 @@ export class StorageService {
           console.log(`Copied: ${fileName}`);
           const updatedLink = `${this.configService.get<string>(
             'SERVER_IP',
-          )}/file/${fileName}`;
+          )}file/${fileName}`;
           // add to array link of copied file
           fileLinks.push(updatedLink);
         } catch (error) {
