@@ -14,7 +14,6 @@ import {
   HttpCode,
   HttpException,
   Ip,
-  Param,
   Post,
   Query,
   UseGuards,

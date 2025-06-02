@@ -1,7 +1,6 @@
 import {
   Controller,
   Get,
-  UsePipes,
   HttpException,
   Post,
   Body,

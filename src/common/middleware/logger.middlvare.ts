@@ -8,7 +8,7 @@ export class LoggerMiddleware implements NestMiddleware {
   use(request: Request, response: Response, next: NextFunction): void {
     const { ip, method, originalUrl } = request;
     const userAgent = request.get('user-agent') || '';
-    const headers = request.headers;
+    // const headers = request.headers;
     // this.logger.debug(headers);
     response.on('finish', () => {
       const { statusCode } = response;

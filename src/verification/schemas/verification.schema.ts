@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-import { Role } from 'src/role/role.enum';
+// import { Role } from 'src/role/role.enum';
 
 export type VerificationDocument = HydratedDocument<Verification>;
 
@@ -9,9 +9,9 @@ export type VerificationDocument = HydratedDocument<Verification>;
   toJSON: {
     virtuals: true,
     versionKey: false,
-    transform: function (doc, ret) {
-      // Remove the "_id" property when the object is serialized
-    },
+    // transform: function (doc, ret) {
+    //   // Remove the "_id" property when the object is serialized
+    // },
   },
 })
 export class Verification {

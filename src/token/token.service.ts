@@ -57,7 +57,7 @@ export class TokenService {
   }
   async deleteToken(tokenData: DeleteTokenDto): Promise<{ message: string }> {
     try {
-      const token = await this.tokenModel.findOneAndDelete({
+      await this.tokenModel.findOneAndDelete({
         ...tokenData,
       });
       return { message: 'success' };
