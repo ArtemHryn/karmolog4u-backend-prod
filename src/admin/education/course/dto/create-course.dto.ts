@@ -10,6 +10,12 @@ import {
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
+class OptionalFiles {
+  originalName: string;
+  savedName: string;
+  path: string;
+}
+
 class Access {
   @ApiProperty({
     description: 'Access type',
@@ -179,19 +185,19 @@ export class CreateCourseDto {
   })
   @IsOptional()
   @IsArray()
-  @Transform(({ value }) =>
-    Array.isArray(value) ? value.map((v) => encodeURI(v)) : [],
-  )
-  @IsString({ each: true })
-  @IsUrl(
-    {
-      require_tld: false, // ❗ дозволити локальні домени типу localhost
-      require_protocol: true,
-      protocols: ['http', 'https'],
-    },
-    { each: true },
-  )
-  optionalFiles?: string[];
+  // @Transform(({ value }) =>
+  //   Array.isArray(value) ? value.map((v) => encodeURI(v)) : [],
+  // )
+  // @IsString({ each: true })
+  // @IsUrl(
+  //   {
+  //     require_tld: false, // ❗ дозволити локальні домени типу localhost
+  //     require_protocol: true,
+  //     protocols: ['http', 'https'],
+  //   },
+  //   { each: true },
+  // )
+  optionalFiles?: OptionalFiles[];
 
   @ApiPropertyOptional({
     example: 'https://example.com/invoice',

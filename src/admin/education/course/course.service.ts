@@ -18,6 +18,8 @@ import {
 } from 'src/common/helper/getFileNameFromUrl';
 import { getDifference } from 'src/common/helper/getDifferenceArray';
 import { UpdateCourseDto } from './dto/update-course.dto';
+import { attachTargetToFiles } from 'src/common/helper/attachTargetToFiles';
+import { FilesService } from 'src/files/files.service';
 
 @Injectable()
 export class CourseService {
@@ -26,35 +28,35 @@ export class CourseService {
     private readonly contractService: ContractService,
     private readonly storageService: StorageService,
     private readonly configService: ConfigService,
+    private readonly filesService: FilesService,
   ) {}
 
   async createCourse(data: CreateCourseDto) {
     try {
       const { contract, cover, optionalFiles, ...course } = data;
-
-      //cerate contract
-      const contractID = await this.contractService.createContract(contract);
       //create course
       const newCourse = new this.courseModel({
         ...course,
-        contract: contractID.id,
       });
       await newCourse.save();
       if (!newCourse) {
         throw new Error('Помилка створення курсу :(');
       }
+      //create contract
+      await this.contractService.createContract({
+        ...contract,
+        course: newCourse._id,
+      });
       //create folder to course material
       const folderPath = await this.storageService.createCourseStorage(
         newCourse._id.toString(),
       );
 
-      const updateData: Record<string, any> = {}; // Store all updates
-
       if (cover) {
         //get name from url
         const coverName = getFileNameFromUrl(cover);
         //check exist
-        const fileExist = await this.storageService.fileExists(
+        const fileExist = await this.storageService.coverExists(
           this.storageService.getTempCoversFolder(),
           coverName,
         );
@@ -65,39 +67,37 @@ export class CourseService {
             this.storageService.getSubFolderPath(folderPath, 'covers'),
             this.configService,
           );
-          // add cover link to update
-          updateData.cover = coverLink; // Add cover update
+          // update course document with new cover
+          await this.courseModel.findByIdAndUpdate(newCourse._id, {
+            cover: coverLink,
+          });
         }
       }
 
       if (optionalFiles?.length > 0) {
-        // get array of name
-        const fileNames = getFileNamesFromUrls(optionalFiles);
         //check exist
         const existingFiles = await this.storageService.filterExistingFiles(
-          this.storageService.getTempFilesFolder(),
-          fileNames,
+          // this.storageService.getTempFilesFolder(),
+          optionalFiles,
         );
+
         //if exist, copy
         if (existingFiles.length > 0) {
-          const filesLink = await this.storageService.copyFiles(
-            this.storageService.getTempFilesFolder(),
+          const files = await this.storageService.copyFiles(
             this.storageService.getSubFolderPath(folderPath, 'materials'),
             existingFiles,
           );
-          await this.storageService.deleteFiles(
-            this.storageService.getTempFilesFolder(),
-            existingFiles,
+          //delete from temporary folder
+          await this.storageService.deleteFiles(process.cwd(), existingFiles);
+          //add to array course id
+          const filesToSave = attachTargetToFiles(
+            files,
+            'Course',
+            newCourse._id,
           );
-          //add file link to update
-          updateData.optionalFiles = filesLink; // Add optionalFiles update
+          //create file documents
+          await this.filesService.createFiles(filesToSave);
         }
-      }
-      // update course document with new cover & files
-      if (Object.keys(updateData).length > 0) {
-        await this.courseModel.findByIdAndUpdate(newCourse._id, {
-          $set: updateData,
-        });
       }
 
       return { message: 'success' };
@@ -207,23 +207,25 @@ export class CourseService {
                 $project: {
                   _id: 0,
                   statusCounters: {
-                    $map: {
-                      input: STATUSES,
-                      as: 'status',
-                      in: {
-                        status: '$$status',
-                        count: {
-                          $ifNull: [
-                            {
-                              $toInt: {
-                                $getField: {
-                                  field: '$$status',
-                                  input: { $arrayToObject: '$statusMap' },
+                    $arrayToObject: {
+                      $map: {
+                        input: STATUSES,
+                        as: 'status',
+                        in: {
+                          k: '$$status',
+                          v: {
+                            $ifNull: [
+                              {
+                                $toInt: {
+                                  $getField: {
+                                    field: '$$status',
+                                    input: { $arrayToObject: '$statusMap' },
+                                  },
                                 },
                               },
-                            },
-                            0,
-                          ],
+                              0,
+                            ],
+                          },
                         },
                       },
                     },
@@ -241,7 +243,9 @@ export class CourseService {
                 $divide: [{ $arrayElemAt: ['$totalCount.count', 0] }, limit],
               },
             },
-            statusCounters: '$statusCounts', // Moved outside filtering, ensuring global status counts
+            statusCounters: {
+              $arrayElemAt: ['$statusCounts.statusCounters', 0],
+            }, // Moved outside filtering, ensuring global status counts
           },
         },
       ]);
@@ -250,117 +254,187 @@ export class CourseService {
     }
   }
 
-  async getCourseById(data: any) {
+  async getCourseById(courseId: any) {
     try {
-      return await this.courseModel
-        .findById(data)
-        .populate({
-          path: 'contract',
-          populate: {
-            path: 'points', // якщо points — це ObjectId[] в контракті
+      const course = await this.courseModel.aggregate([
+        { $match: { _id: courseId } },
+        {
+          $lookup: {
+            from: 'contracts',
+            localField: '_id',
+            foreignField: 'course',
+            as: 'contract',
           },
-        })
-        .exec();
+        },
+        {
+          $unwind: {
+            path: '$contract',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: 'files',
+            let: { courseId: '$_id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$targetModel', 'Course'] },
+                      { $eq: ['$targetId', '$$courseId'] },
+                    ],
+                  },
+                },
+              },
+              {
+                $project: {
+                  _id: 0,
+                  originalName: 1,
+                  savedName: 1,
+                },
+              },
+            ],
+            as: 'optionalFiles',
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            id: '$_id',
+            name: 1,
+            type: 1,
+            completeness: 1,
+            access: 1,
+            chat: 1,
+            optionalLink: 1,
+            practiceInvoice: 1,
+            stream: 1,
+            price: 1,
+            literature: 1,
+            cover: 1,
+            status: 1,
+            optionalFiles: 1,
+            contract: {
+              date: '$contract.date',
+              signUpTo: '$contract.signUpTo',
+              price: '$contract.price',
+              header: '$contract.header',
+              points: '$contract.points',
+            },
+          },
+        },
+      ]);
+      return course[0];
     } catch (error) {
-      throw new NotFoundException(`Помилка, курсу з ${data} не знайдено :(`);
+      throw new NotFoundException(
+        `Помилка, курсу з ${courseId} не знайдено :(`,
+      );
     }
   }
 
   async updateCourse(id: mongoose.Types.ObjectId, data: UpdateCourseDto) {
     try {
-      const { contract, ...newCourse } = data;
+      const { cover, optionalFiles, contract, ...courseData } = data;
       //search course
       const oldCourse = await this.courseModel.findById(id).exec();
       if (!oldCourse) {
         throw new NotFoundException('Курс не знайдено :(');
       }
-      if (
-        (newCourse?.cover && oldCourse.cover !== newCourse?.cover) ||
-        newCourse.cover == ''
-      ) {
+
+      const updateData: Record<string, any> = { ...courseData }; // Store all updates
+
+      if ((cover && oldCourse.cover !== cover) || cover == '') {
         //if old cover true, delete
         if (oldCourse.cover) {
           const oldCoverName = getFileNameFromUrl(oldCourse.cover);
           await this.storageService.deleteFiles(
-            this.storageService.getCourseFilePath(id.toHexString(), 'covers'),
-            [oldCoverName],
+            this.storageService.getCourseFilePath(id.toHexString(), 'cover'),
+            [
+              {
+                path: oldCoverName,
+              },
+            ],
           );
         }
         //if new cover, add to course folder
-        if (newCourse.cover) {
-          const coverName = getFileNameFromUrl(newCourse.cover);
-          const fileExist = await this.storageService.fileExists(
+        if (cover) {
+          const coverName = getFileNameFromUrl(cover);
+          //check if cover exist
+          const coverExist = await this.storageService.coverExists(
             this.storageService.getTempCoversFolder(),
             coverName,
           );
-          if (fileExist) {
+          //if exist compress and save to storage
+          if (coverExist) {
             const coverLink = await coverCompress(
-              newCourse.cover,
+              cover,
               this.storageService.getCourseFilePath(id.toHexString(), 'covers'),
               this.configService,
             );
-            newCourse.cover = coverLink;
+            //add link to update
+            updateData.cover = coverLink;
           }
         }
       }
+
+      //update course
+      await this.courseModel.findByIdAndUpdate(id, updateData, {
+        new: true, // Return the updated document
+        runValidators: true, // Run validation checks
+      });
+
+      //get files from db
+      const oldFiles = await this.filesService.getFiles('Course', id);
       //check difference between old & new array of files
-      const difference = getDifference(
-        oldCourse.optionalFiles,
-        newCourse?.optionalFiles || [],
-        getFileNameFromUrl,
-      );
+      const difference = getDifference(oldFiles, optionalFiles || []);
       //delete file witch not exist in new data course
       if (difference.onlyInArr1.length != 0) {
+        //delete from storage
         await this.storageService.deleteFiles(
-          this.storageService.getCourseFilePath(id.toHexString(), 'materials'),
+          this.storageService.getStoragePath(),
           difference.onlyInArr1,
         );
+        //delete from db
+        const fileIds = difference.onlyInArr1.map((i) => i._id);
+
+        await this.filesService.deleteFiles(fileIds);
       }
-      //add files to course folder if exist
+      // //add files to course folder if exist
       if (difference.onlyInArr2.length != 0) {
         const existingFiles = await this.storageService.filterExistingFiles(
-          this.storageService.getTempFilesFolder(),
           difference.onlyInArr2,
         );
+        //if file exist -> copy to course folder
         if (existingFiles.length > 0) {
           const newFiles = await this.storageService.copyFiles(
-            this.storageService.getTempFilesFolder(),
             this.storageService.getCourseFilePath(
               id.toHexString(),
               'materials',
             ),
             existingFiles,
           );
-          //delete files from temp folder
-          await this.storageService.deleteFiles(
-            this.storageService.getTempFilesFolder(),
-            existingFiles,
-          );
-          //concat old and new file links to course
-          newCourse.optionalFiles = difference.inBoth.concat(newFiles);
+          //add additional fields to files object
+          const filesToSave = attachTargetToFiles(newFiles, 'Course', id);
+          //save files data to db
+          await this.filesService.createFiles(filesToSave),
+            //delete files from temp folder
+            await this.storageService.deleteFiles(process.cwd(), existingFiles);
         }
       }
 
       // update contract if available
       if (Object.keys(contract).length != 0) {
-        const course = await this.courseModel.findById(id).select('contract');
-
-        if (!course?.contract)
-          throw new NotFoundException('Contract not found in course');
-
         await this.contractService.updateContract({
-          id: course.contract._id,
+          course: id,
           contract,
         });
       }
-      if (Object.keys(newCourse).length != 0) {
-        await this.courseModel.findByIdAndUpdate(id, newCourse, {
-          new: true, // Return the updated document
-          runValidators: true, // Run validation checks
-        });
-      }
+
       return { message: 'success' };
     } catch (error) {
+      console.log(error);
+
       throw new HttpException(
         {
           status: error.status || 500,
@@ -379,8 +453,6 @@ export class CourseService {
 
   async deleteCourse(data: any) {
     try {
-      console.log(data);
-
       //check if ids exist in db and return witch exist
       const existingDocs = await this.courseModel
         .find({ _id: { $in: data } }, { _id: 1 })
@@ -392,12 +464,9 @@ export class CourseService {
       if (existingIds.length <= 0) {
         throw new NotFoundException('Помилка, курсів не знайдено');
       }
-      //search array of contract ids
-      const contractIds = await this.courseModel
-        .find({ _id: { $in: existingIds } })
-        .select('contract');
-      //delete contract by array of contract id
-      await this.contractService.deleteContract(contractIds);
+
+      //delete contract by array of course id
+      await this.contractService.deleteContract(existingIds);
       //delete course by array of existing course id
       await this.courseModel.deleteMany({
         _id: { $in: existingIds },

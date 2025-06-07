@@ -124,9 +124,17 @@ export class StorageController {
     @UploadedFiles()
     files: Express.Multer.File[],
   ) {
+    // console.log(files);
+
     try {
-      const envValue = this.configService.get<string>('SERVER_IP');
-      return { uploaded: files.map((f) => `${envValue}${f.path}`) };
+      // const envValue = this.configService.get<string>('SERVER_IP');
+      return {
+        uploaded: files.map((f) => ({
+          originalName: f.originalname,
+          savedName: f.filename,
+          path: `${f.path}`,
+        })),
+      };
     } catch (error) {
       throw new HttpException(
         {

@@ -13,33 +13,39 @@ export class ContractService {
     try {
       const newContract = new this.contractModel(data);
       await newContract.save();
-      return { id: newContract._id };
+      return { message: 'success' };
     } catch (error) {
       throw new BadRequestException('Помилка створення контракту :(');
     }
   }
 
-  async getContract() {
+  async getContract(data: any) {
     try {
+      return await this.contractModel.findOne({ course: data });
     } catch (error) {}
   }
   async updateContract(data: any) {
-    const { id, contract } = data;
     try {
-      return await this.contractModel.findByIdAndUpdate(id, contract, {
-        new: true, // Return the updated document
-        runValidators: true, // Run validation checks
-      });
+      await this.contractModel.findOneAndUpdate(
+        { course: data.course }, // умова пошуку по полю course
+        data.contract, // дані для оновлення
+        {
+          new: true, // повернути оновлений документ
+          runValidators: true, // запуск валідації за схемою
+        },
+      );
+      return { message: 'success' };
     } catch (error) {
       throw new BadRequestException('Помилка оновлення контракту :(');
     }
   }
-  async deleteContract(data: any) {
-    const contractIds = data.map((data) => data.contract.toHexString());
+  async deleteContract(courseIds: any) {
+    // const Ids = data.map((data) => data.toHexString());
     try {
       await this.contractModel.deleteMany({
-        _id: { $in: contractIds },
+        course: { $in: courseIds },
       });
+      return { message: 'success' };
     } catch (error) {
       throw new BadRequestException('Не  вдалося видалити контракти');
     }

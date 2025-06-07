@@ -2,20 +2,41 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Date, HydratedDocument } from 'mongoose';
 
 export type CourseDocument = HydratedDocument<Course>;
-export class access {
-  @Prop({ required: true, enum: ['PERMANENT', 'FOR_PERIOD', 'TO_DATE'] })
+
+@Schema({ _id: false })
+class Access {
+  @Prop({
+    required: true,
+    type: String,
+    enum: ['PERMANENT', 'FOR_PERIOD', 'TO_DATE'],
+  })
   type: string;
+
+  @Prop({ type: Date, required: false })
   dateStart: Date;
+
+  @Prop({ type: Date, required: false })
   dateEnd: Date;
+
+  @Prop({ type: Number, required: false })
+  months: number;
 }
 
-export class literature {
+@Schema({ _id: false })
+class Literature {
+  @Prop({ required: true, type: String })
   author: string;
+
+  @Prop({ required: true, type: String })
   link: string;
 }
 
-export class optionalLink {
+@Schema({ _id: false })
+class OptionalLink {
+  @Prop({ required: true, type: String })
   name: string;
+
+  @Prop({ required: true, type: String })
   link: string;
 }
 
@@ -31,11 +52,12 @@ export class optionalLink {
   },
 })
 export class Course {
-  @Prop({ required: true })
+  @Prop({ required: true, type: String })
   name: string;
 
   @Prop({
     required: true,
+    type: String,
     enum: [
       'SSK_INDEPENDENT',
       'SSK_WITH_CURATOR',
@@ -46,59 +68,42 @@ export class Course {
   })
   type: string;
 
-  @Prop({ required: true, enum: ['ALL', 'BY_LESSON'] })
+  @Prop({ required: true, type: String, enum: ['ALL', 'BY_LESSON'] })
   completeness: string;
 
   @Prop({
-    type: access,
-  })
-  access: access;
-
-  @Prop({
+    type: Access,
     required: true,
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Contract',
   })
-  contract: mongoose.Types.ObjectId;
+  access: Access;
 
-  @Prop({ type: String, default: '' })
+  @Prop({ required: false, type: String, default: '' })
   chat: string;
 
   @Prop({
-    type: [
-      {
-        name: String,
-        link: String,
-      },
-    ],
+    required: false,
+    type: [OptionalLink],
     default: [],
   })
-  optionalLink: optionalLink[];
+  optionalLink: OptionalLink[];
 
-  @Prop({ type: [String], default: [] })
-  optionalFiles?: string[];
-
-  @Prop({ type: String, default: '' })
+  @Prop({ required: false, type: String, default: '' })
   practiceInvoice: string;
 
-  @Prop({ type: String, default: 0 })
+  @Prop({ required: false, type: String, default: 0 })
   stream: number;
 
-  @Prop({ type: Number, default: 0 })
+  @Prop({ required: false, type: Number, default: 0 })
   price: number;
 
   @Prop({
-    type: [
-      {
-        author: String,
-        link: String,
-      },
-    ],
+    required: false,
+    type: [Literature],
     default: [],
   })
-  literature: literature[];
+  literature: Literature[];
 
-  @Prop({ type: String, default: '' })
+  @Prop({ required: false, type: String, default: '' })
   cover: string;
 
   @Prop({

@@ -19,6 +19,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middlvare';
 import { AdminModule } from './admin/admin.module';
 import { MailModule } from './mail/mail.module';
 import { StorageService } from './storage/storage.service';
+import { FilesModule } from './files/files.module';
 
 const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
 
@@ -40,6 +41,7 @@ const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
     AdminModule,
     ProductModule,
     MailModule,
+    FilesModule,
     // ServeStaticModule.forRoot({
     //   rootPath: 'covers',
     //   serveRoot: '/covers', // Optional: URL prefix for accessing the files

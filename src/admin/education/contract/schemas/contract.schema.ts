@@ -1,13 +1,14 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Date, HydratedDocument } from 'mongoose';
+import mongoose, { Date, HydratedDocument } from 'mongoose';
 
 export type ContractDocument = HydratedDocument<Contract>;
 
+@Schema({ _id: false })
 export class Point {
-  @Prop({ required: true })
+  @Prop({ required: true, type: String })
   name: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, type: String })
   description: string;
 }
 
@@ -23,6 +24,13 @@ export class Point {
   },
 })
 export class Contract {
+  @Prop({
+    required: false,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Course',
+  })
+  course: mongoose.Types.ObjectId;
+
   @Prop({ type: Date, required: true })
   date: Date;
 
@@ -35,7 +43,7 @@ export class Contract {
   @Prop({ type: String, required: true })
   header: string;
 
-  @Prop({ type: [{ name: String, description: String }], default: [] })
+  @Prop({ required: false, type: [Point], default: [] })
   points: Point[];
 }
 

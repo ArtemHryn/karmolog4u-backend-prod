@@ -1,16 +1,13 @@
-export function getDifference<T extends string>(
+export function getDifference<T extends { savedName: string }>(
   arr1: T[],
   arr2: T[],
-  getFileNameFromUrl: (url: T) => string,
-): { onlyInArr1: string[]; onlyInArr2: string[]; inBoth: string[] } {
-  const fileNames1 = arr1.map(getFileNameFromUrl);
-  const fileNames2 = arr2.map(getFileNameFromUrl);
+): { onlyInArr1: T[]; onlyInArr2: T[]; inBoth: T[] } {
+  const savedNames1 = new Set(arr1.map((item) => item.savedName));
+  const savedNames2 = new Set(arr2.map((item) => item.savedName));
 
-  const onlyInArr1 = fileNames1.filter((name) => !fileNames2.includes(name));
-  const onlyInArr2 = fileNames2.filter((name) => !fileNames1.includes(name));
-  const inBoth = fileNames1.filter(
-    (name) => fileNames2.includes(name) && fileNames1.includes(name),
-  );
+  const onlyInArr1 = arr1.filter((item) => !savedNames2.has(item.savedName));
+  const onlyInArr2 = arr2.filter((item) => !savedNames1.has(item.savedName));
+  const inBoth = arr1.filter((item) => savedNames2.has(item.savedName));
 
   return { onlyInArr1, onlyInArr2, inBoth };
 }

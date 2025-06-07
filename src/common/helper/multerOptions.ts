@@ -28,23 +28,25 @@ export const multerOptionsFiles = (): MulterOptions => ({
   storage: multer.diskStorage({
     destination: './temporaryFiles', // Директорія для збереження файлів
     filename: async (req, file, callback) => {
-      console.log(file.originalname);
+      // console.log('file.originalname', file.originalname);
+      console.log(process.cwd());
 
       const originalName = normalizeFilename(file.originalname); // Правильне ім'яs
 
       const ext = path.extname(originalName);
-      const nameWithoutExt = path.basename(originalName, ext);
-      let filename = `${nameWithoutExt}${ext}`;
-      let filePath = path.join(process.cwd(), 'temporaryFiles', filename);
+      // const nameWithoutExt = path.basename(originalName, ext);
+      const filename = `${Date.now()}_${uuidv4()}${Date.now()}${ext}`;
+      const filePath = path.join(process.cwd(), 'temporaryFiles', filename);
+      // console.log('filePath', filePath);
 
-      let copyIndex = 1;
+      // let copyIndex = 1;
 
-      // Перевіряємо, чи файл вже існує та додаємо префікс (copy_X)
-      while (await fileExists(filePath)) {
-        filename = `${nameWithoutExt}(copy_${copyIndex})${ext}`;
-        filePath = path.join(process.cwd(), 'temporaryFiles', filename); // Оновлюємо шлях
-        copyIndex++;
-      }
+      // // Перевіряємо, чи файл вже існує та додаємо префікс (copy_X)
+      // while (await fileExists(filePath)) {
+      //   filename = `${nameWithoutExt}(copy_${copyIndex})${ext}`;
+      //   filePath = path.join(process.cwd(), 'temporaryFiles', filename); // Оновлюємо шлях
+      //   copyIndex++;
+      // }
 
       callback(null, filename);
     },

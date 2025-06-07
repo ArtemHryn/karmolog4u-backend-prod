@@ -205,18 +205,18 @@ export class UpdateCourseDto {
   })
   @IsOptional()
   @IsArray()
-  @Transform(({ value }) =>
-    Array.isArray(value) ? value.map((v) => encodeURI(v)) : [],
-  )
-  @IsUrl(
-    {
-      require_tld: false, // ❗ дозволити локальні домени типу localhost
-      require_protocol: true,
-      protocols: ['http', 'https'],
-    },
-    { each: true },
-  )
-  optionalFiles?: string[];
+  // @Transform(({ value }) =>
+  //   Array.isArray(value) ? value.map((v) => encodeURI(v)) : [],
+  // )
+  // @IsUrl(
+  //   {
+  //     require_tld: false, // ❗ дозволити локальні домени типу localhost
+  //     require_protocol: true,
+  //     protocols: ['http', 'https'],
+  //   },
+  //   { each: true },
+  // )
+  optionalFiles?: any[];
 
   @ApiPropertyOptional({
     example: 'https://example.com/invoice',

@@ -111,35 +111,35 @@ export class StorageService {
     await this.createFolder(coversFolder);
   }
 
-  async moveFiles(
-    fileLinks: string[],
-    tempFolder: string,
-    storageFolder: string,
-  ): Promise<string[]> {
-    try {
-      await fs.mkdir(storageFolder, { recursive: true }); // Ensure storage folder exists
+  // async moveFiles(
+  //   fileLinks: string[],
+  //   tempFolder: string,
+  //   storageFolder: string,
+  // ): Promise<string[]> {
+  //   try {
+  //     await fs.mkdir(storageFolder, { recursive: true }); // Ensure storage folder exists
 
-      const updatedLinks: string[] = [];
+  //     const updatedLinks: string[] = [];
 
-      for (const fileLink of fileLinks) {
-        const fileName = path.basename(fileLink); // Extract filename from URL or path
-        const tempPath = path.join(tempFolder, fileName); // Temporary file path
-        const storagePath = path.join(storageFolder, fileName); // New storage location
+  //     for (const fileLink of fileLinks) {
+  //       const fileName = path.basename(fileLink); // Extract filename from URL or path
+  //       const tempPath = path.join(tempFolder, fileName); // Temporary file path
+  //       const storagePath = path.join(storageFolder, fileName); // New storage location
 
-        await fs.rename(tempPath, storagePath); // Move file
-        console.log(`Moved: ${fileName} → ${storagePath}`);
+  //       await fs.rename(tempPath, storagePath); // Move file
+  //       console.log(`Moved: ${fileName} → ${storagePath}`);
 
-        // Update the link to replace "temporaryCovers" with "covers"
-        const updatedLink = fileLink.replace('/temporaryFiles/', '/file/');
-        updatedLinks.push(updatedLink);
-      }
+  //       // Update the link to replace "temporaryCovers" with "covers"
+  //       const updatedLink = fileLink.replace('/temporaryFiles/', '/file/');
+  //       updatedLinks.push(updatedLink);
+  //     }
 
-      return updatedLinks;
-    } catch (error) {
-      console.error(`Error moving files: ${error.message}`);
-      return [];
-    }
-  }
+  //     return updatedLinks;
+  //   } catch (error) {
+  //     console.error(`Error moving files: ${error.message}`);
+  //     return [];
+  //   }
+  // }
   getTempFilesFolder() {
     const filePath = path.join(process.cwd(), 'temporaryFiles');
     return filePath;
@@ -158,7 +158,7 @@ export class StorageService {
     return filePath;
   }
 
-  async fileExists(folderPath: string, fileName: string): Promise<boolean> {
+  async coverExists(folderPath: string, fileName: string): Promise<boolean> {
     const filePath = path.join(folderPath, fileName);
 
     try {
@@ -169,63 +169,55 @@ export class StorageService {
     }
   }
 
-  async filterExistingFiles(
-    folderPath: string,
-    fileNames: string[],
-  ): Promise<string[]> {
+  async filterExistingFiles(files: any[]): Promise<any[]> {
     const existingFiles: string[] = [];
 
-    for (const fileName of fileNames) {
-      const filePath = path.join(folderPath, fileName);
+    for (const file of files) {
+      const filePath = path.join(process.cwd(), file?.path);
 
       try {
         await fs.access(filePath); // Check if the file exists
-        existingFiles.push(fileName); // Add to the result array if it exists
+        existingFiles.push(file); // Add to the result array if it exists
       } catch {
         // File does not exist, do nothing
       }
     }
-
     return existingFiles;
   }
 
-  async copyFiles(
-    sourceFolder: string,
-    destinationFolder: string,
-    fileNames: string[],
-  ): Promise<string[]> {
+  async copyFiles(destinationFolder: string, files: any[]): Promise<any[]> {
     try {
       await fs.mkdir(destinationFolder, { recursive: true }); // Ensure destination exists
 
-      const fileLinks: string[] = [];
+      const copiedFiles: any[] = [];
 
-      for (const fileName of fileNames) {
-        const sourcePath = path.join(sourceFolder, fileName);
-        const destinationPath = path.join(destinationFolder, fileName);
+      for (const file of files) {
+        const sourcePath = path.join(process.cwd(), file.path);
+        const destinationPath = path.join(destinationFolder, file.savedName);
 
         try {
           // copy file to destination folder
           await fs.copyFile(sourcePath, destinationPath); // Copy file
-          console.log(`Copied: ${fileName}`);
-          const updatedLink = `${this.configService.get<string>(
-            'SERVER_IP',
-          )}file/${fileName}`;
-          // add to array link of copied file
-          fileLinks.push(updatedLink);
+          console.log(`Copied: ${file.savedName}`);
+          const relativePath = path.relative(
+            this.getStoragePath(),
+            destinationPath,
+          );
+          copiedFiles.push({ ...file, path: relativePath });
         } catch (error) {
-          console.error(`Failed to copy ${fileName}: ${error.message}`);
+          console.error(`Failed to copy ${file.savedName}: ${error.message}`);
         }
       }
-      return fileLinks;
+      return copiedFiles;
     } catch (error) {
       console.error(`Error creating destination folder: ${error.message}`);
     }
   }
-  async deleteFiles(folderPath: string, fileNames: string[]): Promise<void> {
-    const existingFiles = await this.filterExistingFiles(folderPath, fileNames);
-
-    for (const existingFile of existingFiles) {
-      const filePath = path.join(folderPath, existingFile);
+  async deleteFiles(rootPath: string, files: any[]): Promise<void> {
+    // const existingFiles = await this.filterExistingFiles(files);
+    console.log('fff', files);
+    for (const existingFile of files) {
+      const filePath = path.join(rootPath, existingFile.path);
 
       try {
         await fs.unlink(filePath); // Deletes the file
@@ -235,6 +227,7 @@ export class StorageService {
       }
     }
   }
+
   getCourseFilePath(courseId: any, subFolder: string) {
     const filePath = path.join(
       process.cwd(),
@@ -246,6 +239,11 @@ export class StorageService {
     ); // Коренева папка для пошуку
 
     return filePath;
+  }
+
+  getStoragePath() {
+    const storagePath = path.join(process.cwd(), '..', 'storage');
+    return storagePath;
   }
   async deleteCourseFolder(ids: any) {
     //convert mongo id to string
