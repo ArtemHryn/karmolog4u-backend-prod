@@ -10,6 +10,32 @@ import {
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
+class OptionalFiles {
+  [x: string]: any;
+
+  @ApiProperty({
+    description: 'Original name of file',
+    example: 'file.png',
+  })
+  @IsString()
+  originalName: string;
+
+  @ApiProperty({
+    description: 'name of file in storage',
+    example: '11332211.png',
+  })
+  @IsString()
+  savedName: string;
+
+  @ApiPropertyOptional({
+    description: 'path of file in storage',
+    example:
+      'education/68444ba1d97543c9cd424b65/materials/1749306350104_882e27ab-0f1a-4b1e-84b9-c6ee6a3d8dcd1749306350104.pdf',
+  })
+  @IsString()
+  path?: string;
+}
+
 class Access {
   @ApiPropertyOptional({
     description: 'Access type',
@@ -183,15 +209,6 @@ export class UpdateCourseDto {
   @IsUrl()
   chat?: string;
 
-  // @ApiPropertyOptional({
-  //   example: ['https://example.com/file1.pdf'],
-  //   description: 'Additional files',
-  // })
-  // @IsOptional()
-  // @IsArray()
-  // @IsUrl({}, { each: true })
-  // additionalFiles?: string[];
-
   @ApiPropertyOptional({
     type: [OptionalLink],
   })
@@ -200,23 +217,11 @@ export class UpdateCourseDto {
   optionalLink?: OptionalLink[];
 
   @ApiPropertyOptional({
-    example: ['https://example.com/file1.pdf'],
-    description: 'Optional files',
+    type: [OptionalFiles],
   })
   @IsOptional()
   @IsArray()
-  // @Transform(({ value }) =>
-  //   Array.isArray(value) ? value.map((v) => encodeURI(v)) : [],
-  // )
-  // @IsUrl(
-  //   {
-  //     require_tld: false, // ❗ дозволити локальні домени типу localhost
-  //     require_protocol: true,
-  //     protocols: ['http', 'https'],
-  //   },
-  //   { each: true },
-  // )
-  optionalFiles?: any[];
+  optionalFiles?: OptionalFiles[];
 
   @ApiPropertyOptional({
     example: 'https://example.com/invoice',

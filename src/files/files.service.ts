@@ -19,7 +19,11 @@ export class FilesService {
 
   async getFiles(targetModel: string, targetId: any) {
     try {
-      return await this.fileModel.find({ targetModel, targetId });
+      return await this.fileModel
+        .find({ targetModel, targetId })
+        .select('originalName savedName path _id')
+        .lean()
+        .exec();
     } catch (error) {}
   }
 

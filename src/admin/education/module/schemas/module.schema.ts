@@ -18,8 +18,8 @@ class Access {
     virtuals: true,
     versionKey: false,
     transform: function (doc, ret) {
-      // Remove the "_id" property when the object is serialized
-      delete ret._id;
+      ret.id = ret._id?.toString(); // створює поле id з _id
+      delete ret._id; // видаляє _id
     },
   },
 })

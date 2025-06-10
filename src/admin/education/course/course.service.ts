@@ -12,10 +12,7 @@ import { ContractService } from '../contract/contract.service';
 import { StorageService } from 'src/storage/storage.service';
 import { ConfigService } from '@nestjs/config';
 import { coverCompress } from 'src/common/helper/coverCompress';
-import {
-  getFileNameFromUrl,
-  getFileNamesFromUrls,
-} from 'src/common/helper/getFileNameFromUrl';
+import { getFileNameFromUrl } from 'src/common/helper/getFileNameFromUrl';
 import { getDifference } from 'src/common/helper/getDifferenceArray';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { attachTargetToFiles } from 'src/common/helper/attachTargetToFiles';
@@ -383,7 +380,6 @@ export class CourseService {
         new: true, // Return the updated document
         runValidators: true, // Run validation checks
       });
-
       //get files from db
       const oldFiles = await this.filesService.getFiles('Course', id);
       //check difference between old & new array of files
@@ -433,8 +429,6 @@ export class CourseService {
 
       return { message: 'success' };
     } catch (error) {
-      console.log(error);
-
       throw new HttpException(
         {
           status: error.status || 500,
@@ -476,7 +470,6 @@ export class CourseService {
 
       return { message: 'success' };
     } catch (error) {
-      console.error(error);
       throw new HttpException(
         {
           status: error.status || 500,
