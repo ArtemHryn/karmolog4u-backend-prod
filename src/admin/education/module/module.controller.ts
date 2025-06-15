@@ -28,6 +28,7 @@ import { GetModuleByIdParams } from './dto/get-module-by-id-params.dto';
 import { UpdateModuleDto } from './dto/update-module.dto';
 import { UpdateModuleParamsDto } from './dto/update-module-params.dto';
 import { DeleteModuleDto } from './dto/delete-module.dto';
+import { GetAllModuleParams } from './dto/get-all-module-params.dto';
 
 @ApiBearerAuth()
 @ApiTags('admin-module')
@@ -71,7 +72,7 @@ export class ModuleController {
     }
   }
 
-  @Get('get-all')
+  @Get('get-all/:id')
   @ApiOperation({
     summary: 'Admin Get All Module',
     description: 'Access restricted to admins',
@@ -82,11 +83,18 @@ export class ModuleController {
     type: [GetAllModuleResponseDto],
   })
   @ApiResponse({ status: 400, description: 'something wrong' })
-  async getAllModule(@Query() query: GetAllModuleQueryDto) {
+  async getAllModule(
+    @Param() params: GetAllModuleParams,
+    @Query() query: GetAllModuleQueryDto,
+  ) {
     try {
-      return await this.moduleService.getAllModule({
-        ...query,
-      });
+      const id = new mongoose.Types.ObjectId(params.id.toString());
+      return await this.moduleService.getAllModule(
+        {
+          ...query,
+        },
+        id,
+      );
     } catch (error) {
       throw new HttpException(
         {
@@ -115,8 +123,8 @@ export class ModuleController {
   @ApiResponse({ status: 400, description: 'something wrong' })
   async getModuleById(@Param() params: GetModuleByIdParams) {
     try {
-      const courseId = new mongoose.Types.ObjectId(params.id.toString());
-      return await this.moduleService.getModuleById(courseId);
+      const Id = new mongoose.Types.ObjectId(params.id.toString());
+      return await this.moduleService.getModuleById(Id);
     } catch (error) {
       throw new HttpException(
         {

@@ -4,10 +4,15 @@ import {
   IsMongoId,
   ValidateNested,
   IsDateString,
+  IsEnum,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
+enum ModuleAccessType {
+  PRACTICAL = 'PRACTICAL',
+  THEORETICAL = 'THEORETICAL',
+}
 class AccessDto {
   @ApiProperty({
     example: '2025-06-01T00:00:00.000Z',
@@ -32,10 +37,14 @@ export class CreateModuleDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({ example: 'grammar', description: 'Тип модуля' })
-  @IsString()
+  @ApiProperty({
+    example: ModuleAccessType.PRACTICAL,
+    enum: ModuleAccessType,
+    description: 'Тип доступу до модуля',
+  })
+  @IsEnum(ModuleAccessType)
   @IsNotEmpty()
-  type: string;
+  type: ModuleAccessType;
 
   @ApiProperty({ type: AccessDto, description: 'Період доступу до модуля' })
   @ValidateNested()

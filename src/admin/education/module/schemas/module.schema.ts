@@ -27,7 +27,11 @@ export class Module {
   @Prop({ required: true, type: String })
   name: string;
 
-  @Prop({ required: true, type: String })
+  @Prop({
+    required: true,
+    type: String,
+    enum: ['PRACTICAL', 'THEORETICAL'],
+  })
   type: string;
 
   @Prop({

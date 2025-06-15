@@ -21,14 +21,17 @@ export class ModuleService {
     }
   }
 
-  async getAllModule(query: {
-    searchQuery?: string;
-    name?: 1 | -1;
-    type?: any;
-    access?: any;
-    limit?: number;
-    page?: number;
-  }) {
+  async getAllModule(
+    query: {
+      searchQuery?: string;
+      name?: 1 | -1;
+      type?: any;
+      access?: 1 | -1;
+      limit?: number;
+      page?: number;
+    },
+    id: any,
+  ) {
     const page = +query.page || 1;
     const limit = +query.limit || 10;
     const skip = (page - 1) * limit;
@@ -38,13 +41,24 @@ export class ModuleService {
     if (query.name !== undefined) {
       sort.name = query.name; // Apply sorting correctly
     }
+    if (query.access !== undefined) {
+      sort['access.dateStart'] = query.access; // Apply sorting correctly
+    }
 
-    const filters: Record<string, any> = {};
-    if (query.type) filters.type = { $in: query.type }; // Supports multiple course types
-    if (query.access) filters['access.type'] = { $in: query.access }; // Filters inside the access object
+    const filters: Record<string, any> = {
+      course: id,
+    };
+
+    if (query.type?.length) {
+      filters.type = { $in: query.type };
+    }
+
+    if (query.searchQuery) {
+      filters.name = { $regex: query.searchQuery, $options: 'i' };
+    }
 
     try {
-      return this.moduleModel.aggregate([
+      return await this.moduleModel.aggregate([
         { $match: filters },
         { $sort: Object.keys(sort).length ? sort : { createdAt: -1 } },
         {
@@ -59,6 +73,7 @@ export class ModuleService {
                   name: 1,
                   type: 1,
                   access: 1,
+                  durationInDays: 1,
                 },
               },
             ],
@@ -80,7 +95,7 @@ export class ModuleService {
         },
       ]);
     } catch (error) {
-      console.log(error);
+      console.error(error);
       throw new NotFoundException('Модулів не знайдено :(');
     }
   }

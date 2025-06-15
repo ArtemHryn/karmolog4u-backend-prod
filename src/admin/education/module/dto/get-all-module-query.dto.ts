@@ -1,6 +1,18 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsNumber, IsIn, IsArray } from 'class-validator';
-import { Type } from 'class-transformer';
+import {
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsIn,
+  IsArray,
+  IsEnum,
+} from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+
+enum ModuleAccessType {
+  PRACTICAL = 'PRACTICAL',
+  THEORETICAL = 'THEORETICAL',
+}
 
 export class GetAllModuleQueryDto {
   @ApiPropertyOptional({ description: 'Пошуковий запит (назва модуля)' })
@@ -17,17 +29,33 @@ export class GetAllModuleQueryDto {
   @Type(() => Number)
   name?: 1 | -1;
 
-  @ApiPropertyOptional({ type: [String], description: 'Тип модуля (масив)' })
+  @ApiPropertyOptional({
+    description: 'Сортування за типом модуля',
+    example: 'PRACTICAL,THEORETICAL', // Now as a comma-separated string
+  })
+  @Transform(({ value }) => {
+    if (!value) return [];
+    if (typeof value === 'string') {
+      return value
+        .split(',')
+        .map((v) => v.trim())
+        .filter(Boolean); // Splits & removes empty values
+    }
+    return [];
+  })
   @IsOptional()
   @IsArray()
-  @IsString({ each: true })
+  @IsEnum(ModuleAccessType, { each: true }) // Ensures all values are valid CourseType enums
   type?: string[];
 
-  @ApiPropertyOptional({ type: [String], description: 'Тип доступу (масив)' })
+  @ApiPropertyOptional({
+    enum: [1, -1],
+    description: 'Сортування за іменем: 1 - ASC, -1 - DESC',
+  })
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  access?: string[];
+  @IsIn([1, -1])
+  @Type(() => Number)
+  access?: 1 | -1;
 
   @ApiPropertyOptional({
     description: 'Кількість елементів на сторінку',
