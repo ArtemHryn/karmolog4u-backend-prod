@@ -7,17 +7,40 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Module } from './schemas/module.schema';
 import { Model, Types } from 'mongoose';
+import { CourseService } from '../course/course.service';
 
 @Injectable()
 export class ModuleService {
-  constructor(@InjectModel(Module.name) private moduleModel: Model<Module>) {}
+  constructor(
+    @InjectModel(Module.name) private moduleModel: Model<Module>,
+    private readonly courseService: CourseService,
+  ) {}
   async createModule(data: any) {
     try {
+      const course = await this.courseService.getCourseById(data.course);
+      if (course.type !== 'ADVANCED' || 'CONSULTING') {
+        throw new BadRequestException(
+          'Не вдалося створити модуль :(, курс має бути Поглиблений або Консультантський',
+        );
+      }
       const newModule = new this.moduleModel(data);
       await newModule.save();
+      if (!newModule) {
+        throw new BadRequestException('Не вдалося створити модуль :(');
+      }
     } catch (error) {
       console.log(error);
-      throw new BadRequestException('Не вдалося створити модуль :(');
+      throw new HttpException(
+        {
+          status: error.status,
+          message: error.response.message,
+          error: error.response.error,
+        },
+        error.status,
+        {
+          cause: error,
+        },
+      );
     }
   }
 

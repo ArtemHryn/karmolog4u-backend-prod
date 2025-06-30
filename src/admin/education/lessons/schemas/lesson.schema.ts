@@ -25,7 +25,16 @@ class Access {
 @Schema({ _id: false })
 export class AdditionalLink {
   @Prop({ required: true })
-  title: string;
+  name: string;
+
+  @Prop({ required: true })
+  link: string;
+}
+
+@Schema({ _id: false })
+export class VideoLink {
+  @Prop({ required: true })
+  name: string;
 
   @Prop({ required: true })
   link: string;
@@ -50,21 +59,21 @@ export class Lesson {
   targetModel: string;
 
   @Prop({ required: true, type: String })
-  title: string;
+  name: string;
 
   @Prop({ type: String, default: '' })
-  description1: string;
+  description: string;
 
   @Prop({ type: String, default: '' })
-  description2: string;
+  internal_description: string;
 
   @Prop({ required: false, type: Access })
-  accessType: Access;
+  access: Access;
 
-  @Prop({ type: [String], default: [] })
-  videoLinks: string[];
+  @Prop({ type: [VideoLink], default: [] })
+  videoLinks: VideoLink[];
 
-  @Prop({ type: AdditionalLink, default: [] })
+  @Prop({ type: [AdditionalLink], default: [] })
   additionalLinks: AdditionalLink[];
 
   @Prop({ type: String, default: '' })
@@ -87,6 +96,21 @@ export class Lesson {
 
   @Prop({ type: [String], default: [] })
   feedbackQuestions: string[];
+
+  @Prop({ type: Number, default: null })
+  module_day: number;
+
+  @Prop({ type: Number, default: null })
+  module_part: number;
+
+  @Prop({ type: Date, default: null })
+  lesson_time_start: Date;
+
+  @Prop({ type: Date, default: null })
+  lesson_time_end: Date;
+
+  @Prop({ type: String, default: 'DRAFT', enum: ['DRAFT', 'PUBLISHED'] })
+  status: string;
 }
 
 export const LessonSchema = SchemaFactory.createForClass(Lesson);

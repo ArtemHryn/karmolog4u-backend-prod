@@ -97,6 +97,24 @@ export class StorageService {
     }
   }
 
+  async createLessonStorage(lessonId: string): Promise<string> {
+    try {
+      const lessonFolder = path.join(
+        process.cwd(),
+        '..',
+        'storage',
+        'education',
+        lessonId,
+      ); // Шлях до папки
+      await fs.mkdir(lessonFolder, { recursive: true });
+
+      console.log(`Сховище уроку створено: ${lessonFolder}`);
+      return lessonFolder;
+    } catch (error) {
+      throw new BadRequestException('Помилка створення сховища :(');
+    }
+  }
+
   async createStorageFolder() {
     const storageFolder = path.join(process.cwd(), '..', 'storage'); // Шлях до папки
     const educationFolder = path.join(
@@ -238,6 +256,10 @@ export class StorageService {
       subFolder,
     ); // Коренева папка для пошуку
 
+    return filePath;
+  }
+  getLessonFilePath(Id: any) {
+    const filePath = path.join(process.cwd(), '..', 'storage', 'education', Id); // Коренева папка для пошуку
     return filePath;
   }
 

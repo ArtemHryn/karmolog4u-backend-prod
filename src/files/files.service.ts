@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Files } from 'src/files/schemas/files.schema';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class FilesService {
@@ -21,6 +22,17 @@ export class FilesService {
     try {
       return await this.fileModel
         .find({ targetModel, targetId })
+        .select('originalName savedName path _id')
+        .lean()
+        .exec();
+    } catch (error) {}
+  }
+
+  async getFilesByIds(ids: any) {
+    const objectIds = ids.map((id) => new Types.ObjectId(id));
+    try {
+      return await this.fileModel
+        .find({ _id: { $in: ids } })
         .select('originalName savedName path _id')
         .lean()
         .exec();
