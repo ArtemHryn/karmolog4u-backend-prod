@@ -317,7 +317,7 @@ export class LessonController {
   ) {
     try {
       const lessonId = new mongoose.Types.ObjectId(params.id.toString());
-      const moduleId = new mongoose.Types.ObjectId(params.id.toString());
+      const moduleId = new mongoose.Types.ObjectId(data.moduleId.toString());
       return await this.lessonService.updateModuleLesson({
         id: lessonId,
         targetModel: moduleId,

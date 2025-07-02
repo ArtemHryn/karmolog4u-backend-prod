@@ -153,7 +153,8 @@ export class LessonService {
 
     // Construct the filter object dynamically
     const filters: Record<string, any> = {};
-    if (query.targetModel) filters.status = query.targetModel;
+    if (query.targetModel) filters.targetModel = query.targetModel;
+    if (query.targetId) filters.targetId = query.targetId;
     if (query.status) filters.status = query.status;
     if (query.type) filters.type = { $in: query.type }; // Supports multiple lesson types
 
@@ -245,7 +246,8 @@ export class LessonService {
 
     // Construct the filter object dynamically
     const filters: Record<string, any> = {};
-    if (query.targetModel) filters.status = query.targetModel;
+    if (query.targetModel) filters.targetModel = query.targetModel;
+    if (query.targetId) filters.targetId = query.targetId;
     if (query.status) filters.status = query.status;
     if (query.type) filters.type = { $in: query.type }; // Supports multiple lesson types
 
