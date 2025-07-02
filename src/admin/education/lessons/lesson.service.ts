@@ -156,7 +156,7 @@ export class LessonService {
     if (query.targetModel) filters.targetModel = query.targetModel;
     if (query.targetId) filters.targetId = query.targetId;
     if (query.status) filters.status = query.status;
-    if (query.type) filters.type = { $in: query.type }; // Supports multiple lesson types
+    if (query.type) filters['access.type'] = { $in: query.type }; // Supports multiple lesson types
 
     try {
       return await this.lessonModel.aggregate([
@@ -249,7 +249,7 @@ export class LessonService {
     if (query.targetModel) filters.targetModel = query.targetModel;
     if (query.targetId) filters.targetId = query.targetId;
     if (query.status) filters.status = query.status;
-    if (query.type) filters.type = { $in: query.type }; // Supports multiple lesson types
+    if (query.type) filters['access.type'] = { $in: query.type }; // Supports multiple lesson types
 
     try {
       return await this.lessonModel.aggregate([
@@ -272,9 +272,10 @@ export class LessonService {
                 $project: {
                   id: '$_id',
                   name: 1,
-                  module_day: 1,
-                  lesson_time_start: 1,
-                  lesson_time_end: 1,
+                  moduleDay: 1,
+                  modulePart: 1,
+                  lessonTimeStart: 1,
+                  lessonTimeEnd: 1,
                   _id: 0,
                 },
               },

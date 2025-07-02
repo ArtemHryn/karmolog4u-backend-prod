@@ -73,13 +73,13 @@ class AccessDto {
   @IsOptional()
   @IsDate()
   @Type(() => Date)
-  start_date?: Date;
+  startDate?: Date;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsDate()
   @Type(() => Date)
-  end_date?: Date;
+  endDate?: Date;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -101,7 +101,7 @@ export class UpdateLessonDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  internal_description?: string;
+  internalDescription?: string;
 
   @ApiProperty({ type: AccessDto })
   @ValidateNested()
@@ -114,7 +114,7 @@ export class UpdateLessonDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => VideoLinkDto)
-  video_links?: VideoLinkDto[];
+  videoLinks?: VideoLinkDto[];
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -126,7 +126,7 @@ export class UpdateLessonDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => AdditionalLinkDto)
-  additional_links?: AdditionalLinkDto[];
+  additionalLinks?: AdditionalLinkDto[];
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -156,24 +156,24 @@ export class UpdateLessonDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsNumber()
-  module_day?: number;
+  moduleDay?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsNumber()
-  module_part?: number;
+  modulePart?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsDate()
   @Type(() => Date)
-  lesson_time_start?: Date;
+  lessonTimeStart?: Date;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsDate()
   @Type(() => Date)
-  lesson_time_end?: Date;
+  lessonTimeEnd?: Date;
 
   @ApiPropertyOptional({ description: 'статус уроку', enum: Status })
   @IsEnum(Status)

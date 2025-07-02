@@ -65,7 +65,7 @@ export class Lesson {
   description: string;
 
   @Prop({ type: String, default: '' })
-  internal_description: string;
+  internalDescription: string;
 
   @Prop({ required: false, type: Access })
   access: Access;
@@ -98,16 +98,16 @@ export class Lesson {
   feedbacks: string[];
 
   @Prop({ type: Number, default: null })
-  module_day: number;
+  moduleDay: number;
 
   @Prop({ type: Number, default: null })
-  module_part: number;
+  modulePart: number;
 
   @Prop({ type: Date, default: null })
-  lesson_time_start: Date;
+  lessonTimeStart: Date;
 
   @Prop({ type: Date, default: null })
-  lesson_time_end: Date;
+  lessonTimeEnd: Date;
 
   @Prop({ type: String, default: 'DRAFT', enum: ['DRAFT', 'PUBLISHED'] })
   status: string;

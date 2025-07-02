@@ -1,6 +1,5 @@
 import { LessonService } from './lesson.service';
 import { LessonController } from './lesson.controller';
-
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Lesson, LessonSchema } from './schemas/lesson.schema';
