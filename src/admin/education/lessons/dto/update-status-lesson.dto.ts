@@ -5,8 +5,8 @@ export class UpdateStatusLessonDto {
   @ApiProperty({
     description: 'New status for the lesson',
     example: 'PUBLISHED',
-    enum: ['DRAFT', 'PUBLISHED'],
+    enum: ['DRAFT', 'PUBLISHED', 'ARCHIVE'],
   })
-  @IsEnum(['DRAFT', 'PUBLISHED'])
-  status: 'DRAFT' | 'PUBLISHED';
+  @IsEnum(['DRAFT', 'PUBLISHED', 'ARCHIVE'])
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVE';
 }

@@ -109,7 +109,11 @@ export class Lesson {
   @Prop({ type: Date, default: null })
   lessonTimeEnd: Date;
 
-  @Prop({ type: String, default: 'DRAFT', enum: ['DRAFT', 'PUBLISHED'] })
+  @Prop({
+    type: String,
+    default: 'DRAFT',
+    enum: ['DRAFT', 'PUBLISHED', 'ARCHIVE'],
+  })
   status: string;
 }
 

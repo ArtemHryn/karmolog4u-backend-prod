@@ -20,6 +20,7 @@ enum AccessType {
 enum Status {
   DRAFT = 'DRAFT',
   PUBLISHED = 'PUBLISHED',
+  ARCHIVE = 'ARCHIVE',
 }
 
 class VideoLinkDto {

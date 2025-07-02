@@ -159,22 +159,67 @@ export class LessonService {
     if (query.type) filters['access.type'] = { $in: query.type }; // Supports multiple lesson types
 
     try {
+      const STATUSES = ['DRAFT', 'PUBLISHED', 'ARCHIVE'];
       return await this.lessonModel.aggregate([
-        {
-          $match: filters, // Фільтри застосовуються до всього
-        },
+        //   {
+        //     $match: filters, // Фільтри застосовуються до всього
+        //   },
+        //   {
+        //     $facet: {
+        //       paginatedData: [
+        //         ...(query.searchQuery
+        //           ? [
+        //               {
+        //                 $match: {
+        //                   name: { $regex: query.searchQuery, $options: 'i' },
+        //                 },
+        //               },
+        //             ]
+        //           : []),
+        //         {
+        //           $project: {
+        //             id: '$_id',
+        //             name: 1,
+        //             access: 1,
+        //             _id: 0,
+        //           },
+        //         },
+        //         ...(Object.keys(sort).length ? [{ $sort: sort }] : []),
+        //         { $skip: skip },
+        //         { $limit: limit },
+        //       ],
+        //       totalCount: [
+        //         ...(query.searchQuery
+        //           ? [
+        //               {
+        //                 $match: {
+        //                   name: { $regex: query.searchQuery, $options: 'i' },
+        //                 },
+        //               },
+        //             ]
+        //           : []),
+        //         { $count: 'count' },
+        //       ],
+        //     },
+        //   },
+        //   {
+        //     $project: {
+        //       data: '$paginatedData',
+        //       totalPages: {
+        //         $ceil: {
+        //           $divide: [
+        //             { $ifNull: [{ $arrayElemAt: ['$totalCount.count', 0] }, 0] },
+        //             limit,
+        //           ],
+        //         },
+        //       },
+        //     },
+        //   },
+        // ]);
         {
           $facet: {
             paginatedData: [
-              ...(query.searchQuery
-                ? [
-                    {
-                      $match: {
-                        name: { $regex: query.searchQuery, $options: 'i' },
-                      },
-                    },
-                  ]
-                : []),
+              { $match: filters }, // Apply filters only to paginated data
               {
                 $project: {
                   id: '$_id',
@@ -183,21 +228,73 @@ export class LessonService {
                   _id: 0,
                 },
               },
-              ...(Object.keys(sort).length ? [{ $sort: sort }] : []),
-              { $skip: skip },
-              { $limit: limit },
-            ],
-            totalCount: [
               ...(query.searchQuery
                 ? [
                     {
                       $match: {
-                        name: { $regex: query.searchQuery, $options: 'i' },
+                        $or: [
+                          {
+                            name: { $regex: query.searchQuery, $options: 'i' },
+                          },
+                        ],
                       },
                     },
                   ]
                 : []),
-              { $count: 'count' },
+              ...(Object.keys(sort).length ? [{ $sort: sort }] : []),
+              { $skip: skip },
+              { $limit: limit },
+            ],
+            totalCount: [{ $match: filters }, { $count: 'count' }], // Total count respects filters
+            statusCounts: [
+              {
+                $group: {
+                  _id: '$status', // Count all statuses across the collection (no filtering)
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $project: {
+                  status: '$_id',
+                  count: 1,
+                  _id: 0,
+                },
+              },
+              {
+                $group: {
+                  _id: null,
+                  statusMap: { $push: { k: '$status', v: '$count' } },
+                },
+              },
+              {
+                $project: {
+                  _id: 0,
+                  statusCounters: {
+                    $arrayToObject: {
+                      $map: {
+                        input: STATUSES,
+                        as: 'status',
+                        in: {
+                          k: '$$status',
+                          v: {
+                            $ifNull: [
+                              {
+                                $toInt: {
+                                  $getField: {
+                                    field: '$$status',
+                                    input: { $arrayToObject: '$statusMap' },
+                                  },
+                                },
+                              },
+                              0,
+                            ],
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
             ],
           },
         },
@@ -206,12 +303,12 @@ export class LessonService {
             data: '$paginatedData',
             totalPages: {
               $ceil: {
-                $divide: [
-                  { $ifNull: [{ $arrayElemAt: ['$totalCount.count', 0] }, 0] },
-                  limit,
-                ],
+                $divide: [{ $arrayElemAt: ['$totalCount.count', 0] }, limit],
               },
             },
+            statusCounters: {
+              $arrayElemAt: ['$statusCounts.statusCounters', 0],
+            }, // Moved outside filtering, ensuring global status counts
           },
         },
       ]);
@@ -252,48 +349,145 @@ export class LessonService {
     if (query.type) filters['access.type'] = { $in: query.type }; // Supports multiple lesson types
 
     try {
+      const STATUSES = ['DRAFT', 'PUBLISHED', 'ARCHIVE'];
       return await this.lessonModel.aggregate([
-        {
-          $match: filters, // Фільтри застосовуються до всього
-        },
+        //   {
+        //     $match: filters, // Фільтри застосовуються до всього
+        //   },
+        //   {
+        //     $facet: {
+        //       paginatedData: [
+        //         ...(query.searchQuery
+        //           ? [
+        //               {
+        //                 $match: {
+        //                   name: { $regex: query.searchQuery, $options: 'i' },
+        //                 },
+        //               },
+        //             ]
+        //           : []),
+        //         {
+        //           $project: {
+        //             id: '$_id',
+        //             name: 1,
+        //             moduleDay: 1,
+        //             modulePart: 1,
+        //             lessonTimeStart: 1,
+        //             lessonTimeEnd: 1,
+        //             _id: 0,
+        //           },
+        //         },
+        //         ...(Object.keys(sort).length ? [{ $sort: sort }] : []),
+        //         { $skip: skip },
+        //         { $limit: limit },
+        //       ],
+        //       totalCount: [
+        //         ...(query.searchQuery
+        //           ? [
+        //               {
+        //                 $match: {
+        //                   name: { $regex: query.searchQuery, $options: 'i' },
+        //                 },
+        //               },
+        //             ]
+        //           : []),
+        //         { $count: 'count' },
+        //       ],
+        //     },
+        //   },
+        //   {
+        //     $project: {
+        //       data: '$paginatedData',
+        //       totalPages: {
+        //         $ceil: {
+        //           $divide: [
+        //             { $ifNull: [{ $arrayElemAt: ['$totalCount.count', 0] }, 0] },
+        //             limit,
+        //           ],
+        //         },
+        //       },
+        //     },
+        //   },
+        // ]);
         {
           $facet: {
             paginatedData: [
-              ...(query.searchQuery
-                ? [
-                    {
-                      $match: {
-                        name: { $regex: query.searchQuery, $options: 'i' },
-                      },
-                    },
-                  ]
-                : []),
+              { $match: filters }, // Apply filters only to paginated data
               {
                 $project: {
                   id: '$_id',
                   name: 1,
-                  moduleDay: 1,
-                  modulePart: 1,
-                  lessonTimeStart: 1,
-                  lessonTimeEnd: 1,
+                  access: 1,
                   _id: 0,
                 },
               },
-              ...(Object.keys(sort).length ? [{ $sort: sort }] : []),
-              { $skip: skip },
-              { $limit: limit },
-            ],
-            totalCount: [
               ...(query.searchQuery
                 ? [
                     {
                       $match: {
-                        name: { $regex: query.searchQuery, $options: 'i' },
+                        $or: [
+                          {
+                            name: { $regex: query.searchQuery, $options: 'i' },
+                          },
+                        ],
                       },
                     },
                   ]
                 : []),
-              { $count: 'count' },
+              ...(Object.keys(sort).length ? [{ $sort: sort }] : []),
+              { $skip: skip },
+              { $limit: limit },
+            ],
+            totalCount: [{ $match: filters }, { $count: 'count' }], // Total count respects filters
+            statusCounts: [
+              {
+                $group: {
+                  _id: '$status', // Count all statuses across the collection (no filtering)
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $project: {
+                  status: '$_id',
+                  count: 1,
+                  _id: 0,
+                },
+              },
+              {
+                $group: {
+                  _id: null,
+                  statusMap: { $push: { k: '$status', v: '$count' } },
+                },
+              },
+              {
+                $project: {
+                  _id: 0,
+                  statusCounters: {
+                    $arrayToObject: {
+                      $map: {
+                        input: STATUSES,
+                        as: 'status',
+                        in: {
+                          k: '$$status',
+                          v: {
+                            $ifNull: [
+                              {
+                                $toInt: {
+                                  $getField: {
+                                    field: '$$status',
+                                    input: { $arrayToObject: '$statusMap' },
+                                  },
+                                },
+                              },
+                              0,
+                            ],
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
             ],
           },
         },
@@ -302,12 +496,12 @@ export class LessonService {
             data: '$paginatedData',
             totalPages: {
               $ceil: {
-                $divide: [
-                  { $ifNull: [{ $arrayElemAt: ['$totalCount.count', 0] }, 0] },
-                  limit,
-                ],
+                $divide: [{ $arrayElemAt: ['$totalCount.count', 0] }, limit],
               },
             },
+            statusCounters: {
+              $arrayElemAt: ['$statusCounts.statusCounters', 0],
+            }, // Moved outside filtering, ensuring global status counts
           },
         },
       ]);
