@@ -107,10 +107,10 @@ export class CreateLessonDto {
   @IsString()
   internal_description?: string;
 
-  @ApiProperty({ type: AccessDto })
+  @ApiPropertyOptional({ type: AccessDto })
   @ValidateNested()
   // @Type(() => AccessDto)
-  @IsNotEmpty()
+  @IsOptional()
   access: AccessDto;
 
   @ApiPropertyOptional({ type: [VideoLinkDto] })
