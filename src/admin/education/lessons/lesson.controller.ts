@@ -28,6 +28,11 @@ import { GetAllLessonCourseQueryDto } from './dto/get-all-lesson-course-query.dt
 import { GetByIdLessonParams } from './dto/get-lesson-by-id.dto';
 import { UpdateLessonParamsDto } from './dto/update-lesson-params.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
+import { DeleteLessonsDto } from './dto/delete-lesson.dto';
+import { UpdateStatusLessonDto } from './dto/update-status-lesson.dto';
+import { UpdateStatusLessonParamsDto } from './dto/update-status-lesson-params.dto';
+import { UpdateModuleLessonParamsDto } from './dto/update-module-lesson-params.dto';
+import { UpdateModuleLessonDto } from './dto/update-module-lesson.dto';
 
 @ApiBearerAuth()
 @ApiTags('admin-lessons')
@@ -176,116 +181,159 @@ export class LessonController {
     }
   }
 
-  // @Put('edit/:id')
-  // @ApiOperation({
-  //   summary: 'Admin Edit Lesson',
-  //   description: 'Access restricted to admins',
-  // })
-  // @ApiBody({
-  //   description: 'Upload a file with additional fields',
-  //   // type: UpdateLessonDto,
-  // })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'edit lesson',
-  //   type: ResponseSuccessDto,
-  // })
-  // @ApiResponse({ status: 400, description: 'something wrong' })
-  // async updateLesson(
-  //   @Param() params: UpdateLessonParamsDto,
-  //   @Body() data: UpdateLessonDto,
-  // ) {
-  //   try {
-  //     const lessonId = new mongoose.Types.ObjectId(params.id.toString());
-  //     return await this.lessonService.updateLesson(lessonId, data);
-  //   } catch (error) {
-  //     throw new HttpException(
-  //       {
-  //         status: error.status,
-  //         message: error.response.message,
-  //         error: error.response.error,
-  //       },
-  //       error.status,
-  //       {
-  //         cause: error,
-  //       },
-  //     );
-  //   }
-  // }
+  @Put('edit/:id')
+  @ApiOperation({
+    summary: 'Admin Edit Lesson',
+    description: 'Access restricted to admins',
+  })
+  @ApiBody({
+    description: 'Upload a file with additional fields',
+    type: UpdateLessonDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'edit lesson',
+    type: ResponseSuccessDto,
+  })
+  @ApiResponse({ status: 400, description: 'something wrong' })
+  async updateLesson(
+    @Param() params: UpdateLessonParamsDto,
+    @Body() data: UpdateLessonDto,
+  ) {
+    try {
+      const lessonId = new mongoose.Types.ObjectId(params.id.toString());
+      return await this.lessonService.updateLesson(lessonId, data);
+    } catch (error) {
+      console.log(error);
 
-  // @Post('delete')
-  // @ApiOperation({
-  //   summary: 'Admin Delete Lessons',
-  //   description: 'Access restricted to admins',
-  // })
-  // @ApiBody({
-  //   description: 'Upload a file with additional fields',
-  //   type: DeleteLessonsDto,
-  // })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'delete lesson',
-  //   type: ResponseSuccessDto,
-  // })
-  // @ApiResponse({ status: 400, description: 'something wrong' })
-  // async deleteLesson(@Body() data: DeleteLessonsDto) {
-  //   try {
-  //     const objectIds = data.lessonIds.map(
-  //       (id) => new mongoose.Types.ObjectId(id.toString()),
-  //     );
-  //     return await this.lessonService.deleteLesson(objectIds);
-  //   } catch (error) {
-  //     throw new HttpException(
-  //       {
-  //         status: error.status,
-  //         message: error.response.message,
-  //         error: error.response.error,
-  //       },
-  //       error.status,
-  //       {
-  //         cause: error,
-  //       },
-  //     );
-  //   }
-  // }
+      throw new HttpException(
+        {
+          status: error.status,
+          message: error.response.message,
+          error: error.response.error,
+        },
+        error.status,
+        {
+          cause: error,
+        },
+      );
+    }
+  }
 
-  // @Patch('status/:id')
-  // @ApiOperation({
-  //   summary: 'Admin Update Status Lessons',
-  //   description: 'Access restricted to admins',
-  // })
-  // @ApiBody({
-  //   description: 'Upload a file with additional fields',
-  //   type: UpdateStatusLessonDto,
-  // })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: ' lesson',
-  //   type: ResponseSuccessDto,
-  // })
-  // @ApiResponse({ status: 400, description: 'something wrong' })
-  // async updateStatusLesson(
-  //   @Param() params: UpdateStatusLessonParamsDto,
-  //   @Body() data: UpdateStatusLessonDto,
-  // ) {
-  //   try {
-  //     const lessonId = new mongoose.Types.ObjectId(params.id.toString());
-  //     return await this.lessonService.updateStatusLesson({
-  //       id: lessonId,
-  //       status: data.status,
-  //     });
-  //   } catch (error) {
-  //     throw new HttpException(
-  //       {
-  //         status: error.status,
-  //         message: error.response.message,
-  //         error: error.response.error,
-  //       },
-  //       error.status,
-  //       {
-  //         cause: error,
-  //       },
-  //     );
-  //   }
-  // }
+  @Post('delete')
+  @ApiOperation({
+    summary: 'Admin Delete Lessons',
+    description: 'Access restricted to admins',
+  })
+  @ApiBody({
+    description: 'Upload a file with additional fields',
+    type: DeleteLessonsDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'delete lesson',
+    type: ResponseSuccessDto,
+  })
+  @ApiResponse({ status: 400, description: 'something wrong' })
+  async deleteLesson(@Body() data: DeleteLessonsDto) {
+    try {
+      const objectIds = data.lessonIds.map(
+        (id) => new mongoose.Types.ObjectId(id.toString()),
+      );
+      return await this.lessonService.deleteLesson(objectIds);
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: error.status,
+          message: error.response.message,
+          error: error.response.error,
+        },
+        error.status,
+        {
+          cause: error,
+        },
+      );
+    }
+  }
+
+  @Patch('status/:id')
+  @ApiOperation({
+    summary: 'Admin Update Status Lessons',
+    description: 'Access restricted to admins',
+  })
+  @ApiBody({
+    description: 'Upload a file with additional fields',
+    type: UpdateStatusLessonDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: ' lesson',
+    type: ResponseSuccessDto,
+  })
+  @ApiResponse({ status: 400, description: 'something wrong' })
+  async updateStatusLesson(
+    @Param() params: UpdateStatusLessonParamsDto,
+    @Body() data: UpdateStatusLessonDto,
+  ) {
+    try {
+      const lessonId = new mongoose.Types.ObjectId(params.id.toString());
+      return await this.lessonService.updateStatusLesson({
+        id: lessonId,
+        status: data.status,
+      });
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: error.status,
+          message: error.response.message,
+          error: error.response.error,
+        },
+        error.status,
+        {
+          cause: error,
+        },
+      );
+    }
+  }
+
+  @Patch('change_module/:id')
+  @ApiOperation({
+    summary: 'Admin Update module Lessons',
+    description: 'Access restricted to admins',
+  })
+  @ApiBody({
+    description: 'Upload a file with additional fields',
+    type: UpdateModuleLessonDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: ' lesson',
+    type: ResponseSuccessDto,
+  })
+  @ApiResponse({ status: 400, description: 'something wrong' })
+  async updateModuleLesson(
+    @Param() params: UpdateModuleLessonParamsDto,
+    @Body() data: UpdateModuleLessonDto,
+  ) {
+    try {
+      const lessonId = new mongoose.Types.ObjectId(params.id.toString());
+      const moduleId = new mongoose.Types.ObjectId(params.id.toString());
+      return await this.lessonService.updateModuleLesson({
+        id: lessonId,
+        targetModel: moduleId,
+      });
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: error.status,
+          message: error.response.message,
+          error: error.response.error,
+        },
+        error.status,
+        {
+          cause: error,
+        },
+      );
+    }
+  }
 }

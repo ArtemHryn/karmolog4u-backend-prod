@@ -151,7 +151,7 @@ export class UpdateLessonDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  feedback?: string[];
+  feedbacks?: string[];
 
   @ApiPropertyOptional()
   @IsOptional()

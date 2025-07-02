@@ -82,6 +82,16 @@ class AccessDto {
 }
 
 export class CreateLessonDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  targetModel: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  targetId: string;
+
   @ApiProperty({ description: 'Назва уроку' })
   @IsString()
   @IsNotEmpty()
@@ -145,7 +155,7 @@ export class CreateLessonDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  feedbackQuestions?: string[];
+  feedbacks?: string[];
 
   @ApiPropertyOptional()
   @IsOptional()

@@ -95,7 +95,7 @@ export class Lesson {
   bonusFiles: mongoose.Types.ObjectId[];
 
   @Prop({ type: [String], default: [] })
-  feedbackQuestions: string[];
+  feedbacks: string[];
 
   @Prop({ type: Number, default: null })
   module_day: number;

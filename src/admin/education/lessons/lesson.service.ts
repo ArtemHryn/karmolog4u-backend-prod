@@ -8,8 +8,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model, Types } from 'mongoose';
 import { StorageService } from 'src/storage/storage.service';
 import { ConfigService } from '@nestjs/config';
-import { coverCompress } from 'src/common/helper/coverCompress';
-import { getFileNameFromUrl } from 'src/common/helper/getFileNameFromUrl';
 import { getDifference } from 'src/common/helper/getDifferenceArray';
 import { attachTargetToFiles } from 'src/common/helper/attachTargetToFiles';
 import { FilesService } from 'src/files/files.service';
@@ -30,8 +28,6 @@ export class LessonService {
     try {
       const { homeworkFiles, bonusFiles, ...lesson } = data;
       //create lesson
-      console.log(lesson);
-
       const newLesson = new this.lessonModel({
         ...lesson,
       });
@@ -339,155 +335,253 @@ export class LessonService {
     }
   }
 
-  //   async updateLesson(id: mongoose.Types.ObjectId, data: UpdateLessonDto) {
-  //     try {
-  //       const { homeworkFiles, bonusFiles, ...lessonData } = data;
-  //       //search lesson
-  //       const oldLesson = await this.lessonModel.findById(id).lean();
-  //       if (!oldLesson) {
-  //         throw new NotFoundException('Курс не знайдено :(');
-  //       }
+  async updateLesson(id: mongoose.Types.ObjectId, data: UpdateLessonDto) {
+    try {
+      const { homeworkFiles, bonusFiles, ...lessonData } = data;
+      //search lesson
+      const oldLesson = await this.lessonModel.findById(id).lean();
+      if (!oldLesson) {
+        throw new NotFoundException('Курс не знайдено :(');
+      }
 
-  //       const updateData: Record<string, any> = { ...lessonData }; // Store all updates
+      const updateData: Record<string, any> = {}; // Store all updates
 
-  //       //update lesson
-  //       await this.lessonModel.findByIdAndUpdate(id, updateData, {
-  //         new: true, // Return the updated document
-  //         runValidators: true, // Run validation checks
-  //       });
-  //       //get files from db
-  //       const oldFiles = await this.filesService.getFilesByIds(
-  //         oldLesson.homeworkFiles,
-  //       );
-  //       //check difference between old & new array of files
-  //       const difference = getDifference(oldFiles, homeworkFiles || []);
-  //       //delete file witch not exist in new data lesson
-  //       if (difference.onlyInArr1.length != 0) {
-  //         //delete from storage
-  //         await this.storageService.deleteFiles(
-  //           this.storageService.getStoragePath(),
-  //           difference.onlyInArr1,
-  //         );
-  //         //delete from db
-  //         const fileIds = difference.onlyInArr1.map((i) => i._id);
-  //         //remove from db
-  //         await this.filesService.deleteFiles(fileIds);
+      //update lesson
+      await this.lessonModel.findByIdAndUpdate(id, lessonData, {
+        new: true, // Return the updated document
+        runValidators: true, // Run validation checks
+      });
+      //get files from db
+      const oldHomeworkFiles = await this.filesService.getFilesByIds(
+        oldLesson.homeworkFiles,
+      );
 
-  //       }
-  //       // //add files to lesson folder if exist
-  //       if (difference.onlyInArr2.length != 0) {
-  //         const existingFiles = await this.storageService.filterExistingFiles(
-  //           difference.onlyInArr2,
-  //         );
-  //         //if file exist -> copy to lesson folder
-  //         if (existingFiles.length > 0) {
-  //           const newFiles = await this.storageService.copyFiles(
-  //             this.storageService.getLessonFilePath(id.toHexString()),
-  //             existingFiles,
-  //           );
-  //           //add additional fields to files object
-  //           const filesToSave = attachTargetToFiles(newFiles, 'Lesson', id);
-  //           //save files data to db
-  //           await this.filesService.createFiles(filesToSave),
-  //             //delete files from temp folder
-  //             await this.storageService.deleteFiles(process.cwd(), existingFiles);
-  //         }
-  //       }
+      //check difference between old & new array of files
+      const differenceHomeworkFiles = getDifference(
+        oldHomeworkFiles,
+        homeworkFiles || [],
+      );
+      if (differenceHomeworkFiles.inBoth.length != 0) {
+        const oldFilesIds = differenceHomeworkFiles.inBoth.map((item) =>
+          item._id.toString(),
+        );
+        //save to lesson
+        updateData.homeworkFiles = [...oldFilesIds];
+      }
 
-  //       // update contract if available
-  //       // if (Object.keys(contract).length != 0) {
-  //       //   await this.contractService.updateContract({
-  //       //     lesson: id,
-  //       //     contract,
-  //       //   });
-  //       // }
+      //delete file witch not exist in new data lesson
+      if (differenceHomeworkFiles.onlyInArr1.length != 0) {
+        //delete from storage
+        await this.storageService.deleteFiles(
+          this.storageService.getStoragePath(),
+          differenceHomeworkFiles.onlyInArr1,
+        );
+        //delete from db
+        const fileIds = differenceHomeworkFiles.onlyInArr1.map((i) => i._id);
 
-  //       return { message: 'success' };
-  //     } catch (error) {
-  //       throw new HttpException(
-  //         {
-  //           status: error.status || 500,
-  //           message:
-  //             error.response?.message ||
-  //             'An error occurred while processing the file',
-  //           error: error.response?.error || 'Internal Server Error',
-  //         },
-  //         error.status || 500,
-  //         {
-  //           cause: error,
-  //         },
-  //       );
-  //     }
-  //   }
+        //remove from db
+        await this.filesService.deleteFiles(fileIds);
+      }
+      //add files to lesson folder if exist
+      if (differenceHomeworkFiles.onlyInArr2.length != 0) {
+        const existingFiles = await this.storageService.filterExistingFiles(
+          differenceHomeworkFiles.onlyInArr2,
+        );
 
-  //   async deleteLesson(data: any) {
-  //     try {
-  //       //check if ids exist in db and return witch exist
-  //       const existingDocs = await this.lessonModel
-  //         .find({ _id: { $in: data } }, { _id: 1 })
-  //         .lean()
-  //         .exec();
-  //       const existingIds: Types.ObjectId[] = existingDocs.map(
-  //         (doc) => new Types.ObjectId(doc._id),
-  //       );
-  //       if (existingIds.length <= 0) {
-  //         throw new NotFoundException('Помилка, курсів не знайдено');
-  //       }
+        //if file exist -> copy to lesson folder
+        if (existingFiles.length > 0) {
+          const newFiles = await this.storageService.copyFiles(
+            this.storageService.getLessonFilePath(id.toHexString()),
+            existingFiles,
+          );
 
-  //       //delete contract by array of lesson id
-  //       await this.contractService.deleteContract(existingIds);
-  //       //delete lesson by array of existing lesson id
-  //       await this.lessonModel.deleteMany({
-  //         _id: { $in: existingIds },
-  //       });
-  //       //delete lesson folder by exist id
-  //       await this.storageService.deleteLessonFolder(existingIds);
+          //add additional fields to files object
+          const filesToSave = attachTargetToFiles(newFiles, 'Lesson', id);
+          //save files data to db
+          const savedFiles = await this.filesService.createFiles(filesToSave);
+          const newFileIds = savedFiles.map((item) => item._id.toString());
+          //save to lesson
+          updateData.homeworkFiles = [
+            ...updateData.homeworkFiles,
+            ...newFileIds,
+          ];
 
-  //       return { message: 'success' };
-  //     } catch (error) {
-  //       throw new HttpException(
-  //         {
-  //           status: error.status || 500,
-  //           message:
-  //             error.response?.message ||
-  //             'An error occurred while processing the lesson',
-  //           error: error.response?.error || 'Internal Server Error',
-  //         },
-  //         error.status || 500,
-  //         {
-  //           cause: error,
-  //         },
-  //       );
-  //     }
-  //   }
+          //delete files from temp folder
+          await this.storageService.deleteFiles(process.cwd(), existingFiles);
+        }
+      }
 
-  //   async updateStatusLesson(data: any) {
-  //     const { id, ...status } = data;
-  //     try {
-  //       const exists = await this.lessonModel.exists({ _id: id });
-  //       if (!exists) {
-  //         throw new NotFoundException(`Курсу з ід "${id}" не знайдено`);
-  //       }
-  //       await this.lessonModel.findByIdAndUpdate(
-  //         id,
-  //         { $set: { ...status } },
-  //         { new: true, runValidators: true },
-  //       );
-  //       return { message: 'success' };
-  //     } catch (error) {
-  //       throw new HttpException(
-  //         {
-  //           status: error.status || 500,
-  //           message:
-  //             error.response?.message ||
-  //             'An error occurred while processing the lesson',
-  //           error: error.response?.error || 'Internal Server Error',
-  //         },
-  //         error.status || 500,
-  //         {
-  //           cause: error,
-  //         },
-  //       );
-  //     }
-  //   }
+      const oldBonusFiles = await this.filesService.getFilesByIds(
+        oldLesson.bonusFiles,
+      );
+      //check difference between old & new array of files
+      const differenceBonusFiles = getDifference(
+        oldBonusFiles,
+        bonusFiles || [],
+      );
+
+      if (differenceBonusFiles.inBoth.length != 0) {
+        const oldFilesIds = differenceBonusFiles.inBoth.map((item) =>
+          item._id.toString(),
+        );
+        //save to lesson
+        updateData.bonusFiles = [...oldFilesIds];
+      }
+      //delete file witch not exist in new data lesson
+      if (differenceBonusFiles.onlyInArr1.length != 0) {
+        //delete from storage
+        await this.storageService.deleteFiles(
+          this.storageService.getStoragePath(),
+          differenceBonusFiles.onlyInArr1,
+        );
+        //delete from db
+        const fileIds = differenceBonusFiles.onlyInArr1.map((i) => i._id);
+        //remove from db
+        await this.filesService.deleteFiles(fileIds);
+      }
+      // //add files to lesson folder if exist
+      if (differenceBonusFiles.onlyInArr2.length != 0) {
+        const existingFiles = await this.storageService.filterExistingFiles(
+          differenceBonusFiles.onlyInArr2,
+        );
+        //if file exist -> copy to lesson folder
+        if (existingFiles.length > 0) {
+          const newFiles = await this.storageService.copyFiles(
+            this.storageService.getLessonFilePath(id.toHexString()),
+            existingFiles,
+          );
+          //add additional fields to files object
+          const filesToSave = attachTargetToFiles(newFiles, 'Lesson', id);
+          //save files data to db
+          const savedFiles = await this.filesService.createFiles(filesToSave);
+
+          const newFileIds = savedFiles.map((item) => item._id.toString());
+          updateData.bonusFiles = [...updateData.bonusFiles, ...newFileIds];
+          //delete files from temp folder
+          await this.storageService.deleteFiles(process.cwd(), existingFiles);
+        }
+      }
+      await this.lessonModel.updateOne(
+        { _id: id },
+        {
+          $set: { ...updateData },
+        },
+      );
+
+      return { message: 'success' };
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: error.status || 500,
+          message:
+            error.response?.message ||
+            'An error occurred while processing the file',
+          error: error.response?.error || 'Internal Server Error',
+        },
+        error.status || 500,
+        {
+          cause: error,
+        },
+      );
+    }
+  }
+
+  async deleteLesson(data: any) {
+    try {
+      //check if ids exist in db and return witch exist
+      const existingDocs = await this.lessonModel
+        .find({ _id: { $in: data } }, { _id: 1 })
+        .lean()
+        .exec();
+      const existingIds: Types.ObjectId[] = existingDocs.map(
+        (doc) => new Types.ObjectId(doc._id),
+      );
+      if (existingIds.length <= 0) {
+        throw new NotFoundException('Помилка, курсів не знайдено');
+      }
+
+      //delete lesson by array of existing lesson id
+      await this.lessonModel.deleteMany({
+        _id: { $in: existingIds },
+      });
+      //delete lesson folder by exist id
+      await this.storageService.deleteLessonFolder(existingIds);
+
+      return { message: 'success' };
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: error.status || 500,
+          message:
+            error.response?.message ||
+            'An error occurred while processing the lesson',
+          error: error.response?.error || 'Internal Server Error',
+        },
+        error.status || 500,
+        {
+          cause: error,
+        },
+      );
+    }
+  }
+
+  async updateStatusLesson(data: any) {
+    const { id, ...status } = data;
+    try {
+      const exists = await this.lessonModel.exists({ _id: id });
+      if (!exists) {
+        throw new NotFoundException(`Курсу з ід "${id}" не знайдено`);
+      }
+      await this.lessonModel.findByIdAndUpdate(
+        id,
+        { $set: { ...status } },
+        { new: true, runValidators: true },
+      );
+      return { message: 'success' };
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: error.status || 500,
+          message:
+            error.response?.message ||
+            'An error occurred while processing the lesson',
+          error: error.response?.error || 'Internal Server Error',
+        },
+        error.status || 500,
+        {
+          cause: error,
+        },
+      );
+    }
+  }
+
+  async updateModuleLesson(data: any) {
+    const { id, targetModel } = data;
+    try {
+      const exists = await this.lessonModel.exists({ _id: id });
+      if (!exists) {
+        throw new NotFoundException(`Курсу з ід "${id}" не знайдено`);
+      }
+      await this.lessonModel.findByIdAndUpdate(
+        id,
+        { $set: { targetModel } },
+        { new: true, runValidators: true },
+      );
+      return { message: 'success' };
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: error.status || 500,
+          message:
+            error.response?.message ||
+            'An error occurred while processing the lesson',
+          error: error.response?.error || 'Internal Server Error',
+        },
+        error.status || 500,
+        {
+          cause: error,
+        },
+      );
+    }
+  }
 }

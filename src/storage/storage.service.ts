@@ -216,7 +216,7 @@ export class StorageService {
         try {
           // copy file to destination folder
           await fs.copyFile(sourcePath, destinationPath); // Copy file
-          console.log(`Copied: ${file.savedName}`);
+          // console.log(`Copied: ${file.savedName}`);
           const relativePath = path.relative(
             this.getStoragePath(),
             destinationPath,
@@ -233,13 +233,11 @@ export class StorageService {
   }
   async deleteFiles(rootPath: string, files: any[]): Promise<void> {
     // const existingFiles = await this.filterExistingFiles(files);
-    console.log('fff', files);
     for (const existingFile of files) {
       const filePath = path.join(rootPath, existingFile.path);
 
       try {
         await fs.unlink(filePath); // Deletes the file
-        console.log(`🗑️ Deleted: ${existingFile}`);
       } catch (error) {
         console.error(`❌ Error deleting ${existingFile}: ${error.message}`);
       }
@@ -268,6 +266,25 @@ export class StorageService {
     return storagePath;
   }
   async deleteCourseFolder(ids: any) {
+    //convert mongo id to string
+    const folderNames = ids.map((id) => id.toHexString());
+    const basePath = path.join(process.cwd(), '..', 'storage', 'education'); // Шлях до папки
+    try {
+      //check exist folders in storage
+      const existingFolder = await this.getExistingFolders(
+        basePath,
+        folderNames,
+      );
+      //delete existing folder
+      await this.deleteFolders(existingFolder);
+      return;
+    } catch (error) {
+      console.error(`❌ Error deleting folder: ${error.message}`);
+      throw new BadRequestException('Не вдалося видалити файли курсу');
+    }
+  }
+
+  async deleteLessonFolder(ids: any) {
     //convert mongo id to string
     const folderNames = ids.map((id) => id.toHexString());
     const basePath = path.join(process.cwd(), '..', 'storage', 'education'); // Шлях до папки

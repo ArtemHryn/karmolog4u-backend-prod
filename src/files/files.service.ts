@@ -32,7 +32,7 @@ export class FilesService {
     const objectIds = ids.map((id) => new Types.ObjectId(id));
     try {
       return await this.fileModel
-        .find({ _id: { $in: ids } })
+        .find({ _id: { $in: objectIds } })
         .select('originalName savedName path _id')
         .lean()
         .exec();
