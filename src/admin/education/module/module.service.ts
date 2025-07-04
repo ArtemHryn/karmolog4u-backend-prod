@@ -17,17 +17,24 @@ export class ModuleService {
   ) {}
   async createModule(data: any) {
     try {
-      const course = await this.courseService.getCourseById(data.course);
-      if (course.type !== 'ADVANCED' || 'CONSULTING') {
+
+      const course = await this.courseService.getCourseById(
+        new Types.ObjectId(data.course),
+      );
+      console.log(course);
+      
+      if (course.type !== 'ADVANCED' && course.type !== 'CONSULTING') {
         throw new BadRequestException(
           'Не вдалося створити модуль :(, курс має бути Поглиблений або Консультантський',
         );
       }
+
       const newModule = new this.moduleModel(data);
       await newModule.save();
       if (!newModule) {
         throw new BadRequestException('Не вдалося створити модуль :(');
       }
+      return { message: 'success' };
     } catch (error) {
       console.log(error);
       throw new HttpException(
