@@ -247,6 +247,7 @@ export class LessonService {
             ],
             totalCount: [{ $match: filters }, { $count: 'count' }], // Total count respects filters
             statusCounts: [
+              { $match: filters },
               {
                 $group: {
                   _id: '$status', // Count all statuses across the collection (no filtering)
@@ -417,7 +418,10 @@ export class LessonService {
                 $project: {
                   id: '$_id',
                   name: 1,
-                  access: 1,
+                  moduleDay: 1,
+                  modulePart: 1,
+                  lessonTimeStart: 1,
+                  lessonTimeEnd: 1,
                   _id: 0,
                 },
               },
@@ -440,6 +444,7 @@ export class LessonService {
             ],
             totalCount: [{ $match: filters }, { $count: 'count' }], // Total count respects filters
             statusCounts: [
+              { $match: filters },
               {
                 $group: {
                   _id: '$status', // Count all statuses across the collection (no filtering)
