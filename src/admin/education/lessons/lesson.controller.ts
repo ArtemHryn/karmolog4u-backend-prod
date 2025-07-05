@@ -320,7 +320,7 @@ export class LessonController {
       const moduleId = new mongoose.Types.ObjectId(data.moduleId.toString());
       return await this.lessonService.updateModuleLesson({
         id: lessonId,
-        targetModel: moduleId,
+        targetId: moduleId,
       });
     } catch (error) {
       throw new HttpException(

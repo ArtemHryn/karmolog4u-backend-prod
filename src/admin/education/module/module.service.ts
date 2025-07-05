@@ -17,12 +17,9 @@ export class ModuleService {
   ) {}
   async createModule(data: any) {
     try {
-
       const course = await this.courseService.getCourseById(
         new Types.ObjectId(data.course),
       );
-      console.log(course);
-      
       if (course.type !== 'ADVANCED' && course.type !== 'CONSULTING') {
         throw new BadRequestException(
           'Не вдалося створити модуль :(, курс має бути Поглиблений або Консультантський',

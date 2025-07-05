@@ -556,7 +556,10 @@ export class LessonService {
         throw new NotFoundException('Курс не знайдено :(');
       }
 
-      const updateData: Record<string, any> = {}; // Store all updates
+      const updateData: Record<string, any> = {
+        homeworkFiles: [],
+        bonusFiles: [],
+      }; // Store all updates
 
       //update lesson
       await this.lessonModel.findByIdAndUpdate(id, lessonData, {
