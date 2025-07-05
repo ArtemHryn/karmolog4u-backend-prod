@@ -247,7 +247,12 @@ export class LessonService {
             ],
             totalCount: [{ $match: filters }, { $count: 'count' }], // Total count respects filters
             statusCounts: [
-              { $match: filters },
+              {
+                $match: {
+                  targetId: query.targetId,
+                  targetModel: query.targetModel,
+                },
+              },
               {
                 $group: {
                   _id: '$status', // Count all statuses across the collection (no filtering)
@@ -444,7 +449,12 @@ export class LessonService {
             ],
             totalCount: [{ $match: filters }, { $count: 'count' }], // Total count respects filters
             statusCounts: [
-              { $match: filters },
+              {
+                $match: {
+                  targetId: query.targetId,
+                  targetModel: query.targetModel,
+                },
+              },
               {
                 $group: {
                   _id: '$status', // Count all statuses across the collection (no filtering)
@@ -758,7 +768,7 @@ export class LessonService {
   }
 
   async updateModuleLesson(data: any) {
-    const { id, targetModel } = data;
+    const { id, targetId } = data;
     try {
       const exists = await this.lessonModel.exists({ _id: id });
       if (!exists) {
@@ -766,11 +776,13 @@ export class LessonService {
       }
       await this.lessonModel.findByIdAndUpdate(
         id,
-        { $set: { targetModel } },
+        { $set: { targetId } },
         { new: true, runValidators: true },
       );
       return { message: 'success' };
     } catch (error) {
+      console.log(error);
+
       throw new HttpException(
         {
           status: error.status || 500,

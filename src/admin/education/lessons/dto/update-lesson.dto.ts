@@ -107,7 +107,7 @@ export class UpdateLessonDto {
   @ApiPropertyOptional({ type: AccessDto })
   @ValidateNested()
   @Type(() => AccessDto)
-  access: AccessDto;
+  access?: AccessDto;
 
   @ApiPropertyOptional({ type: [VideoLinkDto] })
   @IsOptional()
