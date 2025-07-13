@@ -31,7 +31,7 @@ export async function findFileInCovers(
   }
 
   // Check in the global "covers" folder first
-  const globalCovers = await searchFolder(path.join(storagePath, 'covers'));
+  const globalCovers = await searchFolder(path.join(storagePath));
   if (globalCovers) return globalCovers; // Return immediately if found
 
   // Check in all course "covers" folders inside "education/"
