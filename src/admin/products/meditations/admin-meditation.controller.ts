@@ -196,9 +196,8 @@ export class AdminMeditationController {
       if (file && parsedData.category !== 'ARCANES') {
         const oldMeditation =
           await this.adminMeditationService.findMeditationById(meditationId);
-        const parsedUrl = new URL(oldMeditation.cover);
         // Отримання шляху
-        const filePath = parsedUrl.pathname.slice(1); // Видаляємо початковий "/"
+        const filePath = getFileNameFromUrl(oldMeditation.cover); // Видаляємо початковий "/"
         await fileDelete(filePath);
         const link = await fileCompress(file, this.configService);
         parsedData.cover = link;
