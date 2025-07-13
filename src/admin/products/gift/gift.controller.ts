@@ -42,6 +42,7 @@ import {
   newGiftSchema,
   updateGiftSchema,
 } from './schemas/gift-validation';
+import { getFileNameFromUrl } from 'src/common/helper/getFileNameFromUrl';
 
 @ApiBearerAuth()
 @ApiTags('admin-gifts')
@@ -84,7 +85,7 @@ export class GiftController {
       if (error) {
         throw new BadRequestException(error.details[0].message);
       }
-      if (file && parsedData.category) {
+      if (file) {
         const link = await fileCompress(file, this.configService);
         parsedData.cover = link;
       } else if (file) {
@@ -190,11 +191,12 @@ export class GiftController {
       }
       const giftId = new mongoose.Types.ObjectId(id.toString());
 
-      if (file && parsedData.category !== 'ARCANES') {
+      if (file) {
         const oldGift = await this.giftService.findGiftById(giftId);
-        const parsedUrl = new URL(oldGift.cover);
+        // const parsedUrl = new URL(oldGift.cover);
         // Отримання шляху
-        const filePath = parsedUrl.pathname.slice(1); // Видаляємо початковий "/"
+        const filePath = getFileNameFromUrl(oldGift.cover);
+
         await fileDelete(filePath);
         const link = await fileCompress(file, this.configService);
         parsedData.cover = link;

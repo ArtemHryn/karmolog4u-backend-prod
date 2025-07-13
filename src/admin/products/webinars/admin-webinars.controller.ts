@@ -42,6 +42,7 @@ import {
 import mongoose from 'mongoose';
 import { CreateWebinarDto } from './dto/create-webinar.dto';
 import { EditWebinarDto } from './dto/edit-webinar.dto';
+import { getFileNameFromUrl } from 'src/common/helper/getFileNameFromUrl';
 
 @ApiBearerAuth()
 @ApiTags('admin-webinars')
@@ -197,9 +198,10 @@ export class AdminWebinarsController {
         const oldWebinar = await this.adminWebinarService.findWebinarById(
           webinarId,
         );
-        const parsedUrl = new URL(oldWebinar.cover);
+        const filePath = getFileNameFromUrl(oldWebinar.cover); // Видаляємо початковий "/"
+
         // Отримання шляху
-        const filePath = parsedUrl.pathname.slice(1); // Видаляємо початковий "/"
+
         await fileDelete(filePath);
         const link = await fileCompress(file, this.configService);
         parsedData.cover = link;

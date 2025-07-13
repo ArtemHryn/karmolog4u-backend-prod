@@ -42,6 +42,7 @@ import {
   newGuidesAndBooksSchema,
   updateGuidesAndBooksSchema,
 } from './schemas/guides_and_books-validation';
+import { getFileNameFromUrl } from 'src/common/helper/getFileNameFromUrl';
 
 @ApiBearerAuth()
 @ApiTags('admin-guides-and-books')
@@ -85,7 +86,7 @@ export class AdminGuidesAndBooksController {
       if (error) {
         throw new BadRequestException(error.details[0].message);
       }
-      if (file && parsedData.category) {
+      if (file) {
         const link = await fileCompress(file, this.configService);
         parsedData.cover = link;
       } else if (file) {
@@ -203,9 +204,9 @@ export class AdminGuidesAndBooksController {
           await this.adminGuidesAndBooksService.findGuidesAndBooksById(
             guidesAndBooksId,
           );
-        const parsedUrl = new URL(oldGuidesAndBooks.cover);
-        // Отримання шляху
-        const filePath = parsedUrl.pathname.slice(1); // Видаляємо початковий "/"
+        // const parsedUrl = new URL(oldGuidesAndBooks.cover);
+        const filePath = getFileNameFromUrl(oldGuidesAndBooks.cover);
+        // Отримання шляху // Видаляємо початковий "/"
         await fileDelete(filePath);
         const link = await fileCompress(file, this.configService);
         parsedData.cover = link;

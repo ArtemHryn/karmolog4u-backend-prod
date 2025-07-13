@@ -34,7 +34,6 @@ import { UpdateStatusLessonParamsDto } from './dto/update-status-lesson-params.d
 import { UpdateModuleLessonParamsDto } from './dto/update-module-lesson-params.dto';
 import { UpdateModuleLessonDto } from './dto/update-module-lesson.dto';
 
-
 @ApiBearerAuth()
 @ApiTags('admin-lessons')
 @Roles(Role.Admin)
