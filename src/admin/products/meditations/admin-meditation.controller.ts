@@ -43,6 +43,7 @@ import { parseFields } from 'src/common/helper/parseFields';
 import { fileDelete } from 'src/common/helper/fileDelete';
 import { CreateMeditationDto } from './dto/create-meditation.dto';
 import { EditMeditationDto } from './dto/edit-meditation.dto';
+import { getFileNameFromUrl } from 'src/common/helper/getFileNameFromUrl';
 
 @ApiBearerAuth()
 @ApiTags('admin-meditations')
