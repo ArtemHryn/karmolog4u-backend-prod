@@ -26,14 +26,22 @@ export class ContractService {
   }
   async updateContract(data: any) {
     try {
-      await this.contractModel.findOneAndUpdate(
-        { course: data.course }, // умова пошуку по полю course
-        data.contract, // дані для оновлення
-        {
-          new: true, // повернути оновлений документ
-          runValidators: true, // запуск валідації за схемою
-        },
-      );
+      const oldContract = await this.contractModel.findOne({
+        course: data.course,
+      });
+      if (oldContract) {
+        await this.contractModel.findOneAndUpdate(
+          { course: data.course }, // умова пошуку по полю course
+          data.contract, // дані для оновлення
+          {
+            new: true, // повернути оновлений документ
+            runValidators: true, // запуск валідації за схемою
+          },
+        );
+      } else {
+        await this.createContract(data);
+      }
+
       return { message: 'success' };
     } catch (error) {
       throw new BadRequestException('Помилка оновлення контракту :(');

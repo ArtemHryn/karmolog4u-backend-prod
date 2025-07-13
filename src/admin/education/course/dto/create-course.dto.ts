@@ -170,8 +170,8 @@ export class CreateCourseDto {
   @ApiProperty({ description: 'Access details', type: Access })
   access: Access;
 
-  @ApiProperty({ description: 'Contract details', type: Contract })
-  contract: Contract;
+  @ApiPropertyOptional({ description: 'Contract details', type: Contract })
+  contract?: Contract;
 
   @ApiPropertyOptional({
     example: 'https://chat.example.com',

@@ -30,7 +30,7 @@ export class CourseService {
 
   async createCourse(data: CreateCourseDto) {
     try {
-      const { contract, cover, optionalFiles, ...course } = data;
+      const { cover, optionalFiles, ...course } = data;
       //create course
       const newCourse = new this.courseModel({
         ...course,
@@ -39,11 +39,15 @@ export class CourseService {
       if (!newCourse) {
         throw new Error('Помилка створення курсу :(');
       }
-      //create contract
-      await this.contractService.createContract({
-        ...contract,
-        course: newCourse._id,
-      });
+
+      if (data?.contract) {
+        //create contract
+        await this.contractService.createContract({
+          ...data.contract,
+          course: newCourse._id,
+        });
+      }
+
       //create folder to course material
       const folderPath = await this.storageService.createCourseStorage(
         newCourse._id.toString(),
@@ -332,7 +336,7 @@ export class CourseService {
 
   async updateCourse(id: mongoose.Types.ObjectId, data: UpdateCourseDto) {
     try {
-      const { cover, optionalFiles, contract, ...courseData } = data;
+      const { cover, optionalFiles, ...courseData } = data;
       //search course
       const oldCourse = await this.courseModel.findById(id).exec();
       if (!oldCourse) {
@@ -420,10 +424,10 @@ export class CourseService {
       }
 
       // update contract if available
-      if (Object.keys(contract).length != 0) {
+      if (Object.keys(data?.contract).length != 0) {
         await this.contractService.updateContract({
           course: id,
-          contract,
+          contract: data?.contract,
         });
       }
 
