@@ -26,11 +26,11 @@ export class ContractService {
   }
   async updateContract(data: any) {
     try {
-      const oldContract = await this.contractModel.findOne({
+      const oldContract = await this.contractModel.find({
         course: data.course,
       });
 
-      if (oldContract) {
+      if (oldContract.length !== 0) {
         console.log(data);
         await this.contractModel.findOneAndUpdate(
           { course: data.course }, // умова пошуку по полю course

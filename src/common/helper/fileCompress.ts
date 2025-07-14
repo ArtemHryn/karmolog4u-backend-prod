@@ -28,6 +28,7 @@ export const fileCompress = async (
     }
     // Стиснення зображення
 
+    // delete from temporary folder
     await fileDelete(file.path);
 
     //crate link for image
