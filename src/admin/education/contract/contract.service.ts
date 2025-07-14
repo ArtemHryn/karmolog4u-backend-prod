@@ -29,7 +29,9 @@ export class ContractService {
       const oldContract = await this.contractModel.findOne({
         course: data.course,
       });
+
       if (oldContract) {
+        console.log(data);
         await this.contractModel.findOneAndUpdate(
           { course: data.course }, // умова пошуку по полю course
           data.contract, // дані для оновлення
@@ -39,7 +41,10 @@ export class ContractService {
           },
         );
       } else {
-        await this.createContract(data);
+        await this.createContract({
+          course: data.course,
+          ...data.contract,
+        });
       }
 
       return { message: 'success' };
