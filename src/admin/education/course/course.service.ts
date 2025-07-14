@@ -429,6 +429,8 @@ export class CourseService {
           course: id,
           contract: data?.contract,
         });
+      } else {
+        await this.contractService.deleteContract([id]);
       }
 
       return { message: 'success' };
