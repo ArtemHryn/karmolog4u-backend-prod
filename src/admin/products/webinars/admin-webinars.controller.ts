@@ -29,7 +29,10 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { multerOptions } from 'src/common/helper/multerOptions';
 import { parseFields } from 'src/common/helper/parseFields';
 import { fileCompress } from 'src/common/helper/fileCompress';
-import { fileDelete } from 'src/common/helper/fileDelete';
+import {
+  coverDeleteFromStorage,
+  fileDelete,
+} from 'src/common/helper/fileDelete';
 import { WebinarEntity } from './dto/webinar-entity.dto';
 import { JoiValidationPipe } from 'src/common/pipes/JoiValidationPipe';
 import { ChangeStatusWebinarDto } from './dto/change-status.dto';
@@ -202,7 +205,7 @@ export class AdminWebinarsController {
 
         // Отримання шляху
 
-        await fileDelete(filePath);
+        await coverDeleteFromStorage(filePath);
         const link = await fileCompress(file, this.configService);
         parsedData.cover = link;
       } else if (file) {

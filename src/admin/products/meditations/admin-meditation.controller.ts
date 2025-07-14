@@ -40,7 +40,10 @@ import { ConfigService } from '@nestjs/config';
 import { multerOptions } from 'src/common/helper/multerOptions';
 import { fileCompress } from 'src/common/helper/fileCompress';
 import { parseFields } from 'src/common/helper/parseFields';
-import { coverDeleteFromStorage, fileDelete } from 'src/common/helper/fileDelete';
+import {
+  coverDeleteFromStorage,
+  fileDelete,
+} from 'src/common/helper/fileDelete';
 import { CreateMeditationDto } from './dto/create-meditation.dto';
 import { EditMeditationDto } from './dto/edit-meditation.dto';
 import { getFileNameFromUrl } from 'src/common/helper/getFileNameFromUrl';

@@ -34,7 +34,10 @@ import { multerOptions } from 'src/common/helper/multerOptions';
 import { ResponseSuccessDto } from 'src/common/dto/response-success.dto';
 import { parseFields } from 'src/common/helper/parseFields';
 import { fileCompress } from 'src/common/helper/fileCompress';
-import { fileDelete } from 'src/common/helper/fileDelete';
+import {
+  coverDeleteFromStorage,
+  fileDelete,
+} from 'src/common/helper/fileDelete';
 import { EditGuidesAndBooksDto } from './dto/edit-guides_and_books.dto';
 import { ChangeStatusGuidesAndBooksDto } from './dto/change-status-guides_and_books.dto';
 import {
@@ -207,7 +210,7 @@ export class AdminGuidesAndBooksController {
         // const parsedUrl = new URL(oldGuidesAndBooks.cover);
         const filePath = getFileNameFromUrl(oldGuidesAndBooks.cover);
         // Отримання шляху // Видаляємо початковий "/"
-        await fileDelete(filePath);
+        await coverDeleteFromStorage(filePath);
         const link = await fileCompress(file, this.configService);
         parsedData.cover = link;
       } else if (file) {

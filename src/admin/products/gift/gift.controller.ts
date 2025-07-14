@@ -30,7 +30,10 @@ import { multerOptions } from 'src/common/helper/multerOptions';
 import { ResponseSuccessDto } from 'src/common/dto/response-success.dto';
 import { parseFields } from 'src/common/helper/parseFields';
 import { fileCompress } from 'src/common/helper/fileCompress';
-import { fileDelete } from 'src/common/helper/fileDelete';
+import {
+  coverDeleteFromStorage,
+  fileDelete,
+} from 'src/common/helper/fileDelete';
 import { CreateGiftDto } from './dto/create-gift.dto';
 import { GiftEntity } from './dto/gift-entity.dto';
 import mongoose from 'mongoose';
@@ -197,7 +200,7 @@ export class GiftController {
         // Отримання шляху
         const filePath = getFileNameFromUrl(oldGift.cover);
 
-        await fileDelete(filePath);
+        await coverDeleteFromStorage(filePath);
         const link = await fileCompress(file, this.configService);
         parsedData.cover = link;
       } else if (file) {
