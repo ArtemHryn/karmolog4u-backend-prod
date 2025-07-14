@@ -424,26 +424,26 @@ export class CourseService {
       }
 
       // update contract if available
-      if (Object.keys(data?.contract).length != 0) {
-        await this.contractService.updateContract({
-          course: id,
-          contract: data?.contract,
-        });
-      } else {
+      if (!data?.contract) {
         await this.contractService.deleteContract([id]);
+      } else {
+        if (Object.keys(data.contract).length != 0) {
+          await this.contractService.updateContract({
+            course: id,
+            contract: data.contract,
+          });
+        }
       }
 
       return { message: 'success' };
     } catch (error) {
       throw new HttpException(
         {
-          status: error.status || 500,
-          message:
-            error.response?.message ||
-            'An error occurred while processing the file',
-          error: error.response?.error || 'Internal Server Error',
+          status: error.status,
+          message: error.response.message,
+          error: error.response.error,
         },
-        error.status || 500,
+        error.status,
         {
           cause: error,
         },

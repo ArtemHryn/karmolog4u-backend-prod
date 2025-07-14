@@ -31,7 +31,6 @@ export class ContractService {
       });
 
       if (oldContract.length !== 0) {
-        console.log(data);
         await this.contractModel.findOneAndUpdate(
           { course: data.course }, // умова пошуку по полю course
           data.contract, // дані для оновлення
