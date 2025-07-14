@@ -201,11 +201,11 @@ export class AdminWebinarsController {
         const oldWebinar = await this.adminWebinarService.findWebinarById(
           webinarId,
         );
-        const filePath = getFileNameFromUrl(oldWebinar.cover); // Видаляємо початковий "/"
-
-        // Отримання шляху
-
-        await coverDeleteFromStorage(filePath);
+        if (oldWebinar.cover !== '') {
+          const filePath = getFileNameFromUrl(oldWebinar.cover); // Видаляємо початковий "/"
+          // Отримання шляху
+          await coverDeleteFromStorage(filePath);
+        }
         const link = await fileCompress(file, this.configService);
         parsedData.cover = link;
       } else if (file) {

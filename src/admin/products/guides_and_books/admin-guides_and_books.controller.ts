@@ -207,10 +207,12 @@ export class AdminGuidesAndBooksController {
           await this.adminGuidesAndBooksService.findGuidesAndBooksById(
             guidesAndBooksId,
           );
-        // const parsedUrl = new URL(oldGuidesAndBooks.cover);
-        const filePath = getFileNameFromUrl(oldGuidesAndBooks.cover);
-        // Отримання шляху // Видаляємо початковий "/"
-        await coverDeleteFromStorage(filePath);
+        if (oldGuidesAndBooks.cover !== '') {
+          // const parsedUrl = new URL(oldGuidesAndBooks.cover);
+          const filePath = getFileNameFromUrl(oldGuidesAndBooks.cover);
+          // Отримання шляху // Видаляємо початковий "/"
+          await coverDeleteFromStorage(filePath);
+        }
         const link = await fileCompress(file, this.configService);
         parsedData.cover = link;
       } else if (file) {

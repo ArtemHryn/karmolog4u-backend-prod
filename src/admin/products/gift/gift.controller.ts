@@ -198,9 +198,10 @@ export class GiftController {
         const oldGift = await this.giftService.findGiftById(giftId);
         // const parsedUrl = new URL(oldGift.cover);
         // Отримання шляху
-        const filePath = getFileNameFromUrl(oldGift.cover);
-
-        await coverDeleteFromStorage(filePath);
+        if (oldGift.cover !== '') {
+          const filePath = getFileNameFromUrl(oldGift.cover);
+          await coverDeleteFromStorage(filePath);
+        }
         const link = await fileCompress(file, this.configService);
         parsedData.cover = link;
       } else if (file) {

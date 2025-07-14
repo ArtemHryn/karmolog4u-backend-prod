@@ -202,8 +202,10 @@ export class AdminMeditationController {
           await this.adminMeditationService.findMeditationById(meditationId);
         // const parsedUrl = new URL(oldMeditation.cover);
         // Отримання шляху
-        const filePath = getFileNameFromUrl(oldMeditation.cover); // Видаляємо початковий "/"
-        await coverDeleteFromStorage(filePath);
+        if (oldMeditation.cover !== '') {
+          const filePath = getFileNameFromUrl(oldMeditation.cover); // Видаляємо початковий "/"
+          await coverDeleteFromStorage(filePath);
+        }
         const link = await fileCompress(file, this.configService);
         parsedData.cover = link;
       } else if (file) {
