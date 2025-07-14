@@ -350,7 +350,7 @@ export class CourseService {
         if (oldCourse.cover) {
           const oldCoverName = getFileNameFromUrl(oldCourse.cover);
           await this.storageService.deleteFiles(
-            this.storageService.getCourseFilePath(id.toHexString(), 'cover'),
+            this.storageService.getCourseFilePath(id.toHexString(), 'covers'),
             [
               {
                 path: oldCoverName,
