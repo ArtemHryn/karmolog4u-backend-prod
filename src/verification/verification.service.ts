@@ -22,7 +22,7 @@ export class VerificationService {
       await verifyToken.save();
       return { message: 'success' };
     } catch (error) {
-      throw new BadRequestException('Шось пішло не так(');
+      throw new BadRequestException('Помилка запису в БД, токен вже існує!');
     }
   }
 

@@ -5,12 +5,11 @@ import { JwtService } from '@nestjs/jwt';
 import { TokenService } from './../token/token.service';
 import {
   BadRequestException,
-  ConflictException,
   ForbiddenException,
   HttpException,
   Inject,
   Injectable,
-  NotFoundException,
+  InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { RegisterUserDto } from './dto/register-user.dto';
@@ -44,11 +43,15 @@ export class AuthService {
         _id: user._id,
         email: user.email,
       });
+      if (!verifyToken) {
+        throw new InternalServerErrorException('Помилка створення токену');
+      }
       await this.verifyService.createVerifyToken({
         userId: user._id,
         email: user.email,
         token: verifyToken,
       });
+      //якщо не verified тоді надсилає емейл
       if (!registerUserDto?.verified) {
         await this.mailService.sendEmail(
           user.email,
@@ -56,9 +59,13 @@ export class AuthService {
           'verifyEmail', // HBS template name
           {
             name: user.name, // User's full name
+
+            // todo
+            // make verification link in .env
+
             verifyUrl: `${this.configService.get<string>(
               'FRONT_DOMAIN',
-            )}/auth/verify?token=${verifyToken}`, // Verification link
+            )}/cabinet/verify/${verifyToken}`, // Verification link
             appName: 'Karmolog4u',
             year: new Date().getFullYear(),
           },
@@ -66,7 +73,16 @@ export class AuthService {
       }
       return user;
     } catch (error) {
-      throw new ConflictException('Email вже зареєстрований');
+      throw new HttpException(
+        {
+          status: error.status,
+          message: error.response.message,
+        },
+        error.status,
+        {
+          cause: error,
+        },
+      );
     }
   }
 
@@ -78,9 +94,6 @@ export class AuthService {
       const user = await this.userService.findUserByEmail({
         email: loginUserDto.email,
       });
-      if (!user) {
-        throw new NotFoundException('Email не знайдено');
-      }
       if (!user.verified) {
         throw new ForbiddenException('Користувач не верифікований');
       }
@@ -127,6 +140,9 @@ export class AuthService {
       const refreshToken = await this.jwtService.signAsync(refreshPayload, {
         expiresIn: refreshToken_expired,
       });
+      if (!accessToken || !refreshToken) {
+        throw new InternalServerErrorException('Помилка створення токену');
+      }
       const daysToAdd = parseInt(
         this.configService.get<string>('DOCUMENT_TOKEN_EXPIRED'),
         10,
@@ -174,7 +190,16 @@ export class AuthService {
       });
       return { message: 'success' };
     } catch (error) {
-      throw new UnauthorizedException('Неавторизований');
+      throw new HttpException(
+        {
+          status: error.status,
+          message: error.response.message,
+        },
+        error.status,
+        {
+          cause: error,
+        },
+      );
     }
   }
 
@@ -182,9 +207,13 @@ export class AuthService {
     refreshTokenDto: RefreshTokenDto,
   ): Promise<TokenResponseDto> {
     try {
+      const secret = this.configService.get<string>('JWT_SECRET');
       const payload = await this.jwtService.verifyAsync(refreshTokenDto.token, {
-        secret: 'secretcode',
+        secret: secret,
       });
+      if (!payload) {
+        throw new UnauthorizedException('Недійсний або протермінований токен');
+      }
       const tokenInstance = await this.tokenService.findToken({
         refreshToken: refreshTokenDto.token,
         owner: payload.sub,
@@ -203,14 +232,25 @@ export class AuthService {
       const accessToken = await this.jwtService.signAsync(accessPayload, {
         expiresIn: accessToken_expired,
       });
-
+      if (!accessToken) {
+        throw new InternalServerErrorException('Помилка створення токену');
+      }
       const newToken = await this.tokenService.updateToken({
         accessToken,
         id: tokenInstance._id,
       });
       return newToken;
     } catch (error) {
-      throw new UnauthorizedException('Неавторизований');
+      throw new HttpException(
+        {
+          status: error.status,
+          message: error.response.message,
+        },
+        error.status,
+        {
+          cause: error,
+        },
+      );
     }
   }
 
@@ -219,9 +259,6 @@ export class AuthService {
       const user = await this.userService.findUserByEmail({
         email: data.email,
       });
-      if (!user) {
-        throw new NotFoundException('Користувача не знайдено');
-      }
       if (!user.verified) {
         throw new ForbiddenException('Користувач не верифікований');
       }
@@ -263,21 +300,34 @@ export class AuthService {
 
   async verifyUser(token: string) {
     try {
+      const secret = this.configService.get<string>('JWT_SECRET');
       const payload = await this.jwtService.verifyAsync(token, {
-        secret: 'secretcode',
+        secret: secret,
       });
+      if (!payload) {
+        throw new BadRequestException('Недійсний або протермінований токен');
+      }
       const verifyToken = await this.verifyService.getVerifyToken({
         userId: payload.userId,
         email: payload.email,
       });
-      if (verifyToken.token != token) {
-        throw new Error();
+      if (verifyToken.token !== token) {
+        throw new BadRequestException('Невірний токен верифікації');
       }
       await this.userService.updateUser(verifyToken.userId, { verified: true });
       await this.verifyService.deleteVerifyToken({ _id: verifyToken._id });
       return { message: 'success' };
     } catch (error) {
-      throw new BadRequestException('Токен не відповідає дійсному');
+      throw new HttpException(
+        {
+          status: error.status,
+          message: error.response.message,
+        },
+        error.status,
+        {
+          cause: error,
+        },
+      );
     }
   }
 }

@@ -3,7 +3,12 @@ import { TokenResponseDto } from './dto/token-response.dto';
 import { FindTokenDto } from './dto/find-token.dto';
 import { UpdateTokenDto } from './dto/update-token.dto';
 import { NewTokenDto } from './dto/new-token.dto';
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Token } from './schemas/token.schema';
@@ -19,7 +24,7 @@ export class TokenService {
       const token = await this.tokenModel.findOne({ ...tokenData });
       return token;
     } catch (error) {
-      throw new BadRequestException();
+      throw new NotFoundException('Токен не знайдено');
     }
   }
 
@@ -32,7 +37,7 @@ export class TokenService {
         refreshToken: token.refreshToken,
       };
     } catch (error) {
-      throw new BadRequestException();
+      throw new BadRequestException('Помилка запису в БД');
     }
   }
 
@@ -52,7 +57,7 @@ export class TokenService {
         refreshToken: token.refreshToken,
       };
     } catch (error) {
-      throw new BadRequestException();
+      throw new ForbiddenException('Помилка оновлення токену');
     }
   }
   async deleteToken(tokenData: DeleteTokenDto): Promise<{ message: string }> {
@@ -62,7 +67,7 @@ export class TokenService {
       });
       return { message: 'success' };
     } catch (error) {
-      throw new BadRequestException('Something wrong');
+      throw new NotFoundException('Токен не знайдено або вже видалено');
     }
   }
 
@@ -70,7 +75,7 @@ export class TokenService {
     try {
       await this.tokenModel.deleteMany({ ...id });
     } catch (error) {
-      throw new BadRequestException('Something wrong');
+      throw new BadRequestException('Помилка скасування сесій');
     }
   }
 }

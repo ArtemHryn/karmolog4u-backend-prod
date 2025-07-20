@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
@@ -15,8 +15,7 @@ export class MailService {
       });
       return { message: 'success' };
     } catch (error) {
-      console.error('Error sending email:', error.message);
-      throw error;
+      throw new ServiceUnavailableException('Помилка відправлення email!');
     }
   }
 }

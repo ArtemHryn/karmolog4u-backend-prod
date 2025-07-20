@@ -1,11 +1,18 @@
 import { RefreshTokenResponse } from './dto/refresh-token-response.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
-import { ApiBearerAuth, ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
-  registerUserSchema,
-  loginUserSchema,
-  resetPasswordSchema,
-} from './schemas/validation.schemas';
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiConflictResponse,
+  ApiForbiddenResponse,
+  ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
+  ApiResponse,
+  ApiServiceUnavailableResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import {
   Body,
@@ -17,11 +24,9 @@ import {
   Post,
   Query,
   UseGuards,
-  UsePipes,
 } from '@nestjs/common';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
-import { JoiValidationPipe } from 'src/common/pipes/JoiValidationPipe';
 import { AuthGuard } from './auth.guard';
 import { Token } from 'src/common/decorators/token.decorator';
 import { User } from 'src/common/decorators/user.decorator';
@@ -48,8 +53,15 @@ export class AuthController {
     description: 'register user',
     type: ResponseSuccessDto,
   })
-  @ApiResponse({ status: 409, description: 'Email вже зареєстрований' })
-  @UsePipes(new JoiValidationPipe(registerUserSchema))
+  @ApiConflictResponse({
+    description: 'Email вже зареєстрований або токен вже існує!',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Помилка створення токену!',
+  })
+  @ApiServiceUnavailableResponse({
+    description: 'Помилка відправлення email!',
+  })
   async register(
     @Body() registerUserDto: RegisterUserDto,
   ): Promise<ResponseSuccessDto> {
@@ -80,10 +92,16 @@ export class AuthController {
     description: 'login user',
     type: LoginResponseDto,
   })
-  @ApiResponse({ status: 401, description: 'Неправильний пароль' })
-  @ApiResponse({ status: 404, description: 'Email не знайдено' })
+  @ApiNotFoundResponse({ description: 'Email не знайдено' })
+  @ApiForbiddenResponse({ description: 'Користувач не верифікований' })
+  @ApiUnauthorizedResponse({ description: 'Неправильний пароль' })
+  @ApiInternalServerErrorResponse({
+    description: 'Помилка створення токену!',
+  })
+  @ApiBadRequestResponse({
+    description: 'Помилка запису токену в БД!',
+  })
   @HttpCode(200)
-  @UsePipes(new JoiValidationPipe(loginUserSchema))
   async login(
     @Body() loginUserDto: LoginUserDto,
     @Headers('user-agent') userAgent: any,
@@ -116,7 +134,8 @@ export class AuthController {
     description: 'logout user',
     type: ResponseSuccessDto,
   })
-  @ApiResponse({ status: 401, description: 'Неавторизований' })
+  @ApiUnauthorizedResponse({ description: 'Неавторизований' })
+  @ApiNotFoundResponse({ description: 'Токен не знайдено або вже видалено' })
   @UseGuards(AuthGuard)
   @HttpCode(200)
   async logout(
@@ -146,7 +165,18 @@ export class AuthController {
     description: 'refresh token',
     type: RefreshTokenResponse,
   })
-  @ApiResponse({ status: 401, description: 'Неавторизований' })
+  @ApiUnauthorizedResponse({
+    description: 'Недійсний або протермінований токен',
+  })
+  @ApiNotFoundResponse({
+    description: 'Токен не знайдено або користувача не існує',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Помилка створення токену',
+  })
+  @ApiForbiddenResponse({
+    description: 'Помилка оновлення токену',
+  })
   @HttpCode(200)
   async refreshToken(
     @Headers('Authorization') refreshToken: string,
@@ -170,15 +200,23 @@ export class AuthController {
 
   @Public()
   @Post('reset-password')
+  @ApiBody({
+    type: ResetPasswordDto,
+  })
   @ApiResponse({
     status: 200,
     description: 'reset password',
     type: ResponseSuccessDto,
   })
-  @ApiResponse({ status: 404, description: 'Користувача не знайдено' })
+  @ApiNotFoundResponse({ description: 'Користувача не знайдено' })
+  @ApiForbiddenResponse({ description: 'Користувач не верифікований' })
+  @ApiBadRequestResponse({
+    description: 'Помилка оновлення паролю або помилка скасування сесій',
+  })
+  @ApiServiceUnavailableResponse({ description: 'Помилка відправлення email!' })
   @HttpCode(200)
   async resetPassword(
-    @Body(new JoiValidationPipe(resetPasswordSchema)) data: ResetPasswordDto,
+    @Body() data: ResetPasswordDto,
   ): Promise<ResponseSuccessDto> {
     try {
       return await this.authService.resetPassword(data);
@@ -200,10 +238,14 @@ export class AuthController {
   @Post('verify')
   @ApiResponse({
     status: 200,
-    description: 'refresh token',
+    description: 'verify token',
     type: ResponseSuccessDto,
   })
-  @ApiResponse({ status: 404, description: 'Користувача не знайдено' })
+  @ApiBadRequestResponse({
+    description:
+      'Недійсний або протермінований токен,Невірний токен верифікації, помилка оновлення користувача',
+  })
+  @ApiNotFoundResponse({ description: 'Токен верифікації не знайдено' })
   @HttpCode(200)
   async verifyUser(@Query('token') token: string): Promise<ResponseSuccessDto> {
     try {
