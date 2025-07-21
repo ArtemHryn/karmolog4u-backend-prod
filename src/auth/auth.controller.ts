@@ -37,6 +37,7 @@ import { HeadersDataDto } from './dto/headers-data.dto';
 import { ResponseSuccessDto } from 'src/common/dto/response-success.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UAParser } from 'ua-parser-js';
+import { ResendVerificationDto } from './dto/resend-verification.dto';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -250,6 +251,45 @@ export class AuthController {
   async verifyUser(@Query('token') token: string): Promise<ResponseSuccessDto> {
     try {
       return await this.authService.verifyUser(token);
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: error.status,
+          message: error.response.message,
+        },
+        error.status,
+        {
+          cause: error,
+        },
+      );
+    }
+  }
+
+  @Public()
+  @Post('resend-verification')
+  @ApiBody({
+    type: ResendVerificationDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'resend verification token',
+    type: ResponseSuccessDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Користувача не знайдено, Токен верифікації не знайдено',
+  })
+  @ApiBadRequestResponse({
+    description: 'Користувач верифікований',
+  })
+  @ApiServiceUnavailableResponse({
+    description: 'Помилка відправлення email!',
+  })
+  @HttpCode(200)
+  async resendVerification(
+    @Body() data: ResendVerificationDto,
+  ): Promise<ResponseSuccessDto> {
+    try {
+      return await this.authService.resendVerification(data);
     } catch (error) {
       throw new HttpException(
         {

@@ -24,6 +24,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { generateUniquePassword } from 'src/common/helper/generatePassword';
 import { VerificationService } from 'src/verification/verification.service';
 import { MailService } from 'src/mail/mail.service';
+import { ResendVerificationDto } from './dto/resend-verification.dto';
 
 @Injectable()
 export class AuthService {
@@ -59,10 +60,6 @@ export class AuthService {
           'verifyEmail', // HBS template name
           {
             name: user.name, // User's full name
-
-            // todo
-            // make verification link in .env
-
             verifyUrl: `${this.configService.get<string>(
               'FRONT_DOMAIN',
             )}/cabinet/verify/${verifyToken}`, // Verification link
@@ -316,6 +313,48 @@ export class AuthService {
       }
       await this.userService.updateUser(verifyToken.userId, { verified: true });
       await this.verifyService.deleteVerifyToken({ _id: verifyToken._id });
+      return { message: 'success' };
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: error.status,
+          message: error.response.message,
+        },
+        error.status,
+        {
+          cause: error,
+        },
+      );
+    }
+  }
+
+  async resendVerification(
+    data: ResendVerificationDto,
+  ): Promise<ResponseSuccessDto> {
+    try {
+      const user = await this.userService.findUserByEmail({
+        email: data.email,
+      });
+      if (user.verified) {
+        throw new BadRequestException('Користувач верифікований');
+      }
+      const verifyToken = await this.verifyService.getVerifyToken({
+        userId: user._id,
+        email: user.email,
+      });
+      await this.mailService.sendEmail(
+        user.email,
+        'Verify Your Email Address',
+        'verifyEmail', // HBS template name
+        {
+          name: user.name, // User's full name
+          verifyUrl: `${this.configService.get<string>(
+            'FRONT_DOMAIN',
+          )}/cabinet/verify/${verifyToken}`, // Verification link
+          appName: 'Karmolog4u',
+          year: new Date().getFullYear(),
+        },
+      );
       return { message: 'success' };
     } catch (error) {
       throw new HttpException(

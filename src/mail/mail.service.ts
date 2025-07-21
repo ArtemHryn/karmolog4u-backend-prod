@@ -15,6 +15,8 @@ export class MailService {
       });
       return { message: 'success' };
     } catch (error) {
+      console.log(error);
+      
       throw new ServiceUnavailableException('Помилка відправлення email!');
     }
   }
