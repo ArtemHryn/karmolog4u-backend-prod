@@ -305,10 +305,10 @@ export class AuthService {
         throw new BadRequestException('Недійсний або протермінований токен');
       }
       const verifyToken = await this.verifyService.getVerifyToken({
-        userId: payload.userId,
+        userId: payload._id,
         email: payload.email,
       });
-      if (verifyToken.token !== token) {
+      if (verifyToken.token != token) {
         throw new BadRequestException('Невірний токен верифікації');
       }
       await this.userService.updateUser(verifyToken.userId, { verified: true });

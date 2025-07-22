@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Verification } from './schemas/verification.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { CreateVerifyToken } from './dto/create-verify-token.dto';
 import { GetVerifyToken } from './dto/get-verify-token.dto';
 import { DeleteVerifyToken } from './dto/delete-verify-token.dto';
@@ -28,8 +28,9 @@ export class VerificationService {
 
   async getVerifyToken(data: GetVerifyToken) {
     try {
+      const id = new Types.ObjectId(data.userId);
       return await this.verifyModel.findOne({
-        userId: data.userId,
+        userId: id,
         email: data.email,
       });
     } catch (error) {
