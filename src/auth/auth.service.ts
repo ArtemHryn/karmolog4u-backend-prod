@@ -62,7 +62,7 @@ export class AuthService {
             name: user.name, // User's full name
             verifyUrl: `${this.configService.get<string>(
               'FRONT_DOMAIN',
-            )}/cabinet/verify/${verifyToken}`, // Verification link
+            )}/cabinet/verify?token=${verifyToken}`, // Verification link
             appName: 'Karmolog4u',
             year: new Date().getFullYear(),
           },
@@ -350,7 +350,7 @@ export class AuthService {
           name: user.name, // User's full name
           verifyUrl: `${this.configService.get<string>(
             'FRONT_DOMAIN',
-          )}/cabinet/verify/${verifyToken.token}`, // Verification link
+          )}/cabinet/verify?token=${verifyToken.token}`, // Verification link
           appName: 'Karmolog4u',
           year: new Date().getFullYear(),
         },
