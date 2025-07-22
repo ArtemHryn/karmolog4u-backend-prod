@@ -1,7 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import { Role } from 'src/role/role.enum';
-
+import * as bcrypt from 'bcryptjs';
+import { UpdateQuery } from 'mongoose';
 export type UserDocument = HydratedDocument<User>;
 
 @Schema({
@@ -55,3 +56,22 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+UserSchema.pre('findOneAndUpdate', async function (next) {
+  const update = this.getUpdate();
+
+  if (!update) return next();
+
+  // Якщо update виглядає як об'єкт { password: '...' }
+  if ('$set' in update && update.$set?.password) {
+    update.$set.password = await bcrypt.hash(update.$set.password, 10);
+  } else if ('password' in update) {
+    // Прямий update.password
+    (update as UpdateQuery<UserDocument>).password = await bcrypt.hash(
+      (update as UpdateQuery<UserDocument>).password!,
+      10,
+    );
+  }
+
+  next();
+});
