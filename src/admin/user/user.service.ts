@@ -7,8 +7,8 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { User } from 'src/user/schemas/user.schema';
-import { GetQueryDto } from './dto/get-query.dto';
-import { GetAlUserDto } from './dto/get-all-user.dto';
+import { GetUsersQueryDto } from './dto/get-all-query.dto';
+import { GetAllUsersResponseDto } from './dto/get-all-user-response.dto';
 import { GetUserByIdDto } from './dto/get-user-by-id.dto';
 import { ArrayUserIdsDto } from './dto/array-user-ids.dto';
 import { ResponseSuccessDto } from 'src/common/dto/response-success.dto';
@@ -21,6 +21,7 @@ import { MailService } from 'src/mail/mail.service';
 import { ConfigService } from '@nestjs/config';
 import * as ExcelJS from 'exceljs';
 import { Response } from 'express';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class UserService {
@@ -30,65 +31,70 @@ export class UserService {
     @Inject(MailService) private mailService: MailService,
     private configService: ConfigService,
   ) {}
-  async getAllUsers(query: GetQueryDto): Promise<GetAlUserDto[]> {
+  async getAllUsers(
+    query: GetUsersQueryDto,
+  ): Promise<GetAllUsersResponseDto[]> {
     try {
-      const page = +query.page || 1;
-      const limit = +query.limit || 10;
+      const page = query.page || 1;
+      const limit = query.limit || 10;
       const skip = (page - 1) * limit;
+
+      const matchStage: any = {};
+
+      // Пошук по імені, прізвищу або email
+      if (query.searchQuery?.trim()) {
+        matchStage.$or = [
+          { name: { $regex: query.searchQuery, $options: 'i' } },
+          { lastName: { $regex: query.searchQuery, $options: 'i' } },
+          { email: { $regex: query.searchQuery, $options: 'i' } },
+        ];
+      }
+
+      // Фільтр по course_id (якщо це реалізовано)
+      if (query.course_id) {
+        matchStage['courses'] = new Types.ObjectId(query.course_id);
+      }
+
+      // Динамічне сортування
+      const sortStage: Record<string, 1 | -1> =
+        query.sortBy && query.sortOrder
+          ? { [query.sortBy]: query.sortOrder as 1 | -1 }
+          : { createdAt: -1 };
       return await this.userModel
         .aggregate([
-          {
-            $addFields: {
-              education: [{ id: 1, name: 'Name of education' }],
-            },
-          },
+          { $match: matchStage },
+          // Проєкція необхідних полів
           {
             $project: {
+              id: '$_id',
               name: 1,
               lastName: 1,
               email: 1,
               mobPhone: 1,
-              education: 1,
               createdAt: 1,
               lastLogin: 1,
               verified: 1,
               banned: 1,
+              _id: 0,
             },
           },
-          ...(query.searchQuery?.trim()
-            ? [
-                {
-                  $match: {
-                    $or: [
-                      { name: { $regex: query.searchQuery, $options: 'i' } },
-                      { email: { $regex: query.searchQuery, $options: 'i' } },
-                    ],
-                  },
-                },
-              ]
-            : []),
-          ...(query.sortField
-            ? [
-                {
-                  $sort: {
-                    [query.sortField]:
-                      query.sortOrder === 'asc'
-                        ? (1 as 1 | -1)
-                        : (-1 as 1 | -1),
-                  },
-                },
-              ]
-            : []),
+
+          // Сортування
+          { $sort: sortStage },
+
+          // Пагінація
           {
             $facet: {
               paginatedData: [{ $skip: skip }, { $limit: limit }],
               totalCount: [{ $count: 'count' }],
             },
           },
+
+          // Повертаємо об'єднану відповідь
           {
             $project: {
               data: '$paginatedData',
-              totalPromo: {
+              total: {
                 $ifNull: [{ $arrayElemAt: ['$totalCount.count', 0] }, 0],
               },
             },
@@ -109,13 +115,6 @@ export class UserService {
             $match: { _id: userId }, // Знаходимо промокод за _id
           },
           {
-            $addFields: {
-              education: [{ id: 1, name: 'Name of education' }],
-              payment: [{ id: 1, name: 'Payment 1' }],
-              products: [{ id: 1, name: 'Product 1' }],
-            },
-          },
-          {
             $project: {
               name: 1,
               lastName: 1,
@@ -126,9 +125,6 @@ export class UserService {
               lastLogin: 1,
               verified: 1,
               banned: 1,
-              education: 1,
-              payment: 1,
-              products: 1,
             },
           },
         ])

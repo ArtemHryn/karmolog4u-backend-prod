@@ -19,8 +19,8 @@ import {
 import { JoiValidationPipe } from 'src/common/pipes/JoiValidationPipe';
 import { UpdateAdminUserSchema } from './schemas/validation.schemas';
 import { UserService } from './user.service';
-import { GetAlUserDto } from './dto/get-all-user.dto';
-import { GetQueryDto } from './dto/get-query.dto';
+import { GetAllUsersResponseDto } from './dto/get-all-user-response.dto';
+import { GetUsersQueryDto } from './dto/get-all-query.dto';
 import { GetUserByIdDto } from './dto/get-user-by-id.dto';
 import { ResponseSuccessDto } from 'src/common/dto/response-success.dto';
 import { ArrayUserIdsDto } from './dto/array-user-ids.dto';
@@ -41,10 +41,12 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: 'Array of users',
-    type: [GetAlUserDto],
+    type: [GetAllUsersResponseDto],
   })
   @ApiResponse({ status: 404, description: 'Користувачів не знайдено' })
-  async getAllUser(@Query() query: GetQueryDto): Promise<GetAlUserDto[]> {
+  async getAllUser(
+    @Query() query: GetUsersQueryDto,
+  ): Promise<GetAllUsersResponseDto[]> {
     try {
       return await this.userService.getAllUsers(query);
     } catch (error) {
