@@ -1,100 +1,64 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Role } from 'src/role/role.enum';
 
 export class GetUserByIdDto {
   @ApiProperty({
-    type: String,
-    description: 'Name of the user',
-    example: 'ZALUPA',
-    required: true,
+    example: '68824f9288e895de6ba6c570',
+    description: 'Унікальний ідентифікатор користувача (MongoDB ObjectId)',
+  })
+  id: string;
+
+  @ApiProperty({
+    example: 'Іван',
+    description: "Ім'я користувача",
   })
   name: string;
 
   @ApiProperty({
-    type: String,
-    description: 'Last name of the user',
-    example: 'ZALUPA',
-    required: true,
+    example: 'Петренко',
+    description: 'Прізвище користувача',
   })
   lastName: string;
 
   @ApiProperty({
-    type: String,
-    description: 'User email',
-    example: 'ZALUPA@mail.com',
-    required: true,
-  })
-  email: string;
-
-  @ApiProperty({
-    type: String,
-    description: 'User mobile phone',
     example: '0967788777',
-    required: true,
+    description: 'Номер мобільного телефону',
   })
   mobPhone: string;
 
   @ApiProperty({
-    type: Array,
-    description: 'Array of user educations',
-    example: '[]',
-    required: true,
+    example: 'ivan.petrenko@gmail.com',
+    description: 'Email користувача',
   })
-  education: [];
+  email: string;
 
   @ApiProperty({
-    type: Array,
-    description: 'Array of user products',
-    example: '[]',
-    required: true,
-  })
-  products: [];
-
-  @ApiProperty({
-    type: Array,
-    description: 'Array of user payments',
-    example: '[]',
-    required: true,
-  })
-  payment: [];
-
-  @ApiProperty({
-    type: Boolean,
-    description: 'Status is user banned',
-    example: 'false',
-    required: true,
+    example: false,
+    description: 'Чи заблокований користувач (banned)',
   })
   banned: boolean;
 
   @ApiProperty({
-    type: String,
-    description: 'User role',
-    example: 'USER',
-    required: true,
-  })
-  role: Role[];
-
-  @ApiProperty({
-    type: Boolean,
-    description: 'Status is user verified',
-    example: 'true',
-    required: true,
+    example: true,
+    description: 'Чи верифікований користувач (verified)',
   })
   verified: boolean;
 
   @ApiProperty({
-    type: Date,
-    description: 'Date when user create account',
-    example: '2025-02-14T22:48:34.096+00:00',
-    required: true,
+    example: 'ADMIN',
+    enum: ['ADMIN', 'USER'],
+    description: 'Роль користувача',
   })
-  createdAt: Date;
+  role: string;
 
   @ApiProperty({
-    type: Date,
-    description: 'User last login',
-    example: '2025-02-14T22:48:34.096+00:00',
-    required: true,
+    example: '2025-07-24T15:22:41.669Z',
+    description: 'Останній вхід користувача (lastLogin)',
   })
-  lastLogin: Date;
+  lastLogin: string | null;
+
+  @ApiProperty({
+    example: '2025-07-24T15:21:54.476Z',
+    description: 'Дата створення користувача (createdAt)',
+  })
+  createdAt: string;
 }

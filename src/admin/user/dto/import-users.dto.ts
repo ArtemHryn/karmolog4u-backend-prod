@@ -1,67 +1,88 @@
 import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsString,
+  IsNotEmpty,
+  IsEmail,
+  IsPhoneNumber,
+  IsArray,
+  ValidateNested,
+  IsBoolean,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
-class UserDto {
+export class UserDto {
   @ApiProperty({
     type: String,
-    description: 'Name of the user',
-    example: 'ZALUPA',
-    required: true,
+    description: "Ім'я користувача",
+    example: 'Іван',
   })
+  @IsString()
+  @IsNotEmpty({ message: "Ім'я не може бути порожнім" })
   name: string;
 
   @ApiProperty({
     type: String,
-    description: 'Last name of the user',
-    example: 'ZALUPA',
-    required: true,
+    description: 'Прізвище користувача',
+    example: 'Петренко',
   })
+  @IsString()
+  @IsNotEmpty({ message: 'Прізвище не може бути порожнім' })
   lastName: string;
 
   @ApiProperty({
     type: String,
-    description: 'User email',
-    example: 'ZALUPA@mail.com',
-    required: true,
+    description: 'Email користувача',
+    example: 'ivan.petrenko@gmail.com',
   })
+  @IsEmail({}, { message: 'Невірний формат email' })
   email: string;
 
   @ApiProperty({
     type: String,
-    description: 'User mobile phone',
-    example: '0967788777',
-    required: true,
+    description: 'Номер телефону користувача (у форматі +380)',
+    example: '+380967788777',
   })
+  @IsPhoneNumber('UA', { message: 'Невірний формат номера телефону' })
   mobPhone: string;
 }
 
 export class ImportUsersDto {
   @ApiProperty({
-    description: 'Array of user objects',
+    description: 'Масив користувачів, яких потрібно імпортувати',
     type: [UserDto],
     example: [
       {
-        name: 'John',
-        lastName: 'Doe',
-        mobPhone: '+1234567890',
-        email: 'example@mail.com',
+        name: 'Іван',
+        lastName: 'Петренко',
+        mobPhone: '+380967788777',
+        email: 'ivan.petrenko@gmail.com',
+      },
+      {
+        name: 'Олена',
+        lastName: 'Шевченко',
+        mobPhone: '+380931234567',
+        email: 'olena.shevchenko@gmail.com',
       },
     ],
   })
+  @IsArray({ message: 'users має бути масивом' })
+  @ValidateNested({ each: true })
+  @Type(() => UserDto)
   users: UserDto[];
 
   @ApiProperty({
     type: Boolean,
-    description: 'Generate password and send to email',
-    example: 'false',
-    required: true,
+    description: 'Чи згенерувати пароль і надіслати на email',
+    example: false,
   })
+  @IsBoolean({ message: 'sendToEmail має бути булевим значенням' })
   sendToEmail: boolean;
 
   @ApiProperty({
     type: Boolean,
-    description: 'User verified',
-    example: 'false',
-    required: true,
+    description: 'Чи підтверджений користувач',
+    example: false,
   })
+  @IsBoolean({ message: 'verified має бути булевим значенням' })
   verified: boolean;
 }

@@ -11,6 +11,9 @@ import {
 import {
   ApiBearerAuth,
   ApiBody,
+  ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
+  ApiNotModifiedResponse,
   ApiOperation,
   ApiParam,
   ApiResponse,
@@ -43,7 +46,9 @@ export class UserController {
     description: 'Array of users',
     type: [GetAllUsersResponseDto],
   })
-  @ApiResponse({ status: 404, description: 'Користувачів не знайдено' })
+  @ApiInternalServerErrorResponse({
+    description: 'Не вдалося отримати список користувачів. Спробуйте пізніше.',
+  })
   async getAllUser(
     @Query() query: GetUsersQueryDto,
   ): Promise<GetAllUsersResponseDto[]> {
@@ -71,7 +76,7 @@ export class UserController {
     description: 'User data',
     type: GetUserByIdDto,
   })
-  @ApiResponse({ status: 404, description: 'Користувача не знайдено' })
+  @ApiNotFoundResponse({ description: 'Користувача не знайдено' })
   async getUserById(@Param('id') id: string): Promise<GetUserByIdDto> {
     try {
       return await this.userService.getUserById(id);
@@ -99,7 +104,7 @@ export class UserController {
     description: 'success',
     type: ResponseSuccessDto,
   })
-  @ApiResponse({ status: 404, description: 'Користувачів не знайдено' })
+  @ApiNotModifiedResponse({ description: 'Користувачів не знайдено' })
   async deleteUsers(
     @Body() data: ArrayUserIdsDto,
   ): Promise<ResponseSuccessDto> {

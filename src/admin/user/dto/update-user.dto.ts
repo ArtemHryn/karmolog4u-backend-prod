@@ -1,67 +1,86 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsString,
+  IsEmail,
+  IsPhoneNumber,
+  IsDate,
+  IsBoolean,
+  IsOptional,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class UpdateUserDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: String,
-    description: 'Name of the user',
-    example: 'ZALUPA',
-    required: true,
+    description: "Ім'я користувача",
+    example: 'Іван',
   })
-  name: string;
+  @IsOptional()
+  @IsString({ message: "Ім'я повинно бути текстовим значенням" })
+  name?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: String,
-    description: 'Last name of the user',
-    example: 'ZALUPA',
-    required: true,
+    description: 'Прізвище користувача',
+    example: 'Петренко',
   })
-  lastName: string;
+  @IsOptional()
+  @IsString({ message: 'Прізвище повинно бути текстовим значенням' })
+  lastName?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: String,
-    description: 'User email',
-    example: 'ZALUPA@mail.com',
-    required: true,
+    description: 'Email користувача',
+    example: 'ivan.petrenko@gmail.com',
   })
-  email: string;
+  @IsOptional()
+  @IsEmail({}, { message: 'Некоректний формат email' })
+  email?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: String,
-    description: 'User mobile phone',
-    example: '0967788777',
-    required: true,
+    description: 'Номер телефону користувача у форматі +380...',
+    example: '+380967788777',
   })
-  mobPhone: string;
+  @IsOptional()
+  @IsPhoneNumber('UA', { message: 'Некоректний формат номера телефону' })
+  mobPhone?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: Date,
-    description: 'Date when user create account',
-    example: '2025-02-14T22:48:34.096+00:00',
-    required: true,
+    description: 'Дата створення акаунту',
+    example: '2025-02-14T22:48:34.096Z',
   })
-  createdAt: Date;
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate({ message: 'createdAt повинен бути датою' })
+  createdAt?: Date;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: Date,
-    description: 'User last login',
-    example: '2025-02-14T22:48:34.096+00:00',
-    required: true,
+    description: 'Дата останнього входу користувача',
+    example: '2025-07-20T16:58:30.472Z',
   })
-  lastLogin: Date;
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate({ message: 'lastLogin повинен бути датою' })
+  lastLogin?: Date;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: Boolean,
-    description: 'User verified',
-    example: 'false',
-    required: true,
+    description: 'Чи підтверджено користувача',
+    example: true,
   })
-  verified: boolean;
+  @IsOptional()
+  @IsBoolean({ message: 'verified повинен бути булевим значенням' })
+  verified?: boolean;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: Boolean,
-    description: 'User banned',
-    example: 'false',
-    required: true,
+    description: 'Чи заблоковано користувача',
+    example: false,
   })
-  banned: boolean;
+  @IsOptional()
+  @IsBoolean({ message: 'banned повинен бути булевим значенням' })
+  banned?: boolean;
 }

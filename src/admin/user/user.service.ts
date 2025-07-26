@@ -1,7 +1,9 @@
 import {
   BadRequestException,
+  HttpException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -35,74 +37,86 @@ export class UserService {
     query: GetUsersQueryDto,
   ): Promise<GetAllUsersResponseDto[]> {
     try {
-      const page = query.page || 1;
-      const limit = query.limit || 10;
+      const {
+        sortBy = 'createdAt',
+        sortOrder = -1,
+        searchQuery,
+        course_id,
+        page = 1,
+        limit = 10,
+      } = query;
+
       const skip = (page - 1) * limit;
 
-      const matchStage: any = {};
+      const matchStage: Record<string, any> = {};
 
-      // Пошук по імені, прізвищу або email
-      if (query.searchQuery?.trim()) {
+      if (searchQuery?.trim()) {
+        const regex = new RegExp(searchQuery.trim(), 'i');
         matchStage.$or = [
-          { name: { $regex: query.searchQuery, $options: 'i' } },
-          { lastName: { $regex: query.searchQuery, $options: 'i' } },
-          { email: { $regex: query.searchQuery, $options: 'i' } },
+          { name: regex },
+          { lastName: regex },
+          { email: regex },
         ];
       }
 
-      // Фільтр по course_id (якщо це реалізовано)
-      if (query.course_id) {
-        matchStage['courses'] = new Types.ObjectId(query.course_id);
+      if (course_id) {
+        matchStage.courses = new Types.ObjectId(course_id);
       }
 
-      // Динамічне сортування
-      const sortStage: Record<string, 1 | -1> =
-        query.sortBy && query.sortOrder
-          ? { [query.sortBy]: query.sortOrder as 1 | -1 }
-          : { createdAt: -1 };
-      return await this.userModel
+      const sortField = [
+        'name',
+        'email',
+        'createdAt',
+        'lastLogin',
+        'banned',
+        'verified',
+        'toDelete',
+      ].includes(sortBy)
+        ? sortBy
+        : 'createdAt';
+
+      return this.userModel
         .aggregate([
-          { $match: matchStage },
-          // Проєкція необхідних полів
+          {
+            $match: matchStage,
+          },
+          {
+            $sort: {
+              [sortField]: sortOrder === -1 ? -1 : 1,
+            },
+          },
           {
             $project: {
               id: '$_id',
               name: 1,
               lastName: 1,
-              email: 1,
               mobPhone: 1,
-              createdAt: 1,
-              lastLogin: 1,
-              verified: 1,
+              email: 1,
               banned: 1,
-              _id: 0,
+              verified: 1,
+              lastLogin: 1,
+              createdAt: 1,
+              toDelete: 1,
             },
           },
-
-          // Сортування
-          { $sort: sortStage },
-
-          // Пагінація
           {
             $facet: {
-              paginatedData: [{ $skip: skip }, { $limit: limit }],
-              totalCount: [{ $count: 'count' }],
+              data: [{ $skip: skip }, { $limit: limit }],
+              total: [{ $count: 'count' }],
             },
           },
-
-          // Повертаємо об'єднану відповідь
           {
             $project: {
-              data: '$paginatedData',
-              total: {
-                $ifNull: [{ $arrayElemAt: ['$totalCount.count', 0] }, 0],
-              },
+              data: 1,
+              total: { $ifNull: [{ $arrayElemAt: ['$total.count', 0] }, 0] },
             },
           },
         ])
         .exec();
     } catch (error) {
-      throw new NotFoundException('Користувачів не знайдено');
+      throw new InternalServerErrorException(
+        'Не вдалося отримати список користувачів. Спробуйте пізніше.',
+      );
     }
   }
 
@@ -130,18 +144,35 @@ export class UserService {
         ])
         .exec();
       if (!user[0]) {
-        throw new Error();
+        throw new NotFoundException('Користувача не знайдено');
       }
       return user[0];
     } catch (error) {
-      throw new NotFoundException('Користувача не знайдено');
+      throw new HttpException(
+        {
+          status: error.status,
+          message: error.response.message,
+        },
+        error.status,
+        {
+          cause: error,
+        },
+      );
     }
   }
 
   async deleteUsers(data: ArrayUserIdsDto): Promise<ResponseSuccessDto> {
     try {
       const objectIds = data.users.map((id) => new mongoose.Types.ObjectId(id));
-      await this.userModel.deleteMany({ _id: { $in: objectIds } });
+      await this.userModel.updateMany(
+        { _id: { $in: objectIds } },
+        {
+          $set: {
+            toDelete: true,
+            expiredAt: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+          },
+        },
+      );
       //delete all data related to users
       return { message: 'success' };
     } catch (error) {

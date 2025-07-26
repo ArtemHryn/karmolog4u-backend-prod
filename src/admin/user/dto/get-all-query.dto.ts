@@ -1,18 +1,37 @@
-import { IsIn, IsOptional, IsString, IsInt, IsMongoId } from 'class-validator';
-import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsIn, IsInt, IsMongoId, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class GetUsersQueryDto {
   @ApiPropertyOptional({
     description: 'Поле для сортування',
-    enum: ['name', 'email', 'register_date', 'active', 'blocked', 'verified'],
+    enum: [
+      'name',
+      'email',
+      'createdAt',
+      'lastLogin',
+      'banned',
+      'verified',
+      'toDelete',
+    ],
     example: 'email',
   })
   @IsOptional()
-  @IsIn(['name', 'email', 'register_date', 'active', 'blocked', 'verified'], {
-    message:
-      'sortBy може бути лише одним із: name, email, register_date, active, blocked, verified',
-  })
+  @IsIn(
+    [
+      'name',
+      'email',
+      'createdAt',
+      'lastLogin',
+      'banned',
+      'verified',
+      'toDelete',
+    ],
+    {
+      message:
+        'sortBy має бути одним із: name, email, createdAt, lastLogin, banned, verified, toDelete',
+    },
+  )
   sortBy?: string;
 
   @ApiPropertyOptional({
@@ -39,11 +58,11 @@ export class GetUsersQueryDto {
 
   @ApiPropertyOptional({
     description: 'ID курсу для фільтрації',
-    example: '64a872bd92c1d5412830c9a1',
+    example: '64ff00a7d81e29cbf3ac11f1',
   })
   @IsOptional()
   @IsMongoId({
-    message: 'course_id має бути дійсним MongoID',
+    message: 'course_id має бути валідним MongoID',
   })
   course_id?: string;
 
