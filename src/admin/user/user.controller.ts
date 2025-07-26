@@ -35,7 +35,7 @@ import { Response } from 'express';
 
 @ApiBearerAuth()
 @ApiTags('admin-user')
-@Controller('user')
+@Controller('admin/user')
 export class UserController {
   constructor(private userService: UserService) {}
 
