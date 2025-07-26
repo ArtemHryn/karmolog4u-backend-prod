@@ -97,6 +97,7 @@ export class UserService {
               lastLogin: 1,
               createdAt: 1,
               toDelete: 1,
+              _id: 0,
             },
           },
           {
