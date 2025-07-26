@@ -272,7 +272,7 @@ export class UserController {
   @ApiParam({ name: 'id', type: String })
   async updateUser(
     @Param('id') id: string,
-    @Body(new JoiValidationPipe(UpdateAdminUserSchema)) data: UpdateUserDto,
+    @Body() data: UpdateUserDto,
   ): Promise<ResponseSuccessDto> {
     try {
       return await this.userService.updateUser(id, data);
