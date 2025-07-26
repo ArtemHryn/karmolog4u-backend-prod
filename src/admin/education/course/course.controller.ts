@@ -32,6 +32,7 @@ import { GetAllCourseParams } from './dto/get-all-course-params.dto';
 import { GetByIdCourseParams } from './dto/get-by-id-course-params.dto';
 import { UpdateCourseParamsDto } from './dto/update-course-params.dto';
 import { UpdateStatusCourseParamsDto } from './dto/update-status-course-params.dto';
+import { CourseListResponseDto } from './dto/get-course-list-response.dto';
 
 @ApiBearerAuth()
 @ApiTags('admin-course')
@@ -239,6 +240,35 @@ export class CourseController {
         id: courseId,
         status: data.status,
       });
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: error.status,
+          message: error.response.message,
+          error: error.response.error,
+        },
+        error.status,
+        {
+          cause: error,
+        },
+      );
+    }
+  }
+
+  @Get('list')
+  @ApiOperation({
+    summary: 'Admin Get Course list',
+    description: 'Access restricted to admins',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'get course list',
+    type: CourseListResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'something wrong' })
+  async getCourseList() {
+    try {
+      return await this.courseService.getCourseList();
     } catch (error) {
       throw new HttpException(
         {

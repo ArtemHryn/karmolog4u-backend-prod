@@ -2,6 +2,7 @@ import {
   BadRequestException,
   HttpException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -518,6 +519,41 @@ export class CourseService {
         {
           cause: error,
         },
+      );
+    }
+  }
+
+  async getCourseList() {
+    try {
+      return await this.courseModel.aggregate([
+        {
+          $match: {
+            // toDelete: false,
+            status: 'PUBLISHED',
+            $or: [
+              { 'access.type': 'PERMANENT' },
+              { 'access.type': 'FOR_PERIOD' },
+              {
+                $and: [
+                  { 'access.type': 'TO_DATE' },
+                  { 'access.dateStart': { $lte: new Date() } },
+                  { 'access.dateEnd': { $gte: new Date() } },
+                ],
+              },
+            ],
+          },
+        },
+        {
+          $project: {
+            id: '$_id',
+            name: 1,
+            _id: 0,
+          },
+        },
+      ]);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Не вдалося отримати список курсів',
       );
     }
   }

@@ -1,6 +1,12 @@
-import { BadRequestException, Controller, Get } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  HttpException,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiInternalServerErrorResponse,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -11,9 +17,10 @@ import { AdminWebinarsService } from './webinars/admin-webinars.service';
 import { Roles } from 'src/role/roles.decorator';
 import { Role } from 'src/role/role.enum';
 import { GiftService } from './gift/gift.service';
+import { ProductListResponseDto } from './dto/get-product-list-response.dto';
 
 @ApiBearerAuth()
-@ApiTags('product')
+@ApiTags('admin-product')
 @Roles(Role.Admin)
 @Controller('admin/products')
 export class AdminProductController {
@@ -48,6 +55,37 @@ export class AdminProductController {
       };
     } catch (error) {
       throw new BadRequestException('Something wrong');
+    }
+  }
+
+  @Get('list')
+  @ApiOperation({ summary: 'Get list of products' })
+  @ApiResponse({
+    status: 200,
+    description: 'get list of product ',
+    type: ProductListResponseDto,
+  })
+  @ApiInternalServerErrorResponse({ description: 'Не вдалося отримати список' })
+  async getProductList(): Promise<ProductListResponseDto> {
+    try {
+      const meditations = await this.adminMeditationService.getMeditationList();
+      const webinars = await this.adminWebinarService.getWebinarList();
+      const guidesAndBooks =
+        await this.adminGuidesAndBooksService.getGuidesAndBooksList();
+      return {
+        list: [...meditations, ...webinars, ...guidesAndBooks],
+      };
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: error.status,
+          message: error.response.message,
+        },
+        error.status,
+        {
+          cause: error,
+        },
+      );
     }
   }
 }
