@@ -7,6 +7,8 @@ import {
   Param,
   Query,
   Res,
+  HttpCode,
+  Patch,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -49,6 +51,7 @@ export class UserController {
   @ApiInternalServerErrorResponse({
     description: 'Не вдалося отримати список користувачів. Спробуйте пізніше.',
   })
+  @HttpCode(200)
   async getAllUser(
     @Query() query: GetUsersQueryDto,
   ): Promise<GetAllUsersResponseDto[]> {
@@ -77,6 +80,7 @@ export class UserController {
     type: GetUserByIdDto,
   })
   @ApiNotFoundResponse({ description: 'Користувача не знайдено' })
+  @HttpCode(200)
   async getUserById(@Param('id') id: string): Promise<GetUserByIdDto> {
     try {
       return await this.userService.getUserById(id);
@@ -94,7 +98,7 @@ export class UserController {
     }
   }
 
-  @Post('delete')
+  @Patch('delete')
   @ApiOperation({ summary: 'Delete of users' })
   @ApiBody({
     type: ArrayUserIdsDto,
@@ -104,7 +108,8 @@ export class UserController {
     description: 'success',
     type: ResponseSuccessDto,
   })
-  @ApiNotModifiedResponse({ description: 'Користувачів не знайдено' })
+  @ApiNotFoundResponse({ description: 'Користувачів не знайдено' })
+  @HttpCode(200)
   async deleteUsers(
     @Body() data: ArrayUserIdsDto,
   ): Promise<ResponseSuccessDto> {
@@ -124,7 +129,7 @@ export class UserController {
     }
   }
 
-  @Post('block')
+  @Patch('block')
   @ApiOperation({ summary: 'Block of users' })
   @ApiBody({
     type: ArrayUserIdsDto,
@@ -135,6 +140,7 @@ export class UserController {
     type: ResponseSuccessDto,
   })
   @ApiResponse({ status: 400, description: 'Users not found' })
+  @HttpCode(200)
   async blockUsers(@Body() data: ArrayUserIdsDto): Promise<ResponseSuccessDto> {
     try {
       return await this.userService.blockUsers(data);
@@ -270,6 +276,7 @@ export class UserController {
   })
   @ApiResponse({ status: 400, description: 'Щось пішло не так(' })
   @ApiParam({ name: 'id', type: String })
+  @HttpCode(200)
   async updateUser(
     @Param('id') id: string,
     @Body() data: UpdateUserDto,

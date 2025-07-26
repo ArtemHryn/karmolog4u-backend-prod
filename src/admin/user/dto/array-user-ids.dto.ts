@@ -11,11 +11,11 @@ export class ArrayUserIdsDto {
       '687ac075e56c0fa2e9ea088b',
     ],
   })
-  @IsArray({ message: 'Поле usersIds повинно бути масивом' })
-  @ArrayNotEmpty({ message: 'Масив usersIds не повинен бути порожнім' })
+  @IsArray({ message: 'Поле users повинно бути масивом' })
+  @ArrayNotEmpty({ message: 'Масив users не повинен бути порожнім' })
   @IsMongoId({
     each: true,
-    message: 'Кожен елемент в usersIds має бути валідним MongoID',
+    message: 'Кожен елемент в users має бути валідним MongoID',
   })
   users: string[];
 }
