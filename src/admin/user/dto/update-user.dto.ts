@@ -43,7 +43,7 @@ export class UpdateUserDto {
     example: '+380967788777',
   })
   @IsOptional()
-  @IsPhoneNumber('UA', { message: 'Некоректний формат номера телефону' })
+  @IsPhoneNumber(null, { message: 'Некоректний формат номера телефону' })
   mobPhone?: string;
 
   @ApiPropertyOptional({

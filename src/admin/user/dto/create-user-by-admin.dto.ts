@@ -41,7 +41,7 @@ export class CreateUserByAdminDto {
     description: 'Мобільний телефон користувача',
     example: '+380967788777',
   })
-  @IsPhoneNumber('UA', { message: 'Невірний формат номера телефону' })
+  @IsPhoneNumber(null, { message: 'Невірний формат номера телефону' })
   mobPhone: string;
 
   @ApiProperty({

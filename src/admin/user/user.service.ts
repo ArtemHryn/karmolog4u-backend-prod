@@ -165,15 +165,30 @@ export class UserService {
   async deleteUsers(data: ArrayUserIdsDto): Promise<ResponseSuccessDto> {
     try {
       const objectIds = data.users.map((id) => new mongoose.Types.ObjectId(id));
-      await this.userModel.updateMany(
-        { _id: { $in: objectIds } },
-        {
-          $set: {
-            toDelete: true,
-            expiredAt: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+
+      const users = await this.userModel.find({ _id: { $in: objectIds } });
+
+      const now = new Date();
+      const nextMonth = new Date(now.setMonth(now.getMonth() + 1));
+
+      const updates = users.map((user) => {
+        const toDelete = !user.toDelete; // інверсія
+        return {
+          updateOne: {
+            filter: { _id: user._id },
+            update: {
+              $set: {
+                toDelete,
+                expiredAt: toDelete ? nextMonth : null,
+              },
+            },
           },
-        },
-      );
+        };
+      });
+
+      if (updates.length) {
+        await this.userModel.bulkWrite(updates);
+      }
       //delete all data related to users
       return { message: 'success' };
     } catch (error) {
@@ -364,6 +379,7 @@ export class UserService {
           $set: data,
         },
         { new: true, projection: { _id: 0 } },
+        //id null
       );
     } catch (error) {
       throw new BadRequestException('Щось пішло не так(');
