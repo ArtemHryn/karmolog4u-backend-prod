@@ -382,6 +382,8 @@ export class UserService {
         //id null
       );
     } catch (error) {
+      console.log(error);
+      
       throw new BadRequestException('Щось пішло не так(');
     }
   }

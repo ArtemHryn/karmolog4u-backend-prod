@@ -47,26 +47,6 @@ export class UpdateUserDto {
   mobPhone?: string;
 
   @ApiPropertyOptional({
-    type: Date,
-    description: 'Дата створення акаунту',
-    example: '2025-02-14T22:48:34.096Z',
-  })
-  @IsOptional()
-  @Type(() => Date)
-  @IsDate({ message: 'createdAt повинен бути датою' })
-  createdAt?: Date;
-
-  @ApiPropertyOptional({
-    type: Date,
-    description: 'Дата останнього входу користувача',
-    example: '2025-07-20T16:58:30.472Z',
-  })
-  @IsOptional()
-  @Type(() => Date)
-  @IsDate({ message: 'lastLogin повинен бути датою' })
-  lastLogin?: Date;
-
-  @ApiPropertyOptional({
     type: Boolean,
     description: 'Чи підтверджено користувача',
     example: true,

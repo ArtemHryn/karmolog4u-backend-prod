@@ -34,10 +34,10 @@ export class RegisterUserDto {
   @ApiProperty({
     type: String,
     description: 'Мобільний номер телефону користувача',
-    example: '0967788777',
+    example: '+380967788777',
     required: true,
   })
-  @IsPhoneNumber('UA', {
+  @IsPhoneNumber(null, {
     message: 'Номер телефону має бути українським номером у форматі +380...',
   })
   mobPhone: string;
