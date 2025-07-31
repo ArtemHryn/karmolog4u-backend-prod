@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
   IsNotEmpty,
@@ -37,13 +37,13 @@ export class UserDto {
   @IsEmail({}, { message: 'Невірний формат email' })
   email: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: String,
     description: 'Номер телефону користувача (у форматі +380)',
     example: '+380967788777',
   })
   @IsPhoneNumber(null, { message: 'Невірний формат номера телефону' })
-  mobPhone: string;
+  mobPhone?: string;
 }
 
 export class ImportUsersDto {

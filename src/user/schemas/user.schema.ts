@@ -27,7 +27,7 @@ export class User {
   @Prop({ type: String, required: [true, 'Last name is required'] })
   lastName: string;
 
-  @Prop({ type: String, required: [true, 'Phone is required'] })
+  @Prop({ type: String, required: false, default: null })
   mobPhone: string;
 
   @Prop({ type: String, required: [true, 'Password is required'] })
