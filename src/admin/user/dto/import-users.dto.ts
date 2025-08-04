@@ -7,6 +7,7 @@ import {
   IsArray,
   ValidateNested,
   IsBoolean,
+  IsOptional,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -42,6 +43,7 @@ export class UserDto {
     description: 'Номер телефону користувача (у форматі +380)',
     example: '+380967788777',
   })
+  @IsOptional()
   @IsPhoneNumber(null, { message: 'Невірний формат номера телефону' })
   mobPhone?: string;
 }
