@@ -24,6 +24,7 @@ import { ConfigService } from '@nestjs/config';
 import * as ExcelJS from 'exceljs';
 import { Response } from 'express';
 import { Types } from 'mongoose';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UserService {
@@ -252,41 +253,78 @@ export class UserService {
 
   async importUsers(data: ImportUsersDto): Promise<ResponseSuccessDto> {
     try {
-      const users = data.users.map((user) => ({
-        ...user, // Spread the existing user object
-        password: generateUniquePassword(16, {
-          includeUppercase: true,
-          includeNumbers: true,
-          includeSymbols: true,
+      const emails = data.users.map((u) => u.email.toLowerCase().trim());
+
+      // Перевірка, чи емейли вже є в базі
+      const existingUsers = await this.userModel
+        .find({ email: { $in: emails } }, { email: 1, _id: 0 })
+        .lean();
+
+      if (existingUsers.length > 0) {
+        const existingEmails = existingUsers.map((u) => u.email);
+        throw new BadRequestException({
+          message: `Деякі емейли вже існують у базі ${existingEmails}`,
+        });
+      }
+      const users = await Promise.all(
+        data.users.map(async (user) => {
+          const password = generateUniquePassword(16, {
+            includeUppercase: true,
+            includeNumbers: true,
+            includeSymbols: true,
+          });
+
+          const hashedPassword = await bcrypt.hash(password, 10);
+
+          return {
+            ...user,
+            password: hashedPassword,
+            verified: !!data.verified,
+            rawPassword: password, // якщо потрібно передати для email
+          };
         }),
-        verified: data.verified ? true : false, // Add 'verified' property based on data.verified
-      }));
+      );
+
       await this.userModel.insertMany(users);
+
+      // Відправлення емейлів
       if (data.sendToEmail) {
-        const emailPromises = users.map(async (user) => {
-          return await this.mailService.sendEmail(
+        const emailPromises = users.map((user) =>
+          this.mailService.sendEmail(
             user.email,
             'Password Recovery',
-            'resetPassword', // HBS template name
+            'resetPassword',
             {
-              name: user.name, // User's full name
-              //todo add email
-              password: user.password, // Newly generated password
+              name: user.name,
+              password: user.rawPassword, // передаємо в шаблон
               loginUrl: `${this.configService.get<string>(
                 'FRONT_DOMAIN',
-              )}/auth/login`, // Login page URL
+              )}/auth/login`,
               appName: 'Karmolog4u',
               year: new Date().getFullYear(),
             },
-          );
-        });
+          ),
+        );
 
-        // Wait for all email sending promises to resolve
         await Promise.all(emailPromises);
       }
-      return { message: 'success' };
+
+      return {
+        message: 'Користувачі успішно імпортовані',
+      };
     } catch (error) {
-      throw new BadRequestException('Щось пішло не так(');
+      console.log(error);
+      
+      throw new HttpException(
+        {
+          status: error.status,
+          message: error.response.message,
+        },
+        error.status,
+        {
+          cause: error,
+        },
+      );
     }
   }
 
@@ -383,7 +421,7 @@ export class UserService {
       );
     } catch (error) {
       console.log(error);
-      
+
       throw new BadRequestException('Щось пішло не так(');
     }
   }
