@@ -8,7 +8,7 @@ import {
   IsDate,
   IsUrl,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 class OptionalFiles {
   @ApiProperty({
@@ -205,12 +205,13 @@ export class CreateCourseDto {
   optionalFiles?: OptionalFiles[];
 
   @ApiPropertyOptional({
-    example: 'https://example.com/invoice',
-    description: 'Invoice link',
+    example: 12345,
+    description: 'Invoice number',
   })
   @IsOptional()
-  @IsString()
-  practiceInvoice?: string;
+  @Type(() => Number)
+  @IsNumber()
+  practiceInvoice?: number;
 
   @ApiProperty({ example: 1, description: 'Stream number' })
   @IsNumber()

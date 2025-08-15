@@ -87,8 +87,8 @@ export class Course {
   })
   optionalLink: OptionalLink[];
 
-  @Prop({ required: false, type: String, default: '' })
-  practiceInvoice: string;
+  @Prop({ required: false, type: Number, default: 0 })
+  practiceInvoice: number;
 
   @Prop({ required: false, type: String, default: 0 })
   stream: number;
