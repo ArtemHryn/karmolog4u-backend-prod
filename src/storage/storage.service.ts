@@ -97,6 +97,24 @@ export class StorageService {
     }
   }
 
+  async createUserStorage(userId: string): Promise<string> {
+    try {
+      const userFolder = path.join(
+        process.cwd(),
+        '..',
+        'storage',
+        'users',
+        userId,
+      ); // Шлях до папки
+      await fs.mkdir(userFolder, { recursive: true });
+
+      console.log(`Сховище користувача створено: ${userFolder}`);
+      return userFolder;
+    } catch (error) {
+      throw new BadRequestException('Помилка створення сховища :(');
+    }
+  }
+
   async createLessonStorage(lessonId: string): Promise<string> {
     try {
       const lessonFolder = path.join(
@@ -124,9 +142,11 @@ export class StorageService {
       'education',
     ); // Шлях до папки
     const coversFolder = path.join(process.cwd(), '..', 'storage', 'covers'); // Шлях до папки
+    const usersFolder = path.join(process.cwd(), '..', 'storage', 'users'); // Шлях до папки
     await this.createFolder(storageFolder);
     await this.createFolder(educationFolder);
     await this.createFolder(coversFolder);
+    await this.createFolder(usersFolder);
   }
 
   // async moveFiles(

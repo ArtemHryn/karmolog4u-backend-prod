@@ -14,27 +14,33 @@ export async function findFileInCovers(
 
         if (item.isDirectory()) {
           if (item.name === 'covers') {
-            // Search inside "covers" folders
             const foundFile = await findFileRecursive(itemPath, fileName);
-            if (foundFile) return foundFile; // Return immediately if found
+            if (foundFile) return foundFile;
           } else {
-            // Continue searching inside subdirectories
             const foundFile = await searchFolder(itemPath);
-            if (foundFile) return foundFile; // Return if found in subdirectory
+            if (foundFile) return foundFile;
           }
+        } else if (item.name === fileName) {
+          // File found directly in folder
+          return itemPath;
         }
       }
     } catch (error) {
       console.error(`Error accessing folder ${folderPath}: ${error.message}`);
     }
-    return null; // File not found
+    return null;
   }
 
-  // Check in the global "covers" folder first
-  const globalCovers = await searchFolder(path.join(storagePath));
-  if (globalCovers) return globalCovers; // Return immediately if found
+  // 1. Check in users folder directly
+  const usersPath = path.join(storagePath, 'users');
+  const foundInUsers = await searchFolder(usersPath);
+  if (foundInUsers) return foundInUsers;
 
-  // Check in all course "covers" folders inside "education/"
+  // 2. Check in global covers folder
+  const globalCovers = await searchFolder(path.join(storagePath, 'covers'));
+  if (globalCovers) return globalCovers;
+
+  // 3. Check in education covers folders
   const educationPath = path.join(storagePath, 'education');
   return await searchFolder(educationPath);
 }
