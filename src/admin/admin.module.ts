@@ -5,7 +5,7 @@ import { UserModule } from './user/user.module';
 import { CourseModule } from './education/course/course.module';
 import { ModuleModule } from './education/module/module.module';
 import { LessonModule } from './education/lessons/lesson.module';
-import { CoursePurchaseModule } from './coursePurchase/coursepurchase.module';
+import { CoursePurchaseModule } from './coursePurchase/coursePurchase.module';
 
 @Module({
   imports: [
