@@ -1,3 +1,5 @@
+// import { ProductPurchaseModule } from './productPurchase/productPurchase.module';
+import { CoursePurchaseModule } from './coursePurchase/coursePurchase.module';
 import { StorageModule } from './storage/storage.module';
 import { DiscountModule } from './admin/products/discount/discount.module';
 import { ProductModule } from './products/product.module';
@@ -42,6 +44,8 @@ const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
     AdminModule,
     ProductModule,
     FilesModule,
+    CoursePurchaseModule,
+    // ProductPurchaseModule,
     // ServeStaticModule.forRoot({
     //   rootPath: 'covers',
     //   serveRoot: '/covers', // Optional: URL prefix for accessing the files

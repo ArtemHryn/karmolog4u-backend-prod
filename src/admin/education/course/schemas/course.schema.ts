@@ -12,13 +12,13 @@ class Access {
   })
   type: string;
 
-  @Prop({ type: Date, required: false })
+  @Prop({ type: Date, required: false, default: null })
   dateStart: Date;
 
-  @Prop({ type: Date, required: false })
+  @Prop({ type: Date, required: false, default: null })
   dateEnd: Date;
 
-  @Prop({ type: Number, required: false })
+  @Prop({ type: Number, required: false, default: 0 })
   months: number;
 }
 

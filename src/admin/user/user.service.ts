@@ -313,8 +313,6 @@ export class UserService {
         message: 'Користувачі успішно імпортовані',
       };
     } catch (error) {
-      console.log(error);
-      
       throw new HttpException(
         {
           status: error.status,
