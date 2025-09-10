@@ -153,7 +153,7 @@ export class CoursePurchaseService {
         .find({ userId: userObjectId })
         .populate({
           path: 'courseId', // поле, що зберігає ID курсу
-          select: 'name', // повертаємо тільки назву курсу
+          select: 'name type', // повертаємо тільки назву курсу
         })
         .select('courseId status completed accessEndDate type') // потрібні поля
         .lean()
