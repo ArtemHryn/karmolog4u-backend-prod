@@ -547,6 +547,7 @@ export class CourseService {
           $project: {
             id: '$_id',
             name: 1,
+            type: 1,
             _id: 0,
           },
         },

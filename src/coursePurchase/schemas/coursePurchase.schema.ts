@@ -22,7 +22,6 @@ export class CoursePurchase {
     required: true,
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Course',
-    unique: true,
   })
   courseId: mongoose.Types.ObjectId;
 

@@ -182,33 +182,33 @@ export class CoursePurchaseController {
     }
   }
 
-  @Post('lesson-half-access/:purchaseId')
-  @ApiOperation({
-    summary: 'Admin Change Status Course Purchase',
-    description: 'Access restricted to admins',
-  })
-  @ApiNotFoundResponse({
-    description: 'Покупку з ід ${purchaseId} не знайдено',
-  })
-  async lessonHalfAccessPurchase(@Param() param: PurchaseIdDto) {
-    try {
-      return await this.coursePurchaseService.halfAccessLesson(
-        param.purchaseId,
-      );
-    } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
-    }
-  }
+  // @Post('lesson-half-access/:purchaseId')
+  // @ApiOperation({
+  //   summary: 'Admin Change Status Course Purchase',
+  //   description: 'Access restricted to admins',
+  // })
+  // @ApiNotFoundResponse({
+  //   description: 'Покупку з ід ${purchaseId} не знайдено',
+  // })
+  // async lessonHalfAccessPurchase(@Param() param: PurchaseIdDto) {
+  //   try {
+  //     return await this.coursePurchaseService.halfAccessLesson(
+  //       param.purchaseId,
+  //     );
+  //   } catch (error) {
+  //     throw new HttpException(
+  //       {
+  //         status: error.status,
+  //         message: error.response.message,
+  //         error: error.response.error,
+  //       },
+  //       error.status,
+  //       {
+  //         cause: error,
+  //       },
+  //     );
+  //   }
+  // }
 
   @Post('complete-access/:purchaseId')
   @ApiOperation({
@@ -236,40 +236,40 @@ export class CoursePurchaseController {
     }
   }
 
-  @Post('activate-consulting-advanced/:userId')
-  @ApiOperation({
-    summary: 'Admin Change Status Course Purchase',
-    description: 'Access restricted to admins',
-  })
-  @ApiBody({
-    description: 'Upload fields',
-    type: ActivateConsultingAdvancedDto,
-  })
-  @ApiBadRequestResponse({
-    description: 'Виникла помилка(',
-  })
-  async activateConsultingAdvanced(
-    @Param() params: UserIdParamDto,
-    @Body()
-    data: ActivateConsultingAdvancedDto,
-  ) {
-    try {
-      return await this.coursePurchaseService.activateConsultingAdvanced(
-        params.userId,
-        data.courseId,
-      );
-    } catch (error) {
-      throw new HttpException(
-        {
-          status: error.status,
-          message: error.response.message,
-          error: error.response.error,
-        },
-        error.status,
-        {
-          cause: error,
-        },
-      );
-    }
-  }
+  //   @Post('activate-consulting-advanced/:userId')
+  //   @ApiOperation({
+  //     summary: 'Admin Change Status Course Purchase',
+  //     description: 'Access restricted to admins',
+  //   })
+  //   @ApiBody({
+  //     description: 'Upload fields',
+  //     type: ActivateConsultingAdvancedDto,
+  //   })
+  //   @ApiBadRequestResponse({
+  //     description: 'Виникла помилка(',
+  //   })
+  //   async activateConsultingAdvanced(
+  //     @Param() params: UserIdParamDto,
+  //     @Body()
+  //     data: ActivateConsultingAdvancedDto,
+  //   ) {
+  //     try {
+  //       return await this.coursePurchaseService.activateConsultingAdvanced(
+  //         params.userId,
+  //         data.courseId,
+  //       );
+  //     } catch (error) {
+  //       throw new HttpException(
+  //         {
+  //           status: error.status,
+  //           message: error.response.message,
+  //           error: error.response.error,
+  //         },
+  //         error.status,
+  //         {
+  //           cause: error,
+  //         },
+  //       );
+  //     }
+  //   }
 }

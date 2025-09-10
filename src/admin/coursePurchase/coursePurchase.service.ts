@@ -14,7 +14,6 @@ import { UpdatePurchaseDto } from './dto/update-course-purchase.dto';
 import { Course } from '../education/course/schemas/course.schema';
 import { AddCoursePurchaseDto } from './dto/add-course-purchase.dto';
 import { Lesson } from '../education/lessons/schemas/lesson.schema';
-import { brotliDecompress } from 'zlib';
 
 @Injectable()
 export class CoursePurchaseService {
@@ -31,6 +30,14 @@ export class CoursePurchaseService {
     paymentPlan: 'FULL' | 'PARTIAL' | 'INSTALLMENT',
   ) {
     try {
+      const purchase = await this.coursePurchaseModel.findOne({
+        userId: new Types.ObjectId(userId),
+        courseId: new Types.ObjectId(courseId),
+      });
+      if (purchase) {
+        throw new BadRequestException('користувач має таку покупку!');
+      }
+
       const userObjectId = new Types.ObjectId(userId);
 
       //get course from db
@@ -148,7 +155,7 @@ export class CoursePurchaseService {
           path: 'courseId', // поле, що зберігає ID курсу
           select: 'name', // повертаємо тільки назву курсу
         })
-        .select('courseId status completed accessEndDate') // потрібні поля
+        .select('courseId status completed accessEndDate type') // потрібні поля
         .lean()
         .exec();
 
@@ -157,11 +164,14 @@ export class CoursePurchaseService {
         course: {
           id: (purchase.courseId as any)._id,
           name: (purchase.courseId as any).name,
+          type: (purchase.courseId as any).type,
         },
         status: purchase.status,
         completed: purchase.completed,
         accessEndDate: purchase.accessEndDate,
         id: purchase._id,
+        paymentPlan: purchase.paymentPlan,
+        accessType: purchase.accessType,
       }));
     } catch (error) {
       throw new BadRequestException('Не вдалося отримати покупки користувача');
@@ -353,19 +363,45 @@ export class CoursePurchaseService {
         throw new NotFoundException(`Покупку з ід ${purchaseId} не знайдено`);
       }
 
+      if (
+        purchase.paymentPlan === 'PARTIAL' &&
+        (purchase.accessType === 'SSK_INDEPENDENT' ||
+          purchase.accessType === 'SSK_WITH_CURATOR' ||
+          purchase.accessType === 'SSK_WITH_SERGIY')
+      ) {
+        const lessons = await this.lessonModel
+          .find({
+            targetId: purchase.courseId,
+            targetModel: 'Course',
+          })
+          .sort({ createdAt: 1 })
+          .select('_id');
+        const updatePurchase = await this.coursePurchaseModel.findByIdAndUpdate(
+          purchaseId,
+          {
+            $set: {
+              paymentPlan: 'FULL',
+              lessonsUnlocked: lessons,
+            },
+          },
+          { new: true, runValidators: true },
+        );
+        if (!updatePurchase) {
+          throw new Error();
+        }
+      }
+
       const updatePurchase = await this.coursePurchaseModel.findByIdAndUpdate(
         purchaseId,
         {
           $set: {
-            availableTo: purchase.accessEndDate, // копіюємо значення
+            availableTo: purchase.accessEndDate,
           },
         },
-        { new: true, runValidators: true },
       );
       if (!updatePurchase) {
         throw new Error();
       }
-
       return { message: 'success' };
     } catch (error) {
       throw new NotFoundException(
