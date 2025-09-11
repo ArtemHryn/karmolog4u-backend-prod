@@ -155,7 +155,9 @@ export class CoursePurchaseService {
           path: 'courseId', // поле, що зберігає ID курсу
           select: 'name type', // повертаємо тільки назву курсу
         })
-        .select('courseId status completed accessEndDate type') // потрібні поля
+        .select(
+          'courseId status completed accessEndDate accessType paymentPlan availableTo',
+        ) // потрібні поля
         .lean()
         .exec();
 
@@ -172,6 +174,7 @@ export class CoursePurchaseService {
         id: purchase._id,
         paymentPlan: purchase.paymentPlan,
         accessType: purchase.accessType,
+        availableTo: purchase.availableTo,
       }));
     } catch (error) {
       throw new BadRequestException('Не вдалося отримати покупки користувача');
