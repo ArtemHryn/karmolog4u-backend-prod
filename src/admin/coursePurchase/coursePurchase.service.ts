@@ -74,7 +74,7 @@ export class CoursePurchaseService {
         Data.accessType === 'SSK_WITH_CURATOR' ||
         Data.accessType === 'SSK_WITH_SERGIY'
       ) {
-        Data.availableTo = course.access.dateEnd;
+        Data.availableTo = Data.accessEndDate;
       }
 
       if (

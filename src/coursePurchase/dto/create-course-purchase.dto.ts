@@ -15,8 +15,8 @@ export class CreatePurchaseDto {
   @IsMongoId()
   courseId: Types.ObjectId;
 
-  @IsEnum(['LIFETIME', 'PERIOD', 'RANGE'])
-  accessType: string;
+  @IsEnum(['PERMANENT', 'FOR_PERIOD', 'TO_DATE'])
+  accessType: 'PERMANENT' | 'FOR_PERIOD' | 'TO_DATE';
 
   @IsOptional()
   @IsDateString()
