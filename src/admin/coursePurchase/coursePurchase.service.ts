@@ -84,8 +84,8 @@ export class CoursePurchaseService {
         Data.availableTo = course.access.dateEnd;
       }
       if (
-        (Data.accessType.type === 'CONSULTING' ||
-          Data.accessType.type === 'ADVANCED') &&
+        (Data.accessType === 'CONSULTING' ||
+          Data.accessType === 'ADVANCED') &&
         Data.paymentPlan === 'INSTALLMENT'
       ) {
         const dateNowPlusMonths = new Date();
