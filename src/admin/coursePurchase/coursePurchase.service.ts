@@ -14,6 +14,8 @@ import { UpdatePurchaseDto } from './dto/update-course-purchase.dto';
 import { Course } from '../education/course/schemas/course.schema';
 import { AddCoursePurchaseDto } from './dto/add-course-purchase.dto';
 import { Lesson } from '../education/lessons/schemas/lesson.schema';
+import { Module } from '../education/module/schemas/module.schema';
+import { UpdatePurchaseAccess } from './interfaces/updatePurchaseAccess.interface';
 
 @Injectable()
 export class CoursePurchaseService {
@@ -22,6 +24,7 @@ export class CoursePurchaseService {
     private readonly coursePurchaseModel: Model<CoursePurchaseDocument>,
     @InjectModel(Course.name) private courseModel: Model<Course>,
     @InjectModel(Lesson.name) private lessonModel: Model<Lesson>,
+    @InjectModel(Module.name) private moduleModel: Model<Module>,
   ) {}
 
   async addCoursePurchase(
@@ -70,22 +73,21 @@ export class CoursePurchaseService {
       }
 
       if (
-        Data.accessType === 'SSK_INDEPENDENT' ||
-        Data.accessType === 'SSK_WITH_CURATOR' ||
-        Data.accessType === 'SSK_WITH_SERGIY'
+        course.type === 'SSK_INDEPENDENT' ||
+        course.type === 'SSK_WITH_CURATOR' ||
+        course.type === 'SSK_WITH_SERGIY'
       ) {
         Data.availableTo = Data.accessEndDate;
       }
 
       if (
-        (Data.accessType === 'CONSULTING' || Data.accessType === 'ADVANCED') &&
+        (course.type === 'CONSULTING' || course.type === 'ADVANCED') &&
         Data.paymentPlan === 'FULL'
       ) {
         Data.availableTo = course.access.dateEnd;
       }
       if (
-        (Data.accessType === 'CONSULTING' ||
-          Data.accessType === 'ADVANCED') &&
+        (course.type === 'CONSULTING' || course.type === 'ADVANCED') &&
         Data.paymentPlan === 'INSTALLMENT'
       ) {
         const dateNowPlusMonths = new Date();
@@ -94,9 +96,9 @@ export class CoursePurchaseService {
       }
 
       if (
-        Data.accessType === 'SSK_INDEPENDENT' ||
-        Data.accessType === 'SSK_WITH_CURATOR' ||
-        Data.accessType === 'SSK_WITH_SERGIY'
+        course.type === 'SSK_INDEPENDENT' ||
+        course.type === 'SSK_WITH_CURATOR' ||
+        course.type === 'SSK_WITH_SERGIY'
       ) {
         const lessons = await this.lessonModel
           .find({
@@ -105,6 +107,7 @@ export class CoursePurchaseService {
           })
           .sort({ createdAt: 1 })
           .select('_id');
+
         if (Data.paymentPlan === 'PARTIAL') {
           const splitIndex = Math.floor(lessons.length / 2);
           const half = lessons.slice(0, splitIndex);
@@ -282,6 +285,18 @@ export class CoursePurchaseService {
           'Курс повинен бути ADVANCED або CONSULTING',
         );
       }
+
+      const practicesCount = await this.moduleModel.countDocuments({
+        course: course._id,
+        type: 'PRACTICAL',
+      });
+      console.log('practicesCount', practicesCount);
+      console.log('purchase.numberOfPractices', purchase.numberOfPractices);
+
+      if (practicesCount <= purchase.numberOfPractices) {
+        return { message: 'Максимальна кількість практик' };
+      }
+
       const updatedPurchase = await this.coursePurchaseModel.findByIdAndUpdate(
         new Types.ObjectId(purchaseId),
         { $inc: { numberOfPractices: 1 } }, // додає +1 до поточного значення
@@ -365,13 +380,12 @@ export class CoursePurchaseService {
       if (!purchase) {
         throw new NotFoundException(`Покупку з ід ${purchaseId} не знайдено`);
       }
+      if (purchase.accessType === 'FULL')
+        throw new BadRequestException('Курс повністю куплений');
 
-      if (
-        purchase.paymentPlan === 'PARTIAL' &&
-        (purchase.accessType === 'SSK_INDEPENDENT' ||
-          purchase.accessType === 'SSK_WITH_CURATOR' ||
-          purchase.accessType === 'SSK_WITH_SERGIY')
-      ) {
+      const updateData: UpdatePurchaseAccess = { paymentPlan: 'FULL' };
+
+      if (purchase.paymentPlan === 'PARTIAL') {
         const lessons = await this.lessonModel
           .find({
             targetId: purchase.courseId,
@@ -379,27 +393,17 @@ export class CoursePurchaseService {
           })
           .sort({ createdAt: 1 })
           .select('_id');
-        const updatePurchase = await this.coursePurchaseModel.findByIdAndUpdate(
-          purchaseId,
-          {
-            $set: {
-              paymentPlan: 'FULL',
-              lessonsUnlocked: lessons,
-            },
-          },
-          { new: true, runValidators: true },
-        );
-        if (!updatePurchase) {
-          throw new Error();
-        }
+        updateData.lessonsUnlocked = lessons.map((l) => l._id);
+      }
+
+      if (purchase.accessType !== 'PERMANENT') {
+        updateData.availableTo = purchase.accessEndDate;
       }
 
       const updatePurchase = await this.coursePurchaseModel.findByIdAndUpdate(
         purchaseId,
         {
-          $set: {
-            availableTo: purchase.accessEndDate,
-          },
+          $set: updateData,
         },
       );
       if (!updatePurchase) {

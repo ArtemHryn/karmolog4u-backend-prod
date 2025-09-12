@@ -4,6 +4,7 @@ import {
   Get,
   HttpException,
   Param,
+  Patch,
   Post,
 } from '@nestjs/common';
 
@@ -126,7 +127,7 @@ export class CoursePurchaseController {
     }
   }
 
-  @Post('extend-access/:purchaseId')
+  @Patch('extend-access/:purchaseId')
   @ApiOperation({
     summary: 'Admin Change Status Course Purchase',
     description: 'Access restricted to admins',
@@ -154,7 +155,7 @@ export class CoursePurchaseController {
     }
   }
 
-  @Post('extend-practice/:purchaseId')
+  @Patch('extend-practice/:purchaseId')
   @ApiOperation({
     summary: 'Admin Change Status Course Purchase',
     description: 'Access restricted to admins',
