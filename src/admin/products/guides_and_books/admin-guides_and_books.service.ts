@@ -246,6 +246,9 @@ export class AdminGuidesAndBooksService {
           $project: {
             id: '$_id',
             name: '$name.uk',
+            targetModule: {
+              $literal: 'GuidesAndBooks',
+            },
             _id: 0,
           },
         },
