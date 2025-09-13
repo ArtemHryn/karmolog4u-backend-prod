@@ -24,6 +24,13 @@ export class ProductPurchase {
     ref: 'Product',
   })
   productId: mongoose.Types.ObjectId;
+
+  @Prop({
+    required: true,
+    type: String,
+    enum: ['Webinar', 'Meditation', 'GuidesAndBooks'],
+  })
+  targetModule: 'Webinar' | 'Meditation' | 'GuidesAndBooks';
 }
 
 export const ProductPurchaseSchema =
