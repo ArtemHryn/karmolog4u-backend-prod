@@ -119,7 +119,7 @@ export class ProductPurchaseController {
     }
   }
 
-  @Delete('delete/:userId')
+  @Delete('delete/:purchaseId')
   @ApiOperation({
     summary: 'Admin Delete Product Purchase',
     description: 'Access restricted to admins',
@@ -131,15 +131,9 @@ export class ProductPurchaseController {
   @ApiBadRequestResponse({
     description: 'Не вдалося отримати покупки користувача',
   })
-  async deleteProductPurchase(
-    @Param() param: UserIdParamDto,
-    @Body() data: DeletePurchaseDto,
-  ) {
+  async deleteProductPurchase(@Param() param: DeletePurchaseDto) {
     try {
-      return await this.productPurchaseService.deletePurchase(
-        param.userId,
-        data.purchaseId,
-      );
+      return await this.productPurchaseService.deletePurchase(param.purchaseId);
     } catch (error) {
       throw new HttpException(
         {

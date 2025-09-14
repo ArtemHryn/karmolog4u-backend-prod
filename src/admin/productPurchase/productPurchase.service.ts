@@ -211,6 +211,7 @@ export class ProductPurchaseService {
         {
           $project: {
             id: '$_id',
+            productId: 1,
             createdAt: 1,
             name: '$product.name',
             targetModule: '$product.targetModule',
@@ -232,11 +233,10 @@ export class ProductPurchaseService {
     }
   }
 
-  async deletePurchase(userId: string, purchaseId: string) {
+  async deletePurchase(purchaseId: string) {
     try {
       const deleted = await this.productPurchaseModel.findOneAndDelete({
         _id: new Types.ObjectId(purchaseId),
-        userId: new Types.ObjectId(userId),
       });
 
       if (!deleted) {
