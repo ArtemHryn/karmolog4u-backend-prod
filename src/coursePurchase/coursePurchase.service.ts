@@ -104,4 +104,68 @@ export class CoursePurchaseService {
     if (!purchase) return 'NONE';
     // return purchase.accessLevel ?? 'FULL';
   }
+
+  async getAchievement(userId: Types.ObjectId) {
+    const achievements = await this.coursePurchaseModel.aggregate([
+      {
+        $match: {
+          userId: userId,
+          completed: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'courses', // назва колекції з курсами
+          localField: 'courseId',
+          foreignField: '_id',
+          as: 'course',
+        },
+      },
+      { $unwind: '$course' },
+      {
+        $project: {
+          id: '$course._id',
+          _id: 0,
+          cover: '$course.cover',
+          name: '$course.name.uk',
+          numberOfLessons: { $size: '$course.lessons' }, // якщо lessons зберігаються в масиві
+        },
+      },
+    ]);
+
+    return achievements;
+  }
+
+  async getAllCourse(userId: Types.ObjectId) {
+    const courses = await this.coursePurchaseModel.aggregate([
+      {
+        $match: {
+          userId: userId,
+          status: 'ACTIVE',
+        },
+      },
+      {
+        $lookup: {
+          from: 'courses', // колекція курсів
+          localField: 'courseId',
+          foreignField: '_id',
+          as: 'course',
+        },
+      },
+      { $unwind: '$course' },
+      {
+        $project: {
+          id: '$course._id',
+          _id: 0,
+          name: '$course.name.uk',
+          cover: '$course.cover',
+          paymentPlan: '$paymentPlan',
+          accessEndDate: 1,
+          availableTo: 1,
+        },
+      },
+    ]);
+
+    return courses;
+  }
 }

@@ -5,14 +5,12 @@ import {
   Get,
   HttpException,
   Param,
-  Patch,
   Post,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiBody,
-  ApiNotFoundResponse,
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';

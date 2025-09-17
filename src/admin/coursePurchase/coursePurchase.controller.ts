@@ -23,7 +23,6 @@ import { CoursePurchaseService } from './coursePurchase.service';
 import { CoursePurchaseStatusDto } from './dto/change-status-course-purchase.dto';
 import { PurchaseIdDto } from './dto/change-status-course-purchase-param.dto';
 import { UserIdParamDto } from './dto/user-id-params.dto';
-import { ActivateConsultingAdvancedDto } from './dto/activate-consulting-advanced.dto';
 
 @ApiBearerAuth()
 @ApiTags('admin-course-purchase')
