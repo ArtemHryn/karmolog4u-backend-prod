@@ -19,7 +19,7 @@ import { GetAllProductParam } from './dto/get-all-product-param.dto';
 export class ProductPurchaseController {
   constructor(private productPurchaseService: ProductPurchaseService) {}
 
-  @Get('get-all-products')
+  @Get('get-all-products/:type')
   @ApiOperation({
     summary: 'Get User Product',
     description: 'Access restricted to auth users',
