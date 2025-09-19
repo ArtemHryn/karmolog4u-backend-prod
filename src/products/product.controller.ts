@@ -9,6 +9,8 @@ import { Role } from 'src/role/role.enum';
 import { Roles } from 'src/role/roles.decorator';
 import { ProductService } from './product.service';
 import { ProductIdParamDto } from './dto/get-product-detail.dto';
+import { User } from 'src/common/decorators/user.decorator';
+import { UserEntity } from 'src/user/dto/user-entity.dto';
 
 @ApiBearerAuth()
 @ApiTags('product')
@@ -51,9 +53,9 @@ export class ProductController {
   @ApiBadRequestResponse({
     description: 'Не вдалося отримати покупки користувача',
   })
-  async getAllCoursePurchase() {
+  async getInterestingProduct(@User() user: UserEntity) {
     try {
-      return await this.productService.getAllProductsWithPrice();
+      return await this.productService.getAllProductsWithPrice(user._id);
     } catch (error) {
       throw new HttpException(
         {
