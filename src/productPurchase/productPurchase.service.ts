@@ -15,11 +15,11 @@ export class ProductPurchaseService {
 
   async getAllProducts(
     userId: Types.ObjectId,
-    type: 'Webinar' | 'Meditation' | 'GuidesAndBooks',
+    type: 'Webinars' | 'Meditations' | 'GuidesAndBooks',
   ) {
     let collection = '';
-    if (type === 'Webinar') collection = 'webinars';
-    if (type === 'Meditation') collection = 'meditations';
+    if (type === 'Webinars') collection = 'webinars';
+    if (type === 'Meditations') collection = 'meditations';
     if (type === 'GuidesAndBooks') collection = 'guidesandbooks';
 
     const products = await this.productPurchaseModel.aggregate([
