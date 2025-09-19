@@ -109,28 +109,32 @@ export class CoursePurchaseService {
     const achievements = await this.coursePurchaseModel.aggregate([
       {
         $match: {
-          userId: userId,
+          userId: new Types.ObjectId(userId),
           completed: true,
         },
       },
       {
         $lookup: {
-          from: 'courses', // назва колекції з курсами
+          from: 'courses',
           localField: 'courseId',
           foreignField: '_id',
           as: 'course',
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                cover: 1,
+                name: '$name.uk',
+                numberOfLessons: {
+                  $size: { $ifNull: ['$lessons', []] }, // 👈 fallback якщо lessons = null/нема
+                },
+              },
+            },
+          ],
         },
       },
       { $unwind: '$course' },
-      {
-        $project: {
-          id: '$course._id',
-          _id: 0,
-          cover: '$course.cover',
-          name: '$course.name.uk',
-          numberOfLessons: { $size: '$course.lessons' }, // якщо lessons зберігаються в масиві
-        },
-      },
+      { $replaceRoot: { newRoot: '$course' } },
     ]);
 
     return achievements;
@@ -157,7 +161,7 @@ export class CoursePurchaseService {
         $project: {
           id: '$course._id',
           _id: 0,
-          name: '$course.name.uk',
+          name: { $ifNull: ['$course.name.uk', '$course.name'] }, // fallback якщо нема uk
           cover: '$course.cover',
           paymentPlan: '$paymentPlan',
           accessEndDate: 1,
