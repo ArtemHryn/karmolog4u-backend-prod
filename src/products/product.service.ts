@@ -38,44 +38,152 @@ export class ProductService {
     throw new NotFoundException(`Продукт з id ${productId} не знайдено`);
   }
 
-  async getAllProductsWithPrice() {
-    const meditations = await this.meditationModel.aggregate([
-      { $match: { price: { $exists: true, $ne: null } } },
-      {
-        $project: {
-          id: '$_id',
-          cover: 1,
-          name: '$name.uk',
-          _id: 0,
+  async getAllProductsWithPrice(userId: Types.ObjectId) {
+    const [meditations, webinars, guides] = await Promise.all([
+      this.meditationModel.aggregate([
+        // 1. Брати тільки з ціною
+        {
+          $match: {
+            price: { $exists: true, $gt: 0 },
+            status: 'PUBLISHED',
+          },
         },
-      },
+        // 2. Підтягнути покупки користувача
+        {
+          $lookup: {
+            from: 'productpurchases',
+            let: { productId: '$_id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$productId', '$$productId'] },
+                      { $eq: ['$userId', userId] },
+                      { $eq: ['$targetModule', 'Meditation'] },
+                    ],
+                  },
+                },
+              },
+            ],
+            as: 'userPurchase',
+          },
+        },
+        // 3. Відкинути куплені
+        {
+          $match: {
+            userPurchase: { $size: 0 },
+          },
+        },
+        // 4. Вибрати потрібні поля
+        {
+          $project: {
+            id: '$_id',
+            _id: 0,
+            name: '$name.uk',
+            cover: 1,
+            price: 1,
+            targetModule: { $literal: 'Meditation' },
+          },
+        },
+      ]),
+
+      await this.webinarModel.aggregate([
+        // 1. Брати тільки з ціною
+        {
+          $match: {
+            price: { $exists: true, $gt: 0 },
+            status: 'PUBLISHED',
+          },
+        },
+        // 2. Підтягнути покупки користувача
+        {
+          $lookup: {
+            from: 'productpurchases',
+            let: { productId: '$_id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$productId', '$$productId'] },
+                      { $eq: ['$userId', userId] },
+                      { $eq: ['$targetModule', 'Meditation'] },
+                    ],
+                  },
+                },
+              },
+            ],
+            as: 'userPurchase',
+          },
+        },
+        // 3. Відкинути куплені
+        {
+          $match: {
+            userPurchase: { $size: 0 },
+          },
+        },
+        // 4. Вибрати потрібні поля
+        {
+          $project: {
+            id: '$_id',
+            _id: 0,
+            name: '$name.uk',
+            cover: 1,
+            price: 1,
+            targetModule: { $literal: 'Webinar' },
+          },
+        },
+      ]),
+      await this.guidesAndBooksModel.aggregate([
+        // 1. Брати тільки з ціною
+        {
+          $match: {
+            price: { $exists: true, $gt: 0 },
+            status: 'PUBLISHED',
+          },
+        },
+        // 2. Підтягнути покупки користувача
+        {
+          $lookup: {
+            from: 'productpurchases',
+            let: { productId: '$_id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$productId', '$$productId'] },
+                      { $eq: ['$userId', userId] },
+                      { $eq: ['$targetModule', 'Meditation'] },
+                    ],
+                  },
+                },
+              },
+            ],
+            as: 'userPurchase',
+          },
+        },
+        // 3. Відкинути куплені
+        {
+          $match: {
+            userPurchase: { $size: 0 },
+          },
+        },
+        // 4. Вибрати потрібні поля
+        {
+          $project: {
+            id: '$_id',
+            _id: 0,
+            name: '$name.uk',
+            cover: 1,
+            price: 1,
+            targetModule: { $literal: 'GuidesAndBooks' },
+          },
+        },
+      ]),
     ]);
 
-    const webinars = await this.webinarModel.aggregate([
-      { $match: { price: { $exists: true, $ne: null } } },
-      {
-        $project: {
-          id: '$_id',
-          cover: 1,
-          name: '$name.uk',
-          _id: 0,
-        },
-      },
-    ]);
-
-    const guides = await this.guidesAndBooksModel.aggregate([
-      { $match: { price: { $exists: true, $ne: null } } },
-      {
-        $project: {
-          id: '$_id',
-          cover: 1,
-          name: '$name.uk',
-          _id: 0,
-        },
-      },
-    ]);
-
-    // об'єднати всі результати в один масив
     return [...meditations, ...webinars, ...guides];
   }
 }
