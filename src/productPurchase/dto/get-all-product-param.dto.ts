@@ -4,11 +4,11 @@ import { IsEnum } from 'class-validator';
 export class GetAllProductParam {
   @ApiProperty({
     description: 'Тип продукту',
-    enum: ['Meditation', 'Webinar', 'GuidesAndBooks'],
-    example: 'Meditation',
+    enum: ['Meditations', 'Webinars', 'GuidesAndBooks'],
+    example: 'Meditations',
   })
-  @IsEnum(['Meditation', 'Webinar', 'GuidesAndBooks'], {
-    message: 'type має бути одним з: Meditation, Webinar, GuidesAndBooks',
+  @IsEnum(['Meditations', 'Webinars', 'GuidesAndBooks'], {
+    message: 'type має бути одним з: Meditations, Webinars, GuidesAndBooks',
   })
-  type: 'Meditation' | 'Webinar' | 'GuidesAndBooks';
+  type: 'Meditations' | 'Webinars' | 'GuidesAndBooks';
 }
