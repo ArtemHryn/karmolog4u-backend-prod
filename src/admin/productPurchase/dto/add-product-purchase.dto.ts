@@ -9,8 +9,8 @@ import {
 import { Type } from 'class-transformer';
 
 export enum TargetModule {
-  WEBINAR = 'Webinar',
-  MEDITATION = 'Meditation',
+  WEBINARS = 'Webinars',
+  MEDITATIONS = 'Meditations',
   GUIDES_AND_BOOKS = 'GuidesAndBooks',
 }
 
@@ -25,7 +25,7 @@ export class ProductDto {
   @ApiProperty({
     description: 'Модуль, до якого належить продукт',
     enum: TargetModule,
-    example: TargetModule.MEDITATION,
+    example: TargetModule.MEDITATIONS,
   })
   @IsEnum(TargetModule, {
     message: `targetModule має бути одним із: ${Object.values(
@@ -40,8 +40,8 @@ export class AddProductsDto {
     description: 'Список продуктів',
     type: [ProductDto],
     example: [
-      { productId: '64a872bd92c1d5412830c9a1', targetModule: 'Meditation' },
-      { productId: '64a872bd92c1d5412830c9a2', targetModule: 'Webinar' },
+      { productId: '64a872bd92c1d5412830c9a1', targetModule: 'Meditations' },
+      { productId: '64a872bd92c1d5412830c9a2', targetModule: 'Webinars' },
     ],
   })
   @IsArray({ message: 'products має бути масивом' })
