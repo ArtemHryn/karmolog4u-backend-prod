@@ -22,7 +22,7 @@ export class ProductPurchaseService {
   async addProductPurchase(
     userId: string,
     productId: string,
-    targetModule: 'Webinar' | 'Meditation' | 'GuidesAndBooks',
+    targetModule: 'Webinars' | 'Meditations' | 'GuidesAndBooks',
   ) {
     try {
       const existPurchase = await this.productPurchaseModel.findOne({
