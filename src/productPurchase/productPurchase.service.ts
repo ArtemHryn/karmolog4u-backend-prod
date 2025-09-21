@@ -46,6 +46,7 @@ export class ProductPurchaseService {
           name: '$product.name.uk', // якщо name багатомовний
           cover: '$product.cover',
           _id: 0,
+          category: '$product.category',
         },
       },
     ]);
