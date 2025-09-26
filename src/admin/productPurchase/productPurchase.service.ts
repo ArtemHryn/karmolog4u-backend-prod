@@ -11,12 +11,18 @@ import {
   ProductPurchaseDocument,
 } from 'src/productPurchase/schemas/productPurchase.schema';
 import { AddProductsDto } from './dto/add-product-purchase.dto';
+import { MailService } from 'src/mail/mail.service';
+import { UserService } from 'src/user/user.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ProductPurchaseService {
   constructor(
     @InjectModel(ProductPurchase.name)
     private readonly productPurchaseModel: Model<ProductPurchaseDocument>, // @InjectModel(Course.name) private courseModel: Model<Course>
+    private readonly mailService: MailService,
+    private readonly configService: ConfigService,
+    private readonly userService: UserService,
   ) {}
 
   async addProductPurchase(
@@ -43,6 +49,22 @@ export class ProductPurchaseService {
       if (!purchase) {
         throw new BadRequestException(`Не вдалося створити покупку`);
       }
+
+      const user = await this.userService.findUserById({
+        _id: new Types.ObjectId(userId),
+      });
+
+      await this.mailService.sendEmail(
+        user.email,
+        'Ваш продукт доступний 🎉',
+        'productNotify', // HBS template name
+        {
+          dashboardUrl: `${this.configService.get<string>(
+            'FRONT_DOMAIN',
+          )}/cabinet/login`,
+        },
+      );
+
       return purchase;
     } catch (error) {
       throw new HttpException(

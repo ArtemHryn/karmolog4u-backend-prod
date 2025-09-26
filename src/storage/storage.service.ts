@@ -133,6 +133,24 @@ export class StorageService {
     }
   }
 
+  async createProductStorage(productId: string): Promise<string> {
+    try {
+      const productFolder = path.join(
+        process.cwd(),
+        '..',
+        'storage',
+        'products',
+        productId,
+      ); // Шлях до папки
+      await fs.mkdir(productFolder, { recursive: true });
+
+      console.log(`Сховище продукту створено: ${productFolder}`);
+      return productFolder;
+    } catch (error) {
+      throw new BadRequestException('Помилка створення сховища :(');
+    }
+  }
+
   async createStorageFolder() {
     const storageFolder = path.join(process.cwd(), '..', 'storage'); // Шлях до папки
     const educationFolder = path.join(
@@ -143,10 +161,17 @@ export class StorageService {
     ); // Шлях до папки
     const coversFolder = path.join(process.cwd(), '..', 'storage', 'covers'); // Шлях до папки
     const usersFolder = path.join(process.cwd(), '..', 'storage', 'users'); // Шлях до папки
+    const productsFolder = path.join(
+      process.cwd(),
+      '..',
+      'storage',
+      'products',
+    ); // Шлях до папки
     await this.createFolder(storageFolder);
     await this.createFolder(educationFolder);
     await this.createFolder(coversFolder);
     await this.createFolder(usersFolder);
+    await this.createFolder(productsFolder);
   }
 
   // async moveFiles(
@@ -278,6 +303,11 @@ export class StorageService {
   }
   getLessonFilePath(Id: any) {
     const filePath = path.join(process.cwd(), '..', 'storage', 'education', Id); // Коренева папка для пошуку
+    return filePath;
+  }
+
+  getProductFilePath(Id: any) {
+    const filePath = path.join(process.cwd(), '..', 'storage', 'products', Id); // Коренева папка для пошуку
     return filePath;
   }
 

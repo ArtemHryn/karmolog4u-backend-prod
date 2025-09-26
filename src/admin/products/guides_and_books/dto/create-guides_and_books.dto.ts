@@ -1,73 +1,104 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   CategoryGuidesAndBooks,
   Description,
   Name,
   Status,
 } from '../schemas/guides_and_books.schema';
+import {
+  IsEnum,
+  IsOptional,
+  IsString,
+  // IsUrl,
+  IsBoolean,
+  IsNumber,
+  IsNotEmpty,
+} from 'class-validator';
+
+class FileDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  savedName: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  originalName: string;
+}
 
 export class CreateGuidesAndBooksDto {
   @ApiProperty({
     enum: CategoryGuidesAndBooks,
     enumName: 'CategoryGuidesAndBooks',
-    description: 'Category of the webinar',
+    description: 'Category of the guide',
     example: CategoryGuidesAndBooks.GUIDES,
     required: true,
   })
-  category: string;
+  @IsEnum(CategoryGuidesAndBooks, { message: 'Невалідна категорія' })
+  category: CategoryGuidesAndBooks;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: Name,
-    description: 'Name of the meditation',
+    description: 'Name of the guide',
     example: { ru: 'some name', uk: 'some name' },
     required: false,
   })
-  name: Name;
+  @IsOptional()
+  name?: Name;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: Description,
-    description: 'Description of the meditation',
+    description: 'Description of the guide',
     example: { ru: 'some description', uk: 'some description' },
     required: false,
   })
+  @IsOptional()
   description?: Description;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: String,
     example: 'some link',
-    description: 'Video of the meditation',
+    description: 'Video of the guide',
     required: false,
   })
+  @IsOptional()
+  @IsString()
   video?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: Number,
-    description: 'Price of the meditation',
+    description: 'Price of the guide',
     example: 10,
     required: false,
   })
+  @IsOptional()
+  // @IsNumber()
   price?: number;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: Boolean,
-    description: 'Status on waiting of the meditation',
+    description: 'Waiting status of the guide',
     example: false,
     required: false,
   })
+  @IsOptional()
+  // @IsBoolean()
   isWaiting?: boolean;
 
   @ApiProperty({
     enum: Status,
-    enumName: 'Status', // Ім'я, яке відображатиметься у Swagger
-    description: 'Status of the meditation',
+    enumName: 'Status',
+    description: 'Status of the guide',
     example: Status.PUBLISHED,
     required: true,
   })
+  @IsEnum(Status, { message: 'Невалідний статус' })
   status: Status;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: Object,
-    description: 'Discount of the meditation',
+    description: 'Discount of the guide',
     example: {
       discount: 10,
       start: '2024-12-18T19:53:24.560Z',
@@ -75,19 +106,9 @@ export class CreateGuidesAndBooksDto {
     },
     required: false,
   })
+  @IsOptional()
   discount?: { discount: number; start: Date; expiredAt: Date };
 
-  @ApiProperty({
-    oneOf: [
-      {
-        type: 'string',
-        format: 'binary',
-        description: 'The image file to upload',
-      }, // Описуємо файл
-      { type: 'string', format: 'url', description: 'The URL of the image' }, // Описуємо рядок як URL
-    ],
-    description: 'The cover image, can be either a URL or a file.',
-    required: false, // Поле не обов\'язкове
-  })
-  cover?: any; // Поле може бути файлом або рядком
+  @ApiProperty({ type: FileDto })
+  file: FileDto;
 }
