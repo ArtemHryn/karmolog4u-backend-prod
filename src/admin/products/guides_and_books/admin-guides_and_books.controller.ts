@@ -84,11 +84,11 @@ export class AdminGuidesAndBooksController {
     try {
       const parsedData = parseFields(data);
 
-      //validate data
-      // const { error } = newGuidesAndBooksSchema.validate(parsedData);
-      // if (error) {
-      //   throw new BadRequestException(error.details[0].message);
-      // }
+      // validate data
+      const { error } = newGuidesAndBooksSchema.validate(parsedData);
+      if (error) {
+        throw new BadRequestException(error.details[0].message);
+      }
       if (file) {
         const link = await fileCompress(file, this.configService);
         parsedData.cover = link;
@@ -196,10 +196,10 @@ export class AdminGuidesAndBooksController {
   ): Promise<any> {
     try {
       const parsedData = parseFields(data);
-      // const { error } = updateGuidesAndBooksSchema.validate(parsedData);
-      // if (error) {
-      //   throw new BadRequestException(error.details[0].message);
-      // }
+      const { error } = updateGuidesAndBooksSchema.validate(parsedData);
+      if (error) {
+        throw new BadRequestException(error.details[0].message);
+      }
       const guidesAndBooksId = new mongoose.Types.ObjectId(id.toString());
 
       if (file && parsedData.category !== 'ARCANES') {

@@ -5,25 +5,12 @@ import {
   Name,
   Status,
 } from '../schemas/guides_and_books.schema';
-import {
-  IsEnum,
-  IsOptional,
-  IsString,
-  // IsUrl,
-  IsBoolean,
-  IsNumber,
-  IsNotEmpty,
-} from 'class-validator';
 
 class FileDto {
   @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
   savedName: string;
 
   @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
   originalName: string;
 }
 
@@ -35,7 +22,6 @@ export class CreateGuidesAndBooksDto {
     example: CategoryGuidesAndBooks.GUIDES,
     required: true,
   })
-  @IsEnum(CategoryGuidesAndBooks, { message: 'Невалідна категорія' })
   category: CategoryGuidesAndBooks;
 
   @ApiPropertyOptional({
@@ -44,7 +30,6 @@ export class CreateGuidesAndBooksDto {
     example: { ru: 'some name', uk: 'some name' },
     required: false,
   })
-  @IsOptional()
   name?: Name;
 
   @ApiPropertyOptional({
@@ -53,7 +38,6 @@ export class CreateGuidesAndBooksDto {
     example: { ru: 'some description', uk: 'some description' },
     required: false,
   })
-  @IsOptional()
   description?: Description;
 
   @ApiPropertyOptional({
@@ -62,8 +46,6 @@ export class CreateGuidesAndBooksDto {
     description: 'Video of the guide',
     required: false,
   })
-  @IsOptional()
-  @IsString()
   video?: string;
 
   @ApiPropertyOptional({
@@ -72,8 +54,6 @@ export class CreateGuidesAndBooksDto {
     example: 10,
     required: false,
   })
-  @IsOptional()
-  // @IsNumber()
   price?: number;
 
   @ApiPropertyOptional({
@@ -82,8 +62,6 @@ export class CreateGuidesAndBooksDto {
     example: false,
     required: false,
   })
-  @IsOptional()
-  // @IsBoolean()
   isWaiting?: boolean;
 
   @ApiProperty({
@@ -93,7 +71,6 @@ export class CreateGuidesAndBooksDto {
     example: Status.PUBLISHED,
     required: true,
   })
-  @IsEnum(Status, { message: 'Невалідний статус' })
   status: Status;
 
   @ApiPropertyOptional({
@@ -106,7 +83,6 @@ export class CreateGuidesAndBooksDto {
     },
     required: false,
   })
-  @IsOptional()
   discount?: { discount: number; start: Date; expiredAt: Date };
 
   @ApiProperty({ type: FileDto })
