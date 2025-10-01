@@ -107,6 +107,7 @@ export class AdminGuidesAndBooksService {
           {
             $match: { _id: guidesAndBooksId },
           },
+          // 🔹 lookup для знижки
           {
             $lookup: {
               from: 'discounts',
@@ -125,22 +126,25 @@ export class AdminGuidesAndBooksService {
               ],
             },
           },
+          // 🔹 lookup для файлу
           {
             $lookup: {
-              from: 'files', // колекція файлів
-              localField: 'file', // поле у guidesAndBooks, яке містить ObjectId файлу
+              from: 'files',
+              localField: 'file',
               foreignField: '_id',
               as: 'fileData',
               pipeline: [
                 {
                   $project: {
                     _id: 0,
-                    path: 1, // беремо лише path
+                    savedName: 1,
+                    originalName: 1,
                   },
                 },
               ],
             },
           },
+          // 🔹 формуємо поля
           {
             $addFields: {
               discount: {
@@ -153,12 +157,13 @@ export class AdminGuidesAndBooksService {
               file: {
                 $cond: {
                   if: { $gt: [{ $size: '$fileData' }, 0] },
-                  then: { $arrayElemAt: ['$fileData.path', 0] }, // дістаємо path
+                  then: { $arrayElemAt: ['$fileData', 0] }, // { savedName, originalName }
                   else: null,
                 },
               },
             },
           },
+          // 🔹 фінальний проєкт
           {
             $project: {
               _id: 1,
@@ -170,7 +175,7 @@ export class AdminGuidesAndBooksService {
               cover: 1,
               price: 1,
               isWaiting: 1,
-              file: 1, // нове поле з path файлу
+              file: 1, // { savedName, originalName }
               discount: {
                 $cond: {
                   if: { $ne: ['$discount', null] },
