@@ -73,10 +73,32 @@ export async function findFileInMaterials(
     }
     return null; // File not found
   }
-
-  // Search in the "education" directory for any "materials" folders
   const educationPath = path.join(storagePath, 'education');
-  return await searchFolder(educationPath);
+  const foundInEducation = await searchFolder(educationPath);
+  if (foundInEducation) return foundInEducation;
+
+  // 2️⃣ Якщо не знайдено — шукаємо у products/<id>/<fileName>
+  const productsDir = path.join(storagePath, 'products');
+  try {
+    const products = await fs.readdir(productsDir, { withFileTypes: true });
+    for (const dir of products) {
+      if (dir.isDirectory()) {
+        const filePath = path.join(productsDir, dir.name, fileName);
+        console.log(filePath);
+        // return filePath
+        try {
+          const stat = await fs.stat(filePath);
+          if (stat.isFile()) {
+            return filePath; // ✅ знайдено в products
+          }
+        } catch {
+          // файл не знайдено у цій директорії
+        }
+      }
+    }
+  } catch (e: any) {
+    console.error(`⚠️ Не вдалося прочитати products: ${e.message}`);
+  }
 }
 
 export async function findFileRecursive(
