@@ -30,7 +30,11 @@ export class ProductService {
     }
 
     // Пробуємо знайти у гайдах
-    const guide = await this.guidesAndBooksModel.findById(id).lean();
+    const guide = await this.guidesAndBooksModel
+      .findById(id)
+      .populate({ path: 'file', select: 'path originalName -_id' })
+      .lean();
+
     if (guide) {
       return guide;
     }
