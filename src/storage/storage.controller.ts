@@ -46,6 +46,7 @@ export class StorageController {
 
   @ApiBearerAuth()
   @Roles(Role.Admin)
+  @Roles(Role.User)
   @Post('uploadCover')
   @ApiOperation({
     summary: 'Admin Upload Cover',
@@ -99,6 +100,7 @@ export class StorageController {
 
   @ApiBearerAuth()
   @Roles(Role.Admin)
+  @Roles(Role.User)
   @Post('uploadFiles')
   @ApiOperation({
     summary: 'Admin Upload Files',
@@ -162,6 +164,7 @@ export class StorageController {
 
   @ApiBearerAuth()
   @Roles(Role.Admin)
+  @Roles(Role.User)
   @Get('temporaryFiles/:file')
   async serveTemporaryFile(
     @Res() res: Response,
@@ -186,6 +189,7 @@ export class StorageController {
 
   @ApiBearerAuth()
   @Roles(Role.Admin)
+  @Roles(Role.User)
   @Get('file/:file')
   async serveFile(
     @Res() res: Response,
