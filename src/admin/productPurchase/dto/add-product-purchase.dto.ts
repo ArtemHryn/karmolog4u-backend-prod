@@ -27,11 +27,11 @@ export class ProductDto {
     enum: TargetModule,
     example: TargetModule.MEDITATIONS,
   })
-  @IsEnum(TargetModule, {
-    message: `targetModule має бути одним із: ${Object.values(
-      TargetModule,
-    ).join(', ')}`,
-  })
+  // @IsEnum(TargetModule, {
+  //   message: `targetModule має бути одним із: ${Object.values(
+  //     TargetModule,
+  //   ).join(', ')}`,
+  // })
   targetModule: TargetModule;
 }
 
