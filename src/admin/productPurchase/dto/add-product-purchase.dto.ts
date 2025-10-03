@@ -4,7 +4,7 @@ import {
   ArrayNotEmpty,
   ValidateNested,
   IsMongoId,
-  IsEnum,
+  // IsEnum,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
