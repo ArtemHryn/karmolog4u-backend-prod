@@ -173,4 +173,12 @@ export class CoursePurchaseService {
 
     return courses;
   }
+
+  async userHasCourse(userId: string, courseId: string): Promise<boolean> {
+    const course = await this.coursePurchaseModel.findOne({ userId, courseId });
+    // availableTo > now date
+    //accessStartDate < now date
+    // throw course unavailable
+    return !!course;
+  }
 }

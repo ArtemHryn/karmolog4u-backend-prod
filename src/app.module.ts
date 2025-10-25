@@ -22,6 +22,7 @@ import { AdminModule } from './admin/admin.module';
 import { MailModule } from './mail/mail.module';
 import { StorageService } from './storage/storage.service';
 import { FilesModule } from './files/files.module';
+import { CourseModule } from './user/education/course.module';
 
 const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
 
@@ -45,6 +46,7 @@ const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
     ProductModule,
     FilesModule,
     CoursePurchaseModule,
+    CourseModule,
     // ProductPurchaseModule,
     // ServeStaticModule.forRoot({
     //   rootPath: 'covers',

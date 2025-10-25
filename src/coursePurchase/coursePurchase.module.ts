@@ -15,6 +15,6 @@ import { CoursePurchaseService } from './coursePurchase.service';
   ],
   controllers: [CoursePurchaseController],
   providers: [CoursePurchaseService],
-  exports: [MongooseModule],
+  exports: [MongooseModule, CoursePurchaseService],
 })
 export class CoursePurchaseModule {}
