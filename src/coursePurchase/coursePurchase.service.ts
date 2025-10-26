@@ -176,9 +176,23 @@ export class CoursePurchaseService {
 
   async userHasCourse(userId: string, courseId: string): Promise<boolean> {
     const course = await this.coursePurchaseModel.findOne({ userId, courseId });
-    // availableTo > now date
-    //accessStartDate < now date
-    // throw course unavailable
-    return !!course;
+
+    if (!course) {
+      return false; // користувач не купував курс
+    }
+
+    const now = new Date();
+
+    // Перевіряємо чи вже можна почати курс (доступ відкрито)
+    if (course.accessStartDate && course.accessStartDate > now) {
+      return false; // доступ ще не почався
+    }
+
+    // Перевіряємо чи ще не закінчився доступ
+    if (course.availableTo && course.availableTo < now) {
+      return false; // доступ закінчено
+    }
+
+    return true; // курс доступний
   }
 }

@@ -9,6 +9,7 @@ import {
   ApiBearerAuth,
   ApiNotFoundResponse,
   ApiOperation,
+  ApiParam,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -17,30 +18,36 @@ import { Roles } from 'src/role/roles.decorator';
 import { CourseService } from './course.service';
 import { User } from 'src/common/decorators/user.decorator';
 import { UserEntity } from '../dto/user-entity.dto';
-import { AuthGuard } from 'src/auth/auth.guard';
 import { HasCourseGuard } from './guard/hasCourseGuard';
-import { IdDto } from 'src/common/dto/id.dto';
+
+import { IdParams } from './dto/id.dto';
 
 @ApiBearerAuth()
 // @UseGuards(AuthGuard)
-@ApiTags('user/education')
+@ApiTags('user-education')
 @Roles(Role.User, Role.Admin)
 @Controller('user/education')
 export class CourseController {
   constructor(private courseService: CourseService) {}
 
-  @Get('/:courseId')
+  @Get('/:id')
   @ApiOperation({ summary: 'Get course detail' })
   @ApiResponse({
     status: 200,
     description: 'Course data',
     // type: UserInfoResponseDto,
   })
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: 'Course ID',
+    example: '65fa9a9e3c7a9e2fbc123456',
+  })
   @ApiNotFoundResponse({ description: 'Користувача не знайдено' })
   @UseGuards(HasCourseGuard)
-  async getCourseDetail(@User() user: UserEntity, @Param() param: IdDto) {
+  async getCourseDetail(@User() user: UserEntity, @Param() param: IdParams) {
     try {
-      return await this.courseService.getCourseDetail(user._id, param._id);
+      return await this.courseService.getCourseDetail(user._id, param.id);
     } catch (error) {
       throw new HttpException(
         {
@@ -55,18 +62,24 @@ export class CourseController {
     }
   }
 
-  @Get('lessons-SSK/:courseId')
+  @Get('lessons-SSK/:id')
   @ApiOperation({ summary: 'Get lessons ssk' })
   @ApiResponse({
     status: 200,
     description: 'Lessons SSK data',
     // type: UserInfoResponseDto,
   })
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: 'Course ID',
+    example: '65fa9a9e3c7a9e2fbc123456',
+  })
   @ApiNotFoundResponse({ description: 'Користувача не знайдено' })
   @UseGuards(HasCourseGuard)
-  async getLessonsSSK(@User() user: UserEntity, @Param() param: IdDto) {
+  async getLessonsSSK(@User() user: UserEntity, @Param() param: IdParams) {
     try {
-      return await this.courseService.getLessonsSSK(user._id, param._id);
+      return await this.courseService.getLessonsSSK(user._id, param.id);
     } catch (error) {
       throw new HttpException(
         {
@@ -81,18 +94,24 @@ export class CourseController {
     }
   }
 
-  @Get('lessons-list/:courseId')
+  @Get('lessons-list/:id')
   @ApiOperation({ summary: 'Get lessons cons advan' })
   @ApiResponse({
     status: 200,
     description: 'Lessons Consulting & Advanced data',
     // type: UserInfoResponseDto,
   })
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: 'Course ID',
+    example: '65fa9a9e3c7a9e2fbc123456',
+  })
   @ApiNotFoundResponse({ description: 'Користувача не знайдено' })
   @UseGuards(HasCourseGuard)
-  async getLessonsList(@User() user: UserEntity, @Param() param: IdDto) {
+  async getLessonsList(@User() user: UserEntity, @Param() param: IdParams) {
     try {
-      return;
+      return await this.courseService.getLessonsList(user._id, param.id);
     } catch (error) {
       throw new HttpException(
         {
@@ -107,17 +126,23 @@ export class CourseController {
     }
   }
 
-  @Get('lesson/:lessonId')
+  @Get('lesson/:id')
   @ApiOperation({ summary: 'Get user' })
   @ApiResponse({
     status: 200,
     description: 'User data',
     // type: UserInfoResponseDto,
   })
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: 'lesson ID',
+    example: '65fa9a9e3c7a9e2fbc123456',
+  })
   @ApiNotFoundResponse({ description: 'Користувача не знайдено' })
-  async getLesson(@User() user: UserEntity) {
+  async getLessonDetails(@User() user: UserEntity, @Param() param: IdParams) {
     try {
-      return;
+      return await this.courseService.getLesson(user._id, param.id);
     } catch (error) {
       throw new HttpException(
         {

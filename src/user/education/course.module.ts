@@ -5,10 +5,11 @@ import { Module } from '@nestjs/common';
 import { CoursePurchaseModule } from 'src/coursePurchase/coursePurchase.module';
 import { LessonModule } from 'src/admin/education/lessons/lesson.module';
 import { HasCourseGuard } from './guard/hasCourseGuard';
+import { ModuleModule } from 'src/admin/education/module/module.module';
 
 @Module({
-  imports: [Course, CoursePurchaseModule, LessonModule],
+  imports: [Course, CoursePurchaseModule, LessonModule, ModuleModule],
   controllers: [CourseController],
-  providers: [CourseService, HasCourseGuard],
+  providers: [CourseService],
 })
 export class CourseModule {}

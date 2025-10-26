@@ -14,14 +14,14 @@ export class HasCourseGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const user = request.user; // from AuthGuard (JWT)
-    const courseId = request.params.course_id; // URL param
+    const courseId = request.params.id; // URL param
 
     if (!user) throw new ForbiddenException('User not authenticated');
     if (!courseId) throw new ForbiddenException('Course ID is missing');
 
     // Check if user has this course
     const hasCourse = await this.coursePurchase.userHasCourse(
-      user.id,
+      user._id,
       courseId,
     );
 
