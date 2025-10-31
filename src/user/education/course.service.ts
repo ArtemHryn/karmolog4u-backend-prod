@@ -141,7 +141,7 @@ export class CourseService {
   }
 
   async getLesson(userId: any, lessonId: string) {
-    const now = new Date();
+    const now = Date.now();
 
     // 1. Find lesson by ID
     const lesson = await this.lessonModel.findById(lessonId);
@@ -150,12 +150,10 @@ export class CourseService {
     // 2. Check lesson.access.type = TO_DATE
 
     if (lesson.targetModel === 'Module') {
-      if (lesson.access?.type === 'TO_DATE') {
+      if (lesson?.access?.type === 'TO_DATE') {
         if (
-          !lesson.access.dateStart ||
-          !lesson.access.dateEnd ||
-          now < lesson.access.dateStart ||
-          now > lesson.access.dateEnd
+          now < lesson?.access.dateStart.getTime() ||
+          now > lesson?.access.dateEnd.getTime()
         ) {
           throw new ForbiddenException('Lesson is not available by date');
         }
@@ -164,7 +162,10 @@ export class CourseService {
       const module = await this.moduleModel.findById(lesson.targetId).lean();
       if (!module) throw new NotFoundException('Module not found');
 
-      if (now < module.access.dateStart || now > module.access.dateEnd) {
+      if (
+        now > module.access.dateStart.getTime() ||
+        now < module.access.dateEnd.getTime()
+      ) {
         throw new ForbiddenException('Module is not available by date');
       }
 
@@ -176,7 +177,10 @@ export class CourseService {
       if (!purchase)
         throw new ForbiddenException('No course purchase for module found');
 
-      if (!(now > purchase.accessStartDate) || !(now < purchase.availableTo)) {
+      if (
+        !(now > purchase.accessStartDate.getTime()) ||
+        !(now < purchase.availableTo.getTime())
+      ) {
         throw new ForbiddenException(
           'Course access expired or not started yet',
         );
@@ -200,7 +204,10 @@ export class CourseService {
       if (!purchase)
         throw new NotFoundException('No purchase found for this course');
 
-      if (now < purchase.accessStartDate || now > purchase.availableTo) {
+      if (
+        now < purchase.accessStartDate.getTime() ||
+        now > purchase.availableTo.getTime()
+      ) {
         throw new ForbiddenException(
           'Course access period expired or not started',
         );
