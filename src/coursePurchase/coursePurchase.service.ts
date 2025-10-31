@@ -184,12 +184,12 @@ export class CoursePurchaseService {
     const now = new Date();
 
     // Перевіряємо чи вже можна почати курс (доступ відкрито)
-    if (course.accessStartDate && course.accessStartDate > now) {
+    if (course?.accessStartDate > now) {
       return false; // доступ ще не почався
     }
 
     // Перевіряємо чи ще не закінчився доступ
-    if (course.availableTo && course.availableTo < now) {
+    if (course?.availableTo > now) {
       return false; // доступ закінчено
     }
 

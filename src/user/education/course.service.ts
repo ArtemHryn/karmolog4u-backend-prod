@@ -94,7 +94,7 @@ export class CourseService {
 
     const modules = await this.moduleModel.aggregate([
       {
-        $match: { courseId: new Types.ObjectId(courseId) }, // вибірка модулів по курсу
+        $match: { course: new Types.ObjectId(courseId) }, // вибірка модулів по курсу
       },
       {
         $lookup: {
@@ -148,28 +148,57 @@ export class CourseService {
     if (!lesson) throw new NotFoundException('Lesson not found');
 
     // 2. Check lesson.access.type = TO_DATE
-    if (lesson.access?.type === 'TO_DATE') {
-      if (
-        !lesson.access.dateStart ||
-        !lesson.access.dateEnd ||
-        now < lesson.access.dateStart ||
-        now > lesson.access.dateEnd
-      ) {
-        throw new ForbiddenException('Lesson is not available by date');
+
+    if (lesson.targetModel === 'Module') {
+      if (lesson.access?.type === 'TO_DATE') {
+        if (
+          !lesson.access.dateStart ||
+          !lesson.access.dateEnd ||
+          now < lesson.access.dateStart ||
+          now > lesson.access.dateEnd
+        ) {
+          throw new ForbiddenException('Lesson is not available by date');
+        }
       }
+      // ---- TARGET: MODULE ----
+      const module = await this.moduleModel.findById(lesson.targetId).lean();
+      if (!module) throw new NotFoundException('Module not found');
+
+      if (now < module.access.dateStart || now > module.access.dateEnd) {
+        throw new ForbiddenException('Module is not available by date');
+      }
+
+      const purchase = await this.coursePurchaseModel.findOne({
+        userId,
+        courseId: module.course,
+      });
+
+      if (!purchase)
+        throw new ForbiddenException('No course purchase for module found');
+
+      if (!(now > purchase.accessStartDate) || !(now < purchase.availableTo)) {
+        throw new ForbiddenException(
+          'Course access expired or not started yet',
+        );
+      }
+
       return lesson; // ✅ доступ є
     }
 
     // 3. Check by targetModel
     if (lesson.targetModel === 'Course') {
       // ---- TARGET: COURSE ----
+      const course = await this.courseModel.findById(lesson.targetId);
+      if (!course) {
+        throw new NotFoundException('Курс не знайдено');
+      }
       const purchase = await this.coursePurchaseModel.findOne({
         userId,
-        targetId: lesson.targetId,
+        courseId: course._id,
       });
 
       if (!purchase)
-        throw new ForbiddenException('No purchase found for this course');
+        throw new NotFoundException('No purchase found for this course');
 
       if (now < purchase.accessStartDate || now > purchase.availableTo) {
         throw new ForbiddenException(
@@ -181,32 +210,6 @@ export class CourseService {
         if (purchase.lessonsUnlocked?.some((id) => id.equals(lesson._id))) {
           throw new ForbiddenException('Lesson is locked for partial payment');
         }
-      }
-
-      return lesson; // ✅ доступ є
-    }
-
-    if (lesson.targetModel === 'Module') {
-      // ---- TARGET: MODULE ----
-      const module = await this.moduleModel.findById(lesson.targetId).lean();
-      if (!module) throw new NotFoundException('Module not found');
-
-      if (now < module.access.dateStart || now > module.access.dateEnd) {
-        throw new ForbiddenException('Module is not available by date');
-      }
-
-      const purchase = await this.coursePurchaseModel.findOne({
-        userId,
-        targetId: module.course,
-      });
-
-      if (!purchase)
-        throw new ForbiddenException('No course purchase for module found');
-
-      if (now < purchase.accessStartDate || now > purchase.availableTo) {
-        throw new ForbiddenException(
-          'Course access expired or not started yet',
-        );
       }
 
       return lesson; // ✅ доступ є
