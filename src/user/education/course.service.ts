@@ -1,15 +1,18 @@
 import {
   BadRequestException,
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Course } from 'src/admin/education/course/schemas/course.schema';
 import { Lesson } from 'src/admin/education/lessons/schemas/lesson.schema';
 import { Module } from 'src/admin/education/module/schemas/module.schema';
 import { CoursePurchase } from 'src/coursePurchase/schemas/coursePurchase.schema';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class CourseService {
@@ -19,6 +22,8 @@ export class CourseService {
     private coursePurchaseModel: Model<CoursePurchase>,
     @InjectModel(Lesson.name) private lessonModel: Model<Lesson>,
     @InjectModel(Module.name) private moduleModel: Model<Module>,
+    @Inject(MailService) private mailService: MailService,
+    private configService: ConfigService,
   ) {}
 
   async getCourseDetail(userId: any, courseId: any) {
@@ -117,6 +122,7 @@ export class CourseService {
                 moduleDay: 1,
                 modulePart: 1,
                 name: 1,
+                id: '$_id',
               },
             },
           ],
@@ -228,5 +234,58 @@ export class CourseService {
     }
 
     throw new ForbiddenException('Урок має невірно вказане джерело');
+  }
+
+  async sendFeedback(userId: any, id: any, data: any) {
+    // call get lesson to check if user have access
+    const lesson = await this.getLesson(userId, id);
+    if (!lesson) throw new NotFoundException('Уроків не знайдено');
+
+    // send q&a to mail
+    await this.mailService.sendEmail(
+      this.configService.get<string>('ADMIN_MAIL'),
+      'Q&A feedback',
+      'feedback', // HBS template name
+      {
+        data: data,
+        appName: 'Karmolog4u',
+        year: new Date().getFullYear(),
+      },
+    );
+
+    //change completed to true
+    if (lesson.targetModel === 'Module') {
+      // ---- TARGET: MODULE ----
+      const module = await this.moduleModel.findById(lesson.targetId).lean();
+      if (!module) throw new NotFoundException('Модуль не знайдено');
+
+      await this.coursePurchaseModel.findOneAndUpdate(
+        {
+          userId,
+          courseId: module.course,
+        },
+        {
+          $set: { completed: true },
+        },
+      );
+      return { message: 'success' };
+    }
+
+    // 3. Check by targetModel
+    if (lesson.targetModel === 'Course') {
+      // ---- TARGET: COURSE ----
+      const course = await this.courseModel.findById(lesson.targetId);
+      await this.coursePurchaseModel.findOneAndUpdate(
+        {
+          userId,
+          courseId: course._id,
+        },
+        {
+          $set: { completed: true },
+        },
+      );
+
+      return { message: 'success' };
+    }
   }
 }

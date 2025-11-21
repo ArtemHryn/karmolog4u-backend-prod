@@ -4,11 +4,17 @@ import { CourseService } from './course.service';
 import { Module } from '@nestjs/common';
 import { CoursePurchaseModule } from 'src/coursePurchase/coursePurchase.module';
 import { LessonModule } from 'src/admin/education/lessons/lesson.module';
-import { HasCourseGuard } from './guard/hasCourseGuard';
 import { ModuleModule } from 'src/admin/education/module/module.module';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
-  imports: [Course, CoursePurchaseModule, LessonModule, ModuleModule],
+  imports: [
+    Course,
+    CoursePurchaseModule,
+    LessonModule,
+    ModuleModule,
+    MailModule,
+  ],
   controllers: [CourseController],
   providers: [CourseService],
 })

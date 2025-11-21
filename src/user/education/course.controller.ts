@@ -1,8 +1,10 @@
 import {
+  Body,
   Controller,
   Get,
   HttpException,
   Param,
+  Post,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -143,6 +145,41 @@ export class CourseController {
   async getLessonDetails(@User() user: UserEntity, @Param() param: IdParams) {
     try {
       return await this.courseService.getLesson(user._id, param.id);
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: error.status,
+          message: error.response.message,
+        },
+        error.status,
+        {
+          cause: error,
+        },
+      );
+    }
+  }
+
+  @Post('feedback/:id')
+  @ApiOperation({ summary: 'Post Feedback' })
+  @ApiResponse({
+    status: 200,
+    description: 'feedback',
+    // type: UserInfoResponseDto,
+  })
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: 'ID',
+    example: '65fa9a9e3c7a9e2fbc123456',
+  })
+  @ApiNotFoundResponse({ description: 'Користувача не знайдено' })
+  async sendFeedback(
+    @User() user: UserEntity,
+    @Param() param: IdParams,
+    @Body() data: any,
+  ) {
+    try {
+      return await this.courseService.sendFeedback(user._id, param.id, data);
     } catch (error) {
       throw new HttpException(
         {
