@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -6,10 +6,14 @@ import {
   findFileInMaterials,
   findFileInCovers,
 } from 'src/common/helper/findRecursive';
+import { FilesService } from 'src/files/files.service';
 
 @Injectable()
 export class StorageService {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly filesService: FilesService,
+  ) {}
 
   async getCover(fileName: string) {
     const rootFolder = path.join(process.cwd(), '..', 'storage'); // Коренева папка для пошуку
@@ -18,9 +22,10 @@ export class StorageService {
   }
 
   async getFile(fileName: string) {
+    const file = await this.filesService.getFilesBySavedName(fileName);
     const rootFolder = path.join(process.cwd(), '..', 'storage'); // Коренева папка для пошуку
-    const filePath = await findFileInMaterials(rootFolder, fileName);
-    return filePath;
+    // const filePath = await findFileInMaterials(rootFolder, fileName);
+    return { file: file[0], rootFolder };
   }
 
   getTemporaryCover(fileName: string) {

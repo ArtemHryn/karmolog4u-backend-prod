@@ -191,7 +191,16 @@ export class StorageController {
     @Res() res: Response,
     @Param() params: DownloadFileParamsDto,
   ) {
-    const filePath = await this.storageService.getFile(params.file);
-    return res.sendFile(filePath);
+    // const filePath = await this.storageService.getFile(params.file);
+    // return res.sendFile(filePath);
+    const file = await this.storageService.getFile(params.file);
+    if (!file) {
+      return res.status(404).json({ message: 'Файл не знайдено' });
+    }
+
+    return res.download(
+      file.rootFolder + '/' + file.file.path,
+      file.file.originalName,
+    );
   }
 }

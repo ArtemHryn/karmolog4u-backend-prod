@@ -180,8 +180,8 @@ export class CourseService {
       if (!module) throw new NotFoundException('Модуль не знайдено');
 
       if (
-        now > module.access.dateStart.getTime() ||
-        now < module.access.dateEnd.getTime()
+        now < module.access.dateStart.getTime() ||
+        now > module.access.dateEnd.getTime()
       ) {
         throw new ForbiddenException('Модуль не доступний за датою');
       }
@@ -236,9 +236,9 @@ export class CourseService {
     throw new ForbiddenException('Урок має невірно вказане джерело');
   }
 
-  async sendFeedback(userId: any, id: any, data: any) {
+  async sendFeedback(user: any, id: any, data: any) {
     // call get lesson to check if user have access
-    const lesson = await this.getLesson(userId, id);
+    const lesson = await this.getLesson(user._id, id);
     if (!lesson) throw new NotFoundException('Уроків не знайдено');
 
     // send q&a to mail
@@ -247,7 +247,9 @@ export class CourseService {
       'Q&A feedback',
       'feedback', // HBS template name
       {
-        data: data,
+        name: user.name,
+        lastName: user.lastName,
+        data: data.items,
         appName: 'Karmolog4u',
         year: new Date().getFullYear(),
       },
@@ -261,7 +263,7 @@ export class CourseService {
 
       await this.coursePurchaseModel.findOneAndUpdate(
         {
-          userId,
+          userId: user._id,
           courseId: module.course,
         },
         {
@@ -277,7 +279,7 @@ export class CourseService {
       const course = await this.courseModel.findById(lesson.targetId);
       await this.coursePurchaseModel.findOneAndUpdate(
         {
-          userId,
+          userId: user._id,
           courseId: course._id,
         },
         {

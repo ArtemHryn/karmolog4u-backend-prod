@@ -23,6 +23,8 @@ import { UserEntity } from '../dto/user-entity.dto';
 import { HasCourseGuard } from './guard/hasCourseGuard';
 
 import { IdParams } from './dto/id.dto';
+import { Public } from 'src/common/decorators/isPublic.decorator';
+import { QAArrayDto } from './dto/feedback.dto';
 
 @ApiBearerAuth()
 // @UseGuards(AuthGuard)
@@ -159,6 +161,7 @@ export class CourseController {
     }
   }
 
+  @Public()
   @Post('feedback/:id')
   @ApiOperation({ summary: 'Post Feedback' })
   @ApiResponse({
@@ -176,10 +179,10 @@ export class CourseController {
   async sendFeedback(
     @User() user: UserEntity,
     @Param() param: IdParams,
-    @Body() data: any,
+    @Body() data: QAArrayDto,
   ) {
     try {
-      return await this.courseService.sendFeedback(user._id, param.id, data);
+      return await this.courseService.sendFeedback(user, param.id, data);
     } catch (error) {
       throw new HttpException(
         {
