@@ -122,6 +122,8 @@ export class CourseService {
                 moduleDay: 1,
                 modulePart: 1,
                 name: 1,
+                lessonTimeStart: 1,
+                lessonTimeEnd: 1,
                 id: '$_id',
               },
             },
