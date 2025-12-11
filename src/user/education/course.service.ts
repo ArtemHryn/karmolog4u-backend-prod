@@ -12,6 +12,7 @@ import { Course } from 'src/admin/education/course/schemas/course.schema';
 import { Lesson } from 'src/admin/education/lessons/schemas/lesson.schema';
 import { Module } from 'src/admin/education/module/schemas/module.schema';
 import { CoursePurchase } from 'src/coursePurchase/schemas/coursePurchase.schema';
+import { Files } from 'src/files/schemas/files.schema';
 import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
@@ -22,12 +23,27 @@ export class CourseService {
     private coursePurchaseModel: Model<CoursePurchase>,
     @InjectModel(Lesson.name) private lessonModel: Model<Lesson>,
     @InjectModel(Module.name) private moduleModel: Model<Module>,
+    @InjectModel(Files.name) private filesModel: Model<Files>,
     @Inject(MailService) private mailService: MailService,
     private configService: ConfigService,
   ) {}
 
+  // file return
   async getCourseDetail(userId: any, courseId: any) {
     const course = await this.courseModel.findById(courseId);
+    const optionalFiles = await this.filesModel
+      .find(
+        {
+          targetId: courseId,
+          targetModel: 'Course',
+        },
+        {
+          originalName: 1,
+          savedName: 1,
+          _id: 0, // якщо не потрібно _id
+        },
+      )
+      .lean({ virtuals: false });
 
     if (!course) {
       throw new NotFoundException('Курс не знайдено');
@@ -44,6 +60,7 @@ export class CourseService {
 
     return {
       ...cleanCourse,
+      optionalFiles,
       purchaseInfo: purchase,
     };
   }

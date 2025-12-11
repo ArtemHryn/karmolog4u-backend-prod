@@ -6,6 +6,7 @@ import { CoursePurchaseModule } from 'src/coursePurchase/coursePurchase.module';
 import { LessonModule } from 'src/admin/education/lessons/lesson.module';
 import { ModuleModule } from 'src/admin/education/module/module.module';
 import { MailModule } from 'src/mail/mail.module';
+import { FilesModule } from 'src/files/files.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { MailModule } from 'src/mail/mail.module';
     LessonModule,
     ModuleModule,
     MailModule,
+    FilesModule,
   ],
   controllers: [CourseController],
   providers: [CourseService],
