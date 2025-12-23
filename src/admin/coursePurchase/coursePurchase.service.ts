@@ -72,6 +72,14 @@ export class CoursePurchaseService {
         Data.accessEndDate = course.access.dateEnd;
       }
 
+      if (Data.accessType === 'PERMANENT') {
+        const Now = Date.now();
+        const plus100Years = new Date(Now);
+        plus100Years.setFullYear(plus100Years.getFullYear() + 100);
+        Data.accessStartDate = Now;
+        Data.accessEndDate = plus100Years;
+      }
+
       if (
         course.type === 'SSK_INDEPENDENT' ||
         course.type === 'SSK_WITH_CURATOR' ||
