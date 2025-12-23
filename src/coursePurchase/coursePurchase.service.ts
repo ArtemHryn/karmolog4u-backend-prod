@@ -163,6 +163,7 @@ export class CoursePurchaseService {
           _id: 0,
           name: { $ifNull: ['$course.name.uk', '$course.name'] }, // fallback якщо нема uk
           type: '$course.type',
+          accessType: '$course.access.type',
           cover: '$course.cover',
           paymentPlan: '$paymentPlan',
           accessEndDate: 1,
