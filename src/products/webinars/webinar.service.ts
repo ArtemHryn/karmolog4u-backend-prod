@@ -170,4 +170,24 @@ export class WebinarService {
     }
     return response[0];
   }
-}
+
+
+   async findAllWebinars(): Promise<WebinarEntity[]> {
+    const response = await this.webinarModel
+      .aggregate([
+        // Фільтрація записів
+        {
+          $match: {
+            toDelete: false,
+            status: 'PUBLISHED',
+            category: 'WEBINARS',
+          },
+        },
+        {
+          $lookup: {
+            from: 'discounts', // Колекція знижок
+            localField: '_id', // Поле, яке зв'язує запис
+            foreignField: 'refId', // Поле у колекції discounts
+            as: 'discount', // Результат у полі discount          
+          },
+        },

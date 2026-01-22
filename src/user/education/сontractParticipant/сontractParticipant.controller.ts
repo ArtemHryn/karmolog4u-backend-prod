@@ -30,8 +30,8 @@ import { User } from 'src/common/decorators/user.decorator';
 import { UserEntity } from 'src/user/dto/user-entity.dto';
 import { ContractParticipantService } from './сontractParticipant.service';
 import { SignDto } from './dto/sign.dto';
-import { IdDto } from 'src/common/dto/id.dto';
 import { Response } from 'express';
+import { IdParams } from '../dto/id.dto';
 
 @ApiBearerAuth('authorization')
 @ApiTags('Contract Participant')
@@ -50,7 +50,7 @@ export class ContractParticipantController {
    * - Update course purchase agreement status
    * - Send notification emails to admin and user with PDF
    */
-  @Post('sign/:_id')
+  @Post('sign/:id')
   @UseGuards(HasCourseGuard)
   @ApiOperation({
     summary: 'Sign contract',
@@ -98,10 +98,10 @@ export class ContractParticipantController {
   async signContract(
     @User() user: UserEntity,
     @Body() data: SignDto,
-    @Param() param: IdDto,
+    @Param() param: IdParams,
   ) {
     try {
-      const result = await this.contractService.sign(user, data, param._id);
+      const result = await this.contractService.sign(user, data, param.id);
 
       return {
         statusCode: HttpStatus.CREATED,
@@ -129,7 +129,8 @@ export class ContractParticipantController {
    * - Validate contract signature
    * - Generate and download PDF
    */
-  @Get('download/:_id')
+  @Get('download/:id')
+  @UseGuards(HasCourseGuard)
   @ApiOperation({
     summary: 'Download signed contract',
     description:
@@ -164,11 +165,11 @@ export class ContractParticipantController {
   })
   async getContractDownload(
     @User() user: UserEntity,
-    @Param() param: IdDto,
+    @Param() param: IdParams,
     @Res() res: Response,
   ) {
     try {
-      const pdf = await this.contractService.downloadContract(user, param._id);
+      const pdf = await this.contractService.downloadContract(user, param.id);
 
       res.set({
         'Content-Type': 'application/pdf',
