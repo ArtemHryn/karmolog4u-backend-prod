@@ -39,6 +39,16 @@ export class ContractParticipantService {
     if (!contract) {
       throw new InternalServerErrorException('Контракт не знайдено');
     }
+    const checkSign = await this.contractParticipantModel.findOne({
+      userId: user._id,
+      courseId: id,
+      contractId: contract._id,
+    });
+
+    if (checkSign) {
+      throw new BadRequestException('Контракт вже підписаний');
+    }
+
     const sign = new this.contractParticipantModel({
       userId: user._id,
       courseId: id,
@@ -87,40 +97,41 @@ export class ContractParticipantService {
       courseName,
       signDate: new Date().toLocaleDateString('uk-UA'),
     };
-
-    const adminMail = await this.mailService.sendEmail(
-      this.configService.get('ADMIN_EMAIL'),
-      'New Contract Signed',
-      'contract',
-      {
-        isAdmin: true,
-        ...mailData,
-      },
-      {
-        filename: 'dogovir.pdf',
-        content: signPdf,
-        contentType: 'application/pdf',
-      },
-    );
-    if (!adminMail) {
+    try {
+      const adminMail = await this.mailService.sendEmail(
+        this.configService.get('ADMIN_EMAIL'),
+        'New Contract Signed',
+        'contract',
+        {
+          isAdmin: true,
+          ...mailData,
+        },
+        {
+          filename: 'dogovir.pdf',
+          content: signPdf,
+          contentType: 'application/pdf',
+        },
+      );
+    } catch (error) {
       throw new InternalServerErrorException(
         'Помилка відправлення листа адміну',
       );
     }
-    const userMail = await this.mailService.sendEmail(
-      user.email,
-      'Contract Signed Successfully',
-      'contract-signed-user',
-      {
-        ...mailData,
-      },
-      {
-        filename: 'dogovir.pdf',
-        content: signPdf,
-        contentType: 'application/pdf',
-      },
-    );
-    if (!userMail) {
+    try {
+      const userMail = await this.mailService.sendEmail(
+        user.email,
+        'Contract Signed Successfully',
+        'contract-signed-user',
+        {
+          ...mailData,
+        },
+        {
+          filename: 'dogovir.pdf',
+          content: signPdf,
+          contentType: 'application/pdf',
+        },
+      );
+    } catch (error) {
       throw new InternalServerErrorException(
         'Помилка відправлення листа користувачу',
       );
