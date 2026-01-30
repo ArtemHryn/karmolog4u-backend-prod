@@ -22,7 +22,7 @@ export class ContractParticipantService {
   constructor(
     @InjectModel(ContractParticipant.name)
     private contractParticipantModel: Model<ContractParticipant>,
-    @InjectModel(ContractParticipant.name)
+    @InjectModel(Contract.name)
     private contractModel: Model<Contract>,
     @InjectModel(CoursePurchase.name)
     private coursePurchaseModel: Model<CoursePurchase>,
@@ -34,10 +34,10 @@ export class ContractParticipantService {
 
   async sign(user: UserEntity, data: SignDto, id: any) {
     const contract = await this.contractModel.findOne({
-      courseId: id,
+      course: id,
     });
     if (!contract) {
-      throw new InternalServerErrorException('');
+      throw new InternalServerErrorException('Контракт не знайдено');
     }
     const sign = new this.contractParticipantModel({
       userId: user._id,
@@ -47,7 +47,9 @@ export class ContractParticipantService {
     });
     await sign.save();
     if (!sign) {
-      throw new BadRequestException('');
+      throw new BadRequestException(
+        'Не вдалося створити запис учасника контракту',
+      );
     }
     const updatePurchase = await this.coursePurchaseModel.findOneAndUpdate(
       { courseId: id, userId: user._id }, // filter
@@ -138,7 +140,7 @@ export class ContractParticipantService {
     }
 
     const contract = await this.contractModel.findOne({
-      courseId: id,
+      course: id,
     });
     if (!contract) {
       throw new InternalServerErrorException('Контракт не знайдено');
@@ -184,7 +186,7 @@ export class ContractParticipantService {
     }
 
     const contract = await this.contractModel.findOne({
-      courseId: courseId,
+      course: courseId,
     });
     if (!contract) {
       throw new NotFoundException('Контракт не знайдено');
