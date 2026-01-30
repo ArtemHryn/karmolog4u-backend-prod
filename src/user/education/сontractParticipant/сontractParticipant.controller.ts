@@ -33,7 +33,7 @@ import { SignDto } from './dto/sign.dto';
 import { Response } from 'express';
 import { IdParams } from '../dto/id.dto';
 
-@ApiBearerAuth('authorization')
+@ApiBearerAuth()
 @ApiTags('Contract Participant')
 @ApiUnauthorizedResponse({
   description: 'Unauthorized - Missing or invalid authentication token',
@@ -101,6 +101,8 @@ export class ContractParticipantController {
     @Param() param: IdParams,
   ) {
     try {
+      console.log(param.id);
+
       const result = await this.contractService.sign(user, data, param.id);
 
       return {
@@ -186,6 +188,104 @@ export class ContractParticipantController {
           statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
           message: error.message || 'Failed to generate contract PDF',
           error: error.response?.error || 'Internal Server Error',
+        },
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+        {
+          cause: error,
+        },
+      );
+    }
+  }
+
+  @Get('get/:id')
+  @UseGuards(HasCourseGuard)
+  @ApiOperation({
+    summary: 'Get contract information',
+    description:
+      'Get contract details and signing status for a specific course',
+  })
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: 'Course ID',
+    type: 'string',
+    example: '65fa9a9e3c7a9e2fbc123456',
+  })
+  @ApiOkResponse({
+    description: 'Contract information retrieved successfully',
+    schema: {
+      oneOf: [
+        {
+          type: 'object',
+          properties: {
+            agreement: { type: 'boolean', example: false },
+          },
+        },
+        {
+          type: 'object',
+          properties: {
+            agreement: { type: 'boolean', example: true },
+            contractDetails: {
+              type: 'object',
+              properties: {
+                contractId: { type: 'string' },
+                courseId: { type: 'string' },
+                courseName: { type: 'string' },
+                userId: { type: 'string' },
+                fullname: { type: 'string' },
+                email: { type: 'string' },
+                phone: { type: 'string' },
+                idCode: { type: 'string' },
+                passportData: { type: 'string' },
+                signedAt: { type: 'string', format: 'date-time' },
+                contractDate: { type: 'string', format: 'date-time' },
+                header: { type: 'string' },
+                points: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      name: { type: 'string' },
+                      description: { type: 'string' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      ],
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Course not found in purchases',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: 'Курс не знайдено в покупках',
+      },
+    },
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Server error while retrieving contract information',
+  })
+  async getContractInfo(@User() user: UserEntity, @Param() param: IdParams) {
+    try {
+      const result = await this.contractService.getContractDetails(
+        user,
+        param.id,
+      );
+
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'Contract information retrieved successfully',
+        data: result,
+      };
+    } catch (error) {
+      throw new HttpException(
+        {
+          statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+          message: error.message || 'Failed to get contract information',
         },
         error.status || HttpStatus.INTERNAL_SERVER_ERROR,
         {

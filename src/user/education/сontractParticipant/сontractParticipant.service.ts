@@ -4,6 +4,7 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { ContractParticipant } from './schemas/сontractParticipant.schema';
 import { InjectModel } from '@nestjs/mongoose';
@@ -163,5 +164,65 @@ export class ContractParticipantService {
       date: contract.date,
       header: contract.header,
     });
+  }
+
+  async getContractDetails(user: UserEntity, courseId: string) {
+    const purchase = await this.coursePurchaseModel.findOne({
+      userId: user._id,
+      courseId: courseId,
+    });
+
+    if (!purchase) {
+      throw new BadRequestException('Курс не знайдено в покупках');
+    }
+
+    if (!purchase.agreement) {
+      return {
+        agreement: false,
+        message: 'Контракт не підписаний',
+      };
+    }
+
+    const contract = await this.contractModel.findOne({
+      courseId: courseId,
+    });
+    if (!contract) {
+      throw new NotFoundException('Контракт не знайдено');
+    }
+
+    const contractParticipant = await this.contractParticipantModel.findOne({
+      userId: user._id,
+      courseId: courseId,
+      contractId: contract._id,
+    });
+    if (!contractParticipant) {
+      throw new NotFoundException('Дані учасника контракту не знайдено');
+    }
+
+    const course = await this.courseModel
+      .findById(courseId)
+      .select('name')
+      .lean();
+    if (!course) {
+      throw new NotFoundException('Курс не знайдено');
+    }
+
+    return {
+      agreement: true,
+      contractDetails: {
+        contractId: contract._id,
+        courseId: courseId,
+        courseName: course.name,
+        userId: user._id,
+        fullname: `${user.name} ${user.lastName}`,
+        email: user.email,
+        phone: contractParticipant.phone,
+        idCode: contractParticipant.idCode,
+        passportData: contractParticipant.passportData,
+        contractDate: contract.date,
+        header: contract.header,
+        points: contract.points,
+      },
+    };
   }
 }
