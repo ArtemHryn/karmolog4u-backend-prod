@@ -181,6 +181,9 @@ export class CoursePurchaseService {
     if (!course) {
       return false; // користувач не купував курс
     }
+    if (course.accessType === 'PERMANENT') {
+      return true; // постійний доступ
+    }
 
     const now = Date.now();
 
