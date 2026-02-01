@@ -235,6 +235,7 @@ export class ContractParticipantService {
         contractDate: contract.date,
         header: contract.header,
         points: contract.points,
+        messenger: contractParticipant.messenger,
       },
     };
   }
