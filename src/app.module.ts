@@ -1,3 +1,5 @@
+import { DriveModule } from './drive/drive.module';
+import { GcsModule } from './gcs/gcs.module';
 // import { ProductPurchaseModule } from './productPurchase/productPurchase.module';
 import { CoursePurchaseModule } from './coursePurchase/coursePurchase.module';
 import { StorageModule } from './storage/storage.module';
@@ -35,6 +37,30 @@ const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => ({
         uri: config.get<string>('MONGO_URL'),
+      }),
+    }),
+    // GcsModule.forRootAsync({
+    //   inject: [ConfigService],
+    //   useFactory: (config: ConfigService) => ({
+    //     projectId: config.get<string>('GCP_PROJECT_ID'),
+    //     bucket: config.get<string>('GCP_BUCKET'),
+    //     credentials: {
+    //       client_email: config.get<string>('GCP_CLIENT_EMAIL'),
+    //       private_key: config
+    //         .get<string>('GCP_PRIVATE_KEY')
+    //         ?.replace(/\\n/g, '\n'),
+    //     },
+    //   }),
+    // }),
+    DriveModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        clientEmail: config.get<string>('GCP_CLIENT_EMAIL'),
+        privateKey: config
+          .get<string>('GCP_PRIVATE_KEY')
+          ?.replace(/\\n/g, '\n'),
+        folderId: config.get<string>('GOOGLE_API_FOLDER'),
+        scopes: ['https://www.googleapis.com/auth/drive.readonly'],
       }),
     }),
     AuthModule,

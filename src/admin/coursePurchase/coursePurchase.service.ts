@@ -78,7 +78,7 @@ export class CoursePurchaseService {
         plus100Years.setFullYear(plus100Years.getFullYear() + 100);
         Data.accessStartDate = Now;
         Data.accessEndDate = plus100Years;
-        Data.availableTo = plus100Years; 
+        Data.availableTo = plus100Years;
       }
 
       if (

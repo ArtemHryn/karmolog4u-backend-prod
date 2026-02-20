@@ -5,6 +5,7 @@ import {
   HttpException,
   Param,
   Post,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -21,18 +22,22 @@ import { CourseService } from './course.service';
 import { User } from 'src/common/decorators/user.decorator';
 import { UserEntity } from '../dto/user-entity.dto';
 import { HasCourseGuard } from './guard/hasCourseGuard';
+// import { GcsService } from 'src/gcs/gcs.service';
+import { Response } from 'express';
 
 import { IdParams } from './dto/id.dto';
 import { Public } from 'src/common/decorators/isPublic.decorator';
 import { QAArrayDto } from './dto/feedback.dto';
 
 @ApiBearerAuth()
-// @UseGuards(AuthGuard)
+//@UseGuards(AuthGuard)
 @ApiTags('user-education')
 @Roles(Role.User, Role.Admin)
 @Controller('user/education')
 export class CourseController {
-  constructor(private courseService: CourseService) {}
+  constructor(
+    private courseService: CourseService, // private readonly gcsService: GcsService,
+  ) {}
 
   @Get('/:id')
   @ApiOperation({ summary: 'Get course detail' })
@@ -190,6 +195,72 @@ export class CourseController {
           message: error.response.message,
         },
         error.status,
+        {
+          cause: error,
+        },
+      );
+    }
+  }
+
+  @Get('certificate/:id')
+  @ApiOperation({ summary: 'Stream certificate file from storage' })
+  @ApiResponse({ status: 200, description: 'Certificate file stream' })
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: 'Course ID (used for access check)',
+    example: '65fa9a9e3c7a9e2fbc123456',
+  })
+  @UseGuards(HasCourseGuard)
+  async streamCertificate(
+    @Res() res: Response,
+    @User() user: UserEntity,
+    @Param('id') courseId: string,
+  ) {
+    try {
+      const certificate = await this.courseService.getCertificate(
+        user,
+        courseId,
+      );
+
+      //drive
+
+      res.set({
+        'Content-Type': certificate.file.mimeType || 'application/octet-stream',
+        'Content-Disposition': `attachment; filename="${certificate.certificateFileName}"`,
+      });
+
+      certificate.file.stream.pipe(res);
+
+      //cloud storage
+
+      // const stream = certificate.file.stream as NodeJS.ReadableStream;
+      // const metadata = certificate.file.metadata as any;
+      // const name = certificate.certificateFileName;
+
+      // if (metadata && metadata.contentType) {
+      //   res.setHeader('Content-Type', metadata.contentType);
+      // } else {
+      //   res.setHeader('Content-Type', 'application/pdf');
+      // }
+
+      // res.setHeader(
+      //   'Content-Disposition',
+      //   `attachment; filename="${name.split('/').pop()}"`,
+      // );
+
+      // stream.on('error', () => {
+      //   res.status(500).end();
+      // });
+
+      // stream.pipe(res);
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: error.status || 500,
+          message: error.response?.message || error.message || 'Error',
+        },
+        error.status || 500,
         {
           cause: error,
         },

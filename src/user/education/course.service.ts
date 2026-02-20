@@ -14,6 +14,11 @@ import { Module } from 'src/admin/education/module/schemas/module.schema';
 import { CoursePurchase } from 'src/coursePurchase/schemas/coursePurchase.schema';
 import { Files } from 'src/files/schemas/files.schema';
 import { MailService } from 'src/mail/mail.service';
+import { UserEntity } from '../dto/user-entity.dto';
+import { getCourseTypeShortName } from './helpers/course-type.helper';
+// import { GcsService } from 'src/gcs/gcs.service';
+import { trimAnyEmailDomain } from 'src/common/helper/trimEmailDomain';
+import { DriveService } from 'src/drive/drive.service';
 
 @Injectable()
 export class CourseService {
@@ -25,6 +30,8 @@ export class CourseService {
     @InjectModel(Module.name) private moduleModel: Model<Module>,
     @InjectModel(Files.name) private filesModel: Model<Files>,
     @Inject(MailService) private mailService: MailService,
+    // @Inject(GcsService) private gcsService: GcsService,
+    @Inject(DriveService) private driveService: DriveService,
     private configService: ConfigService,
   ) {}
 
@@ -308,5 +315,37 @@ export class CourseService {
 
       return { message: 'success' };
     }
+  }
+
+  async getCertificate(user: UserEntity, courseId: any) {
+    const purchase = await this.coursePurchaseModel.findOne({
+      userId: user._id,
+      courseId,
+    });
+    if (!purchase) {
+      throw new ForbiddenException('Цей курс не куплений користувачем');
+    }
+    if (!purchase.completed) {
+      throw new NotFoundException('Курс не завершений, сертифікат недоступний');
+    }
+    const course = await this.courseModel.findById(purchase.courseId);
+    if (!course) {
+      throw new NotFoundException('Курс не знайдено');
+    }
+
+    // Map course type to short name (e.g., SSK_INDEPENDENT -> ssk_ind)
+    const courseTypeShort = getCourseTypeShortName(course.type);
+    const userName = trimAnyEmailDomain(user.email);
+    const fileName = `${userName}_${courseTypeShort}.pdf`;
+
+    const file = await this.driveService.downloadFile(fileName);
+    // console.log(`Certificate file for ${fileName}:`, file);
+
+    const certificateFileName = `certificate_${fileName}`;
+
+    return {
+      certificateFileName,
+      file,
+    };
   }
 }
