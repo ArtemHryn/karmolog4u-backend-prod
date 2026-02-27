@@ -1,6 +1,4 @@
 import { DriveModule } from './drive/drive.module';
-import { GcsModule } from './gcs/gcs.module';
-// import { ProductPurchaseModule } from './productPurchase/productPurchase.module';
 import { CoursePurchaseModule } from './coursePurchase/coursePurchase.module';
 import { StorageModule } from './storage/storage.module';
 import { DiscountModule } from './admin/products/discount/discount.module';
@@ -19,7 +17,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { getEnvPath } from './common/helper/env.helper';
 import { validate } from './common/helper/env.validation';
 import { LoggerMiddleware } from './common/middleware/logger.middlvare';
-// import { ServeStaticModule } from '@nestjs/serve-static';
 import { AdminModule } from './admin/admin.module';
 import { MailModule } from './mail/mail.module';
 import { StorageService } from './storage/storage.service';

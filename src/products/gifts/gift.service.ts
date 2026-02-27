@@ -1,17 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { Gift } from 'src/admin/products/gift/schemas/gift.schema';
 import { Model, Types } from 'mongoose';
-import { GuidesAndBooks } from 'src/admin/products/guides_and_books/schemas/guides_and_books.schema';
+import { GiftEntity } from 'src/admin/products/gift/dto/gift-entity.dto';
 
 @Injectable()
-export class GuidesAndBooksService {
-  constructor(
-    @InjectModel(GuidesAndBooks.name)
-    private guidesAndBooksModel: Model<GuidesAndBooks>,
-  ) {}
+export class GiftService {
+  constructor(@InjectModel(Gift.name) private giftModel: Model<Gift>) {}
 
-  async findPrevueGuidesAndBooks() {
-    const guidesAndBooks = await this.guidesAndBooksModel
+  /**
+   * Get preview list of gifts for public API
+   */
+  async findPrevueGifts() {
+    const gifts = await this.giftModel
       .aggregate([
         {
           $match: {
@@ -29,9 +30,7 @@ export class GuidesAndBooksService {
             pipeline: [
               {
                 $match: {
-                  $expr: {
-                    $and: [{ $lte: ['$start', '$$now'] }],
-                  },
+                  $expr: { $lte: ['$start', '$$now'] },
                 },
               },
               {
@@ -58,12 +57,10 @@ export class GuidesAndBooksService {
         },
         {
           $project: {
-            _id: 0,
-            id: '$_id',
-            category: 1,
+            _id: 1,
             name: 1,
-            price: 1,
             cover: 1,
+            price: 1,
             isWaiting: 1,
             discount: {
               $cond: {
@@ -76,20 +73,21 @@ export class GuidesAndBooksService {
         },
       ])
       .exec();
-    if (guidesAndBooks.length == 0) {
-      throw new NotFoundException('Guides and books not found');
+
+    if (gifts.length === 0) {
+      throw new NotFoundException('Gifts not found');
     }
-    return guidesAndBooks;
+    return gifts;
   }
 
-  async findGuidesAndBooksById(id: string) {
-    const guidesAndBooks = await this.guidesAndBooksModel
+  async findGiftById(id: string): Promise<GiftEntity> {
+    const gift = await this.giftModel
       .aggregate([
         {
           $match: {
             _id: new Types.ObjectId(id),
-            status: 'PUBLISHED',
             toDelete: false,
+            status: 'PUBLISHED',
           },
         },
         {
@@ -101,19 +99,10 @@ export class GuidesAndBooksService {
             as: 'discount',
             pipeline: [
               {
-                $match: {
-                  $expr: {
-                    $and: [{ $lte: ['$start', '$$now'] }],
-                  },
-                },
+                $match: { $expr: { $lte: ['$start', '$$now'] } },
               },
               {
-                $project: {
-                  _id: 0,
-                  start: 1,
-                  expiredAt: 1,
-                  discount: 1,
-                },
+                $project: { _id: 0, start: 1, expiredAt: 1, discount: 1 },
               },
             ],
           },
@@ -131,13 +120,11 @@ export class GuidesAndBooksService {
         },
         {
           $project: {
-            _id: 0,
-            id: '$_id',
-            category: 1,
-            description: 1,
+            _id: 1,
             name: 1,
-            price: 1,
+            description: 1,
             cover: 1,
+            price: 1,
             isWaiting: 1,
             discount: {
               $cond: {
@@ -151,6 +138,6 @@ export class GuidesAndBooksService {
       ])
       .exec();
 
-    return guidesAndBooks[0];
+    return gift[0];
   }
 }

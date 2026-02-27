@@ -31,10 +31,18 @@ export class WebinarService {
               {
                 $lookup: {
                   from: 'discounts', // Колекція знижок
+                  let: { now: new Date() },
                   localField: '_id', // Поле, яке зв'язує запис
                   foreignField: 'refId', // Поле у колекції discounts
                   as: 'discount', // Результат у полі discount
                   pipeline: [
+                    {
+                      $match: {
+                        $expr: {
+                          $and: [{ $lte: ['$start', '$$now'] }],
+                        },
+                      },
+                    },
                     {
                       $project: {
                         // Вибір конкретних полів
@@ -60,11 +68,13 @@ export class WebinarService {
               },
               {
                 $project: {
-                  _id: 1,
+                  _id: 0,
+                  id: '$_id',
                   category: 1,
                   status: 1,
                   name: 1,
                   cover: 1,
+                  price: 1,
                   discount: {
                     $cond: {
                       if: { $ne: ['$discount', null] }, // Якщо discount не дорівнює null
@@ -82,6 +92,7 @@ export class WebinarService {
                   category: 1,
                   name: 1,
                   video: 1,
+                  _id: 0,
                 },
               },
             ],
@@ -120,10 +131,18 @@ export class WebinarService {
         {
           $lookup: {
             from: 'discounts', // Колекція знижок
+            let: { now: new Date() },
             localField: '_id', // Поле, яке зв'язує запис
             foreignField: 'refId', // Поле у колекції discounts
             as: 'discount', // Результат у полі discount
             pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [{ $lte: ['$start', '$$now'] }],
+                  },
+                },
+              },
               {
                 $project: {
                   // Вибір конкретних полів
@@ -149,11 +168,14 @@ export class WebinarService {
         },
         {
           $project: {
-            _id: 1,
+            _id: 0,
+            id: '$_id',
             category: 1,
             status: 1,
             name: 1,
             cover: 1,
+            price: 1,
+            description: 1,
             discount: {
               $cond: {
                 if: { $ne: ['$discount', null] }, // Якщо discount не дорівнює null
@@ -170,24 +192,4 @@ export class WebinarService {
     }
     return response[0];
   }
-
-  //  async findAllWebinars(): Promise<WebinarEntity[]> {
-  //   const response = await this.webinarModel
-  //     .aggregate([
-  //       // Фільтрація записів
-  //       {
-  //         $match: {
-  //           toDelete: false,
-  //           status: 'PUBLISHED',
-  //           category: 'WEBINARS',
-  //         },
-  //       },
-  //       {
-  //         $lookup: {
-  //           from: 'discounts', // Колекція знижок
-  //           localField: '_id', // Поле, яке зв'язує запис
-  //           foreignField: 'refId', // Поле у колекції discounts
-  //           as: 'discount', // Результат у полі discount
-  //         },
-  //       },
 }
