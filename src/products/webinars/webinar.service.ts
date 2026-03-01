@@ -93,6 +93,7 @@ export class WebinarService {
                   name: 1,
                   video: 1,
                   _id: 0,
+                  id: '$_id',
                 },
               },
             ],
@@ -176,6 +177,8 @@ export class WebinarService {
             cover: 1,
             price: 1,
             description: 1,
+            detailsDescription: 1,
+            DetailsTitle: 1,
             discount: {
               $cond: {
                 if: { $ne: ['$discount', null] }, // Якщо discount не дорівнює null
