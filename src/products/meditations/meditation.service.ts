@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Meditation } from './schemas/meditation.schema';
 import { Model, Types } from 'mongoose';
-import { MeditationEntity } from './dto/meditation-entity.dto';
 
 @Injectable()
 export class MeditationService {

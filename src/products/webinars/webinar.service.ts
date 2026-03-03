@@ -178,7 +178,7 @@ export class WebinarService {
             price: 1,
             description: 1,
             detailsDescription: 1,
-            DetailsTitle: 1,
+            detailsTitle: 1,
             discount: {
               $cond: {
                 if: { $ne: ['$discount', null] }, // Якщо discount не дорівнює null

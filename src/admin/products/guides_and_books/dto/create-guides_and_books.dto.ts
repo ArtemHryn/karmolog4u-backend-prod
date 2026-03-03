@@ -85,6 +85,6 @@ export class CreateGuidesAndBooksDto {
   })
   discount?: { discount: number; start: Date; expiredAt: Date };
 
-  @ApiProperty({ type: FileDto })
+  @ApiPropertyOptional({ type: FileDto })
   file: FileDto;
 }
