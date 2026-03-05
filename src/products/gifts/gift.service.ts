@@ -57,7 +57,8 @@ export class GiftService {
         },
         {
           $project: {
-            _id: 1,
+            _id: 0,
+            id: '$_id',
             name: 1,
             cover: 1,
             price: 1,
@@ -120,7 +121,8 @@ export class GiftService {
         },
         {
           $project: {
-            _id: 1,
+            _id: 0,
+            id: '$_id',
             name: 1,
             description: 1,
             cover: 1,
