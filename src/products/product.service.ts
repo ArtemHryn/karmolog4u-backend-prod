@@ -190,4 +190,20 @@ export class ProductService {
 
     return [...meditations, ...webinars, ...guides];
   }
+
+  async getProductTypeById(
+    id: string,
+  ): Promise<'webinar' | 'meditation' | 'guide' | null> {
+    const [webinar, meditation, guide] = await Promise.all([
+      this.webinarModel.exists({ _id: id }),
+      this.meditationModel.exists({ _id: id }),
+      this.guidesAndBooksModel.exists({ _id: id }),
+    ]);
+
+    if (webinar) return 'webinar';
+    if (meditation) return 'meditation';
+    if (guide) return 'guide';
+
+    return null;
+  }
 }
