@@ -17,9 +17,14 @@ import {
   ProductPurchaseDocument,
 } from 'src/productPurchase/schemas/productPurchase.schema';
 import { User } from 'src/user/schemas/user.schema';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PaymentsService {
+  private merchantAccount: string;
+  private merchantSecretKey: string;
+  private returnUrl: string;
+  private serviceUrl: string;
   constructor(
     @InjectModel(Purchase.name)
     private purchaseModel: Model<PurchaseDocument>,
@@ -28,12 +33,13 @@ export class PaymentsService {
     @InjectModel(User.name) private userModel: Model<User>,
     private readonly productService: ProductService,
     private readonly discountService: DiscountService,
-  ) {}
-
-  private merchantAccount = process.env.WFP_MERCHANT!;
-  private merchantSecretKey = process.env.WFP_SECRET!;
-  private returnUrl = process.env.WFP_RETURN_URL!;
-  private serviceUrl = process.env.WFP_CALLBACK_URL!;
+    private readonly configService: ConfigService,
+  ) {
+    this.merchantAccount = this.configService.getOrThrow('WFP_MERCHANT');
+    this.merchantSecretKey = this.configService.getOrThrow('WFP_SECRET');
+    this.returnUrl = this.configService.getOrThrow('WFP_RETURN_URL');
+    this.serviceUrl = this.configService.getOrThrow('WFP_CALLBACK_URL');
+  }
 
   async createPayment(dto: any, user?: any) {
     // find product
