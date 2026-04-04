@@ -1,5 +1,3 @@
-// services/payments.service.ts
-
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -121,7 +119,7 @@ export class PaymentsService {
         productId: product._id,
         productPrice: product.price,
         productType: productType,
-        currency: 'UAH',
+        currency: 'EUR',
         userId: user._id,
         clientEmail: user.email,
         clientPhone: user.phone,
@@ -173,7 +171,7 @@ export class PaymentsService {
         productPrice: product.price,
         productType: productType,
         amount,
-        currency: 'UAH',
+        currency: 'EUR',
         clientEmail: dto.email,
         clientPhone: dto.phone,
       });

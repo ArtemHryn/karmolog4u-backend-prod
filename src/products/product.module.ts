@@ -10,5 +10,6 @@ import { GiftModule } from './gifts/gift.module';
   imports: [MeditationModule, WebinarModule, GuidesAndBooksModule, GiftModule],
   controllers: [ProductController],
   providers: [ProductService],
+  exports: [ProductService],
 })
 export class ProductModule {}

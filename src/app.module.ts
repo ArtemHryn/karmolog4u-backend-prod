@@ -23,6 +23,7 @@ import { StorageService } from './storage/storage.service';
 import { FilesModule } from './files/files.module';
 import { CourseModule } from './user/education/course.module';
 import { ContractParticipantModule } from './user/education/сontractParticipant/contract.module';
+import { PaymentsModule } from './payments/payments.module';
 
 const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
 
@@ -72,6 +73,7 @@ const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
     CoursePurchaseModule,
     CourseModule,
     ContractParticipantModule,
+    PaymentsModule,
     // ProductPurchaseModule,
     // ServeStaticModule.forRoot({
     //   rootPath: 'covers',
