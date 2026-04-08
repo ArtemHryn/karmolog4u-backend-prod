@@ -7,6 +7,7 @@ import { ProductModule } from 'src/products/product.module';
 import { ProductPurchaseModule } from 'src/productPurchase/productPurchase.module';
 import { UserModule } from 'src/user/user.module';
 import { DiscountModule } from 'src/admin/products/discount/discount.module';
+import { PromoCodeModule } from 'src/admin/promo-code/promo-code.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { DiscountModule } from 'src/admin/products/discount/discount.module';
     ProductPurchaseModule,
     UserModule,
     DiscountModule,
+    PromoCodeModule,
   ],
   providers: [PaymentsService],
   controllers: [PaymentsController],

@@ -25,7 +25,7 @@ export class Purchase {
   @Prop({ type: String })
   productName: string;
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId })
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Product' })
   productId: mongoose.Schema.Types.ObjectId;
 
   @Prop({ type: String })
@@ -54,6 +54,9 @@ export class Purchase {
 
   @Prop({ type: Object })
   rawResponse: any;
+
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null })
+  userId: mongoose.Schema.Types.ObjectId;
 }
 
 export const PurchaseSchema = SchemaFactory.createForClass(Purchase);

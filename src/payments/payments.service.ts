@@ -16,6 +16,7 @@ import {
 } from 'src/productPurchase/schemas/productPurchase.schema';
 import { User } from 'src/user/schemas/user.schema';
 import { ConfigService } from '@nestjs/config';
+import { PromoCodeService } from 'src/admin/promo-code/promo-code.service';
 
 @Injectable()
 export class PaymentsService {
@@ -31,6 +32,7 @@ export class PaymentsService {
     @InjectModel(User.name) private userModel: Model<User>,
     private readonly productService: ProductService,
     private readonly discountService: DiscountService,
+    private readonly promoCodeService: PromoCodeService,
     private readonly configService: ConfigService,
   ) {
     this.merchantAccount = this.configService.getOrThrow('WFP_MERCHANT');
@@ -39,6 +41,8 @@ export class PaymentsService {
     this.serviceUrl = this.configService.getOrThrow('WFP_CALLBACK_URL');
   }
 
+  // if user email not equal to dto.email do by email, if user email equal to dto.email do by userId
+  // add promocode
   async createPayment(dto: any, user?: any) {
     // find product
     const product = await this.productService.getProductDetails(dto.itemId);
@@ -55,6 +59,18 @@ export class PaymentsService {
       amount = product.price - (product.price * discount.discount) / 100;
     }
 
+    const promocode = dto.promocode;
+    if (promocode) {
+      const validPromocode = await this.promoCodeService.validatePromoCode(
+        promocode,
+        product._id,
+      );
+      if (validPromocode) {
+        amount = amount - (amount * validPromocode.promoDiscount) / 100;
+      } else {
+        throw new BadRequestException('Invalid promo code');
+      }
+    }
     const orderReference = `order_${Date.now()}`;
 
     //check type of product and set targetModule
@@ -66,42 +82,11 @@ export class PaymentsService {
 
     let purchase: PurchaseDocument;
 
-    if (user) {
+    // if user email not equal to dto.email do by email, if user email equal to dto.email do by userId
+    if (user && user.email === dto.email) {
       // check if user already has an active purchase for this product
-      const existingPurchase = await this.purchaseModel.findOne({
-        userId: user._id,
-        productId: product._id,
-        status: PurchaseStatus.APPROVED,
-      });
-      if (existingPurchase) {
-        throw new BadRequestException(
-          'You have already purchased this product',
-        );
-      }
+      await this.checkExistingPurchase(dto);
 
-      // check if user has a pending purchase for this product
-      const pendingPurchase = await this.purchaseModel.findOne({
-        userId: user._id,
-        productId: product._id,
-        status: PurchaseStatus.PENDING,
-      });
-      if (pendingPurchase) {
-        throw new BadRequestException(
-          'You have a pending purchase for this product. Please complete it before creating a new one.',
-        );
-      }
-
-      //check if user has a processing purchase for this product
-      const processingPurchase = await this.purchaseModel.findOne({
-        userId: user._id,
-        productId: product._id,
-        status: PurchaseStatus.PROCESSING,
-      });
-      if (processingPurchase) {
-        throw new BadRequestException(
-          'You have a processing purchase for this product. Please wait for it to complete before creating a new one.',
-        );
-      }
       //check if user has productPurchase for this product
       const productPurchase = await this.productPurchaseModel.findOne({
         userId: user._id,
@@ -129,40 +114,8 @@ export class PaymentsService {
 
       // check if user has account with this email
       await this.checkExistingUser(dto);
-
-      // check if there's a pending purchase for this email and product
-      const existingPurchase = await this.purchaseModel.findOne({
-        clientEmail: dto.email,
-        productId: product._id,
-        status: PurchaseStatus.PENDING,
-      });
-      if (existingPurchase) {
-        throw new BadRequestException(
-          'There is already a pending purchase for this email and product. Please complete it before creating a new one.',
-        );
-      }
-      //check if there's a processing purchase for this email and product
-      const processingPurchase = await this.purchaseModel.findOne({
-        clientEmail: dto.email,
-        productId: product._id,
-        status: PurchaseStatus.PROCESSING,
-      });
-      if (processingPurchase) {
-        throw new BadRequestException(
-          'There is a processing purchase for this email and product. Please wait for it to complete before creating a new one.',
-        );
-      }
-      //check if there's an approved purchase for this email and product
-      const approvedPurchase = await this.purchaseModel.findOne({
-        clientEmail: dto.email,
-        productId: product._id,
-        status: PurchaseStatus.APPROVED,
-      });
-      if (approvedPurchase) {
-        throw new BadRequestException(
-          'You have already purchased this product with this email. Please check your purchases.',
-        );
-      }
+      // check if user already has an active purchase for this product
+      await this.checkExistingPurchase(dto);
 
       purchase = await this.purchaseModel.create({
         orderReference,
@@ -321,6 +274,30 @@ export class PaymentsService {
       throw new BadRequestException(
         'An account with this email already exists. Please log in to purchase this product.',
       );
+    }
+  }
+
+  private async checkExistingPurchase(dto: any) {
+    const existingPurchase = await this.purchaseModel.findOne({
+      clientEmail: dto.email,
+      productId: dto.itemId,
+    });
+
+    if (existingPurchase) {
+      switch (existingPurchase.status) {
+        case PurchaseStatus.PENDING:
+          throw new BadRequestException(
+            'There is already a pending purchase for this email and product. Please complete it before creating a new one.',
+          );
+        case PurchaseStatus.DECLINED:
+          throw new BadRequestException(
+            'Your previous purchase for this product was declined. Please try again or contact support.',
+          );
+        case PurchaseStatus.APPROVED:
+          throw new BadRequestException(
+            'You have already purchased this product with this email. Please check your purchases.',
+          );
+      }
     }
   }
 }

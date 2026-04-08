@@ -1,14 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsString,
-  IsNumber,
-  IsOptional,
-  IsEmail,
-  IsPhoneNumber,
-  Min,
-  IsUUID,
-} from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsString, IsOptional, IsEmail, IsPhoneNumber } from 'class-validator';
 
 export class CreatePaymentDto {
   @ApiProperty({
@@ -17,24 +8,6 @@ export class CreatePaymentDto {
   })
   @IsString()
   itemId: string;
-
-  @ApiProperty({
-    example: 499.99,
-    description: 'Сума платежу',
-    minimum: 0,
-  })
-  @Type(() => Number)
-  @IsNumber()
-  @Min(0)
-  amount: number;
-
-  @ApiPropertyOptional({
-    example: 'b3f7c2b2-6c1a-4d9b-9b2a-123456789abc',
-    description: 'ID користувача (якщо авторизований)',
-  })
-  @IsOptional()
-  @IsUUID()
-  userId?: string;
 
   @ApiProperty({
     example: 'user@gmail.com',
@@ -50,4 +23,12 @@ export class CreatePaymentDto {
   @IsOptional()
   @IsPhoneNumber('UA')
   phone?: string;
+
+  @ApiPropertyOptional({
+    example: 'PROMO2024',
+    description: 'Промокод для знижки',
+  })
+  @IsOptional()
+  @IsString()
+  promocode?: string;
 }
