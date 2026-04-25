@@ -40,6 +40,32 @@ class OptionalLink {
   link: string;
 }
 
+//Payment types
+@Schema({ _id: false })
+class AllowedPaymentTypes {
+  @Prop({ type: Boolean, default: false })
+  telegram: boolean;
+
+  @Prop({ type: Boolean, default: false })
+  wayForPay: boolean;
+
+  @Prop({ type: Boolean, default: false })
+  requisites: boolean;
+}
+
+@Schema({ _id: false })
+class PaymentTypes {
+  @Prop({ type: AllowedPaymentTypes, required: true })
+  allowed: AllowedPaymentTypes;
+  @Prop({
+    type: String,
+    required: function () {
+      return this.allowed?.requisites;
+    },
+  })
+  requisitesText: string;
+}
+
 @Schema({
   timestamps: true,
   toJSON: {
@@ -51,6 +77,8 @@ class OptionalLink {
     },
   },
 })
+
+//Final course schema
 export class Course {
   @Prop({ required: true, type: String })
   name: string;
@@ -112,6 +140,9 @@ export class Course {
     enum: ['DRAFT', 'PUBLISHED', 'ARCHIVE'],
   })
   status: string;
+
+  @Prop({ type: PaymentTypes })
+  paymentTypes: PaymentTypes;
 }
 
 export const CourseSchema = SchemaFactory.createForClass(Course);

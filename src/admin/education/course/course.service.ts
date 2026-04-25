@@ -324,6 +324,7 @@ export class CourseService {
               header: '$contract.header',
               points: '$contract.points',
             },
+            paymentTypes: 1,
           },
         },
       ]);

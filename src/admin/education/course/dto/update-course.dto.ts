@@ -7,6 +7,9 @@ import {
   IsNumber,
   IsDate,
   IsUrl,
+  ValidateIf,
+  IsNotEmpty,
+  ValidateNested,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
@@ -154,6 +157,31 @@ class OptionalLink {
   link: string;
 }
 
+class AllowedPaymentTypes {
+  @ApiProperty({ example: false })
+  telegram: boolean;
+
+  @ApiProperty({ example: true })
+  wayForPay: boolean;
+
+  @ApiProperty({ example: false })
+  requisites: boolean;
+}
+
+class PaymentTypes {
+  @ApiProperty({ type: () => AllowedPaymentTypes })
+  @ValidateNested()
+  allowed: AllowedPaymentTypes;
+  @ApiPropertyOptional({
+    description: 'The field is required if allowed.requisites is true',
+    example: 'IBAN: UA1234567890...',
+  })
+  @ValidateIf((o) => o.allowed?.requisites)
+  @IsString()
+  @IsNotEmpty({ message: 'Заповніть поле реквізитів' })
+  requisitesText: string;
+}
+
 export class UpdateCourseDto {
   @ApiPropertyOptional({
     example: 'Advanced JavaScript',
@@ -279,4 +307,9 @@ export class UpdateCourseDto {
   @IsOptional()
   @IsEnum(['DRAFT', 'PUBLISHED', 'ARCHIVE'])
   status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVE';
+
+  @ApiProperty({
+    description: 'Payment types',
+  })
+  paymentTypes: PaymentTypes;
 }
