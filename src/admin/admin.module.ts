@@ -7,6 +7,7 @@ import { ModuleModule } from './education/module/module.module';
 import { LessonModule } from './education/lessons/lesson.module';
 import { CoursePurchaseModule } from './coursePurchase/coursePurchase.module';
 import { ProductPurchaseModule } from './productPurchase/productPurchase.module';
+import { EventsModule } from './events/events.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ProductPurchaseModule } from './productPurchase/productPurchase.module'
     LessonModule,
     CoursePurchaseModule,
     ProductPurchaseModule,
+    EventsModule,
   ],
   controllers: [],
   providers: [],
