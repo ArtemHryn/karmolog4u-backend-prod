@@ -1,5 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsEmail, IsPhoneNumber } from 'class-validator';
+import { IsString, IsOptional, IsEmail, IsEnum } from 'class-validator';
+
+export enum PaymentType {
+  FULL = 'FULL', // повна оплата
+  PARTIAL = 'PARTIAL', // часткова (розстрочка / перший платіж)
+}
 
 export class CreatePaymentDto {
   @ApiProperty({
@@ -21,7 +26,7 @@ export class CreatePaymentDto {
     description: 'Телефон клієнта',
   })
   @IsOptional()
-  @IsPhoneNumber('UA')
+  // @IsPhoneNumber('UA')
   phone?: string;
 
   @ApiPropertyOptional({
@@ -31,4 +36,12 @@ export class CreatePaymentDto {
   @IsOptional()
   @IsString()
   promocode?: string;
+
+  @ApiProperty({
+    enum: PaymentType,
+    example: PaymentType.FULL,
+    description: 'Тип оплати: повна або часткова',
+  })
+  @IsEnum(PaymentType)
+  paymentType: PaymentType;
 }
