@@ -28,5 +28,6 @@ import { RedisPubsubModule } from 'src/redis/redis-pubsub.module';
   ],
   providers: [PaymentsService],
   controllers: [PaymentsController],
+  exports: [PaymentsService],
 })
 export class PaymentsModule {}
