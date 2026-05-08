@@ -19,5 +19,6 @@ import { FilesModule } from 'src/files/files.module';
   ],
   controllers: [CourseController],
   providers: [CourseService],
+  exports: [CourseService],
 })
 export class CourseModule {}
