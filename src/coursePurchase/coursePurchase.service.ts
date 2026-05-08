@@ -199,4 +199,9 @@ export class CoursePurchaseService {
 
     return true; // курс доступний
   }
+
+  async getCoursePurchaseData(userId: any, courseId: any) {
+    const course = await this.coursePurchaseModel.findOne({ userId, courseId });
+    return course;
+  }
 }

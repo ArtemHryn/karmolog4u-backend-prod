@@ -2,8 +2,9 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as crypto from 'crypto';
-
+import { Types } from 'mongoose';
 import {
+  PaymentType,
   Purchase,
   PurchaseDocument,
   PurchaseStatus,
@@ -17,6 +18,12 @@ import {
 import { User } from 'src/user/schemas/user.schema';
 import { ConfigService } from '@nestjs/config';
 import { PromoCodeService } from 'src/admin/promo-code/promo-code.service';
+import { CourseService } from 'src/user/education/course.service';
+import { CoursePurchaseService } from 'src/coursePurchase/coursePurchase.service';
+import { UserEntity } from 'src/user/dto/user-entity.dto';
+import { PaymentStatus } from './emun/payment-status.enum';
+import { RedisPubSubService } from 'src/redis/redis-pubsub.service';
+import { Observable } from 'rxjs';
 
 @Injectable()
 export class PaymentsService {
@@ -33,6 +40,9 @@ export class PaymentsService {
     private readonly productService: ProductService,
     private readonly discountService: DiscountService,
     private readonly promoCodeService: PromoCodeService,
+    private readonly courseService: CourseService,
+    private readonly coursePurchaseService: CoursePurchaseService,
+    private readonly redis: RedisPubSubService,
     private readonly configService: ConfigService,
   ) {
     this.merchantAccount = this.configService.getOrThrow('WFP_MERCHANT');
@@ -78,6 +88,10 @@ export class PaymentsService {
       dto.itemId,
     );
 
+    if (!productType) {
+      throw new BadRequestException('Invalid product type');
+    }
+
     // if user is authenticated, we can link the purchase to their account
 
     let purchase: PurchaseDocument;
@@ -104,6 +118,7 @@ export class PaymentsService {
         productId: product._id,
         productPrice: product.price,
         productType: productType,
+        paymentType: PaymentType.FULL,
         currency: 'EUR',
         userId: user._id,
         clientEmail: user.email,
@@ -123,6 +138,7 @@ export class PaymentsService {
         productId: product._id,
         productPrice: product.price,
         productType: productType,
+        paymentType: PaymentType.FULL,
         amount,
         currency: 'EUR',
         clientEmail: dto.email,
@@ -143,6 +159,157 @@ export class PaymentsService {
     });
 
     return {
+      orderReference,
+      status: PaymentStatus.Pending,
+      paymentUrl: 'https://secure.wayforpay.com/pay',
+      formData: {
+        merchantAccount: this.merchantAccount,
+        merchantAuthType: 'SimpleSignature',
+        merchantSignature: signature,
+        orderReference,
+        orderDate,
+        amount,
+        currency: purchase.currency,
+        productName: purchase.productName,
+        productPrice: purchase.productPrice,
+        productId: purchase.productId,
+        productType,
+        paymentType: PaymentType.FULL,
+        returnUrl: this.returnUrl,
+        serviceUrl: this.serviceUrl,
+      },
+    };
+  }
+
+  async handleCallback(data: any) {
+    const purchase = await this.purchaseModel.findOne({
+      orderReference: data.orderReference,
+    });
+    if (!purchase) {
+      throw new BadRequestException('Order not found');
+    }
+
+    const isValid = this.verifyCallbackSignature(data);
+
+    if (!isValid) {
+      return {
+        status: 'error',
+        reason: 'Invalid signature',
+      };
+    }
+    const orderReference = data.orderReference;
+
+    const status =
+      data.transactionStatus === 'Approved'
+        ? PaymentStatus.Approved
+        : PaymentStatus.Declined;
+
+    purchase.transactionStatus = data.transactionStatus;
+    purchase.rawResponse = data;
+    purchase.processed = true;
+
+    switch (data.transactionStatus) {
+      case 'Approved':
+        purchase.status = PurchaseStatus.APPROVED;
+        break;
+      case 'Declined':
+        purchase.status = PurchaseStatus.DECLINED;
+        break;
+    }
+
+    await purchase.save();
+
+    await this.processBusinessLogic(purchase);
+
+    await this.redis.publish(`payment:${orderReference}`, {
+      orderReference,
+      status,
+      paid: status === PaymentStatus.Approved,
+    });
+
+    const time = Math.floor(Date.now() / 1000);
+
+    return {
+      orderReference,
+      status: 'accept',
+      time,
+      signature: this.generateCallbackResponseSignature(
+        orderReference,
+        'accept',
+        time,
+      ),
+    };
+  }
+
+  async createCourseSSKPayment(dto: any, user: UserEntity) {
+    // search course by id
+    //search user course purchase by userId and courseId, if payment plan full throw error
+    //if ssk user pay 50% only, after change payment plan - full
+    //if CONSULTING or ADVANCED user pay 1 mounth or pay all teoretikal then change payment plan - full
+
+    const id = new Types.ObjectId(dto.itemId);
+    // find course
+    const course = await this.courseService.getCourseData(id);
+    if (!course) {
+      throw new BadRequestException('Course not found');
+    }
+
+    //find course purchase
+    const coursePurchase =
+      await this.coursePurchaseService.getCoursePurchaseData(id, user._id);
+    if (coursePurchase?.paymentPlan === 'FULL') {
+      throw new BadRequestException(
+        'You have already purchased this course with full access. Please check your purchases.',
+      );
+    }
+    // check if user already has an active purchase for this course
+    await this.checkCoursePurchase({ email: user.email, itemId: id });
+
+    let amount = course.price / 2; // 50% of course price for SSK
+
+    // check for active discount
+    const discount = await this.discountService.findDiscount({
+      refId: course._id,
+    });
+    if (discount) {
+      amount = amount - (amount * discount.discount) / 100;
+    }
+
+    const orderReference = `order_${Date.now()}`;
+
+    //check type of product and set targetModule
+    const productType = 'course';
+
+    let purchase: PurchaseDocument;
+
+    purchase = await this.purchaseModel.create({
+      orderReference,
+      productName: course.name,
+      productId: course._id,
+      productPrice: course.price,
+      productType,
+      paymentType: PaymentType.FULL,
+      amount,
+      currency: 'EUR',
+      userId: user._id,
+      clientEmail: user.email,
+      clientPhone: user.mobPhone,
+    });
+
+    const orderDate = Math.floor(Date.now() / 1000);
+
+    const signature = this.generateSignature({
+      orderReference,
+      orderDate,
+      amount,
+      productName: purchase.productName,
+      productId: purchase.productId,
+      productPrice: purchase.productPrice,
+      productType,
+    });
+
+    return {
+      status: PaymentStatus.Pending,
       paymentUrl: 'https://secure.wayforpay.com/pay',
       formData: {
         merchantAccount: this.merchantAccount,
@@ -162,45 +329,167 @@ export class PaymentsService {
     };
   }
 
-  async handleCallback(data: any) {
-    const purchase = await this.purchaseModel.findOne({
-      orderReference: data.orderReference,
+  async createCONS_ADVPayment(dto: any, user: UserEntity) {
+    // search course by id
+    //search user course purchase by userId and courseId, if payment plan full throw error
+    //if ssk user pay 50% only, after change payment plan - full
+    //if CONSULTING or ADVANCED user pay 1 mounth or pay all teoretikal then change payment plan - full
+
+    const id = new Types.ObjectId(dto.itemId);
+    // find course
+    const course = await this.courseService.getCourseData(id);
+    if (!course) {
+      throw new BadRequestException('Course not found');
+    }
+
+    //find course purchase
+    const coursePurchase =
+      await this.coursePurchaseService.getCoursePurchaseData(id, user._id);
+    if (coursePurchase?.paymentPlan === 'FULL') {
+      throw new BadRequestException(
+        'You have already purchased this course with full access. Please check your purchases.',
+      );
+    }
+    // check if user already has an active purchase for this course
+    await this.checkCoursePurchase({ email: user.email, itemId: id });
+
+    let amount = course.price / 2; // 50% of course price for SSK
+
+    // check for active discount
+    const discount = await this.discountService.findDiscount({
+      refId: course._id,
+    });
+    if (discount) {
+      amount = amount - (amount * discount.discount) / 100;
+    }
+
+    const orderReference = `order_${Date.now()}`;
+
+    //check type of product and set targetModule
+    const productType = 'course';
+
+    let purchase: PurchaseDocument;
+
+    if (dto.month) {
+
+      
+
+
+
+    }
+
+    purchase = await this.purchaseModel.create({
+      orderReference,
+      productName: course.name,
+      productId: course._id,
+      productPrice: course.price,
+      productType,
+      amount,
+      currency: 'EUR',
+      userId: user._id,
+      clientEmail: user.email,
+      clientPhone: user.mobPhone,
     });
 
-    if (!purchase) {
-      throw new BadRequestException('Order not found');
-    }
+    const orderDate = Math.floor(Date.now() / 1000);
 
-    if (purchase.processed) {
-      return this.successResponse(data.orderReference);
-    }
+    const signature = this.generateSignature({
+      orderReference,
+      orderDate,
+      amount,
+      productName: purchase.productName,
+      productId: purchase.productId,
+      productPrice: purchase.productPrice,
+      productType,
+    });
 
-    const expectedSignature = this.generateCallbackSignature(data);
+    return {
+      status: PaymentStatus.Pending,
+      paymentUrl: 'https://secure.wayforpay.com/pay',
+      formData: {
+        merchantAccount: this.merchantAccount,
+        merchantAuthType: 'SimpleSignature',
+        merchantSignature: signature,
+        orderReference,
+        orderDate,
+        amount,
+        currency: purchase.currency,
+        productName: purchase.productName,
+        productPrice: purchase.productPrice,
+        productId: purchase.productId,
+        productType,
+        returnUrl: this.returnUrl,
+        serviceUrl: this.serviceUrl,
+      },
+    };
+  }
 
-    if (expectedSignature !== data.merchantSignature) {
-      throw new BadRequestException('Invalid signature');
-    }
+  async getStatus(orderReference: string) {
+    // TODO: брати з БД
+    const payment = await this.purchaseModel.findOne({ orderReference });
 
-    purchase.transactionStatus = data.transactionStatus;
-    purchase.rawResponse = data;
-    purchase.processed = true;
+    return {
+      orderReference,
+      status: payment ? payment.status : 'not_found',
+    };
+  }
 
-    switch (data.transactionStatus) {
-      case 'Approved':
-        purchase.status = PurchaseStatus.APPROVED;
-        break;
-      case 'Declined':
-        purchase.status = PurchaseStatus.DECLINED;
-        break;
-      default:
-        purchase.status = PurchaseStatus.PROCESSING;
-    }
+  sse(orderReference: string): Observable<MessageEvent> {
+    return new Observable<MessageEvent>((observer) => {
+      const channel = `payment:${orderReference}`;
+      let unsubscribe: (() => Promise<void>) | null = null;
 
-    await purchase.save();
+      this.redis
+        .subscribe(channel, (payload) => {
+          observer.next({
+            data: payload,
+          } as MessageEvent);
 
-    await this.processBusinessLogic(purchase);
+          if (payload.status !== PaymentStatus.Pending) {
+            observer.complete();
+          }
+        })
+        .then((unsub) => {
+          unsubscribe = unsub;
+        });
 
-    return this.successResponse(data.orderReference);
+      const heartbeat = setInterval(() => {
+        observer.next({
+          data: {
+            type: 'ping',
+            time: Date.now(),
+          },
+        } as MessageEvent);
+      }, 15000);
+
+      return () => {
+        clearInterval(heartbeat);
+
+        if (unsubscribe) {
+          unsubscribe();
+        }
+      };
+    });
+  }
+
+  private verifyCallbackSignature(body: any): boolean {
+    const signatureString = [
+      body.merchantAccount,
+      body.orderReference,
+      body.amount,
+      body.currency,
+      body.authCode,
+      body.cardPan,
+      body.transactionStatus,
+      body.reasonCode,
+    ].join(';');
+
+    const expectedSignature = crypto
+      .createHmac('md5', this.merchantSecretKey)
+      .update(signatureString)
+      .digest('hex');
+
+    return expectedSignature === body.merchantSignature;
   }
 
   private generateSignature(data: any): string {
@@ -223,21 +512,16 @@ export class PaymentsService {
       .digest('hex');
   }
 
-  private generateCallbackSignature(data: any): string {
-    const str = [
-      data.merchantAccount,
-      data.orderReference,
-      data.amount,
-      data.currency,
-      data.authCode,
-      data.cardPan,
-      data.transactionStatus,
-      data.reasonCode,
-    ].join(';');
+  private generateCallbackResponseSignature(
+    orderReference: string,
+    status: string,
+    time: number,
+  ): string {
+    const signatureString = [orderReference, status, time].join(';');
 
     return crypto
-      .createHmac('sha1', this.merchantSecretKey)
-      .update(str)
+      .createHmac('md5', this.merchantSecretKey)
+      .update(signatureString)
       .digest('hex');
   }
 
@@ -292,6 +576,26 @@ export class PaymentsService {
         case PurchaseStatus.DECLINED:
           throw new BadRequestException(
             'Your previous purchase for this product was declined. Please try again or contact support.',
+          );
+        case PurchaseStatus.APPROVED:
+          throw new BadRequestException(
+            'You have already purchased this product with this email. Please check your purchases.',
+          );
+      }
+    }
+  }
+
+  private async checkCoursePurchase(dto: any) {
+    const existingPurchase = await this.purchaseModel.findOne({
+      clientEmail: dto.email,
+      productId: dto.itemId,
+    });
+
+    if (existingPurchase) {
+      switch (existingPurchase.status) {
+        case PurchaseStatus.PENDING:
+          throw new BadRequestException(
+            'There is already a pending purchase for this email and product. Please complete it before creating a new one.',
           );
         case PurchaseStatus.APPROVED:
           throw new BadRequestException(

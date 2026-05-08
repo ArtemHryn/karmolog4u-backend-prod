@@ -11,6 +11,11 @@ export enum PurchaseStatus {
   EXPIRED = 'EXPIRED',
 }
 
+export enum PaymentType {
+  FULL = 'FULL',
+  MONTHLY = 'MONTHLY',
+}
+
 @Schema({ timestamps: true })
 export class Purchase {
   @Prop({ required: true, unique: true })
@@ -19,7 +24,7 @@ export class Purchase {
   @Prop({ required: true })
   amount: number;
 
-  @Prop({ default: 'UAH' })
+  @Prop({ default: 'EUR' })
   currency: string;
 
   @Prop({ type: String })
@@ -33,6 +38,9 @@ export class Purchase {
 
   @Prop({ type: Number })
   productPrice: number;
+
+  @Prop({ enum: PaymentType })
+  paymentType: PaymentType;
 
   @Prop()
   clientEmail: string;

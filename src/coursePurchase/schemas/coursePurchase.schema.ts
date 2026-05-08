@@ -73,6 +73,7 @@ export class CoursePurchase {
   })
   agreement: false;
 
+  //кількість практик
   @Prop({
     required: false,
     type: Number,
@@ -81,12 +82,37 @@ export class CoursePurchase {
   //for counsalting & advansed
   numberOfPractices: number;
 
+  //доступ до дати
   @Prop({
     required: false,
     type: Date,
     default: null,
   })
   availableTo: Date;
+
+  // ціна для курсу, референс для оплати
+  @Prop({
+    required: true,
+    type: Number,
+    default: 0,
+  })
+  courseAmount: number;
+
+  // ціна для практики, референс для оплати
+  @Prop({
+    required: true,
+    type: Number,
+    default: 0,
+  })
+  practiceAmount: number;
+
+  //кількість виконаних платежів
+  @Prop({
+    required: false,
+    type: Number,
+    default: 0,
+  })
+  numberOfPayments: number;
 }
 
 export const CoursePurchaseSchema =
