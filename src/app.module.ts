@@ -75,7 +75,8 @@ const envFilePath: string = getEnvPath(`${__dirname}/common/envs`);
     CourseModule,
     ContractParticipantModule,
     PaymentsModule,
-    EventsModule
+    EventsModule,
+
     // ProductPurchaseModule,
     // ServeStaticModule.forRoot({
     //   rootPath: 'covers',
