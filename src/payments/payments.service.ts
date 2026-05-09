@@ -185,29 +185,6 @@ export class PaymentsService {
     });
 
 
-    //test
-    console.log({
-      orderReference,
-      status: PaymentStatus.Pending,
-      paymentUrl: 'https://secure.wayforpay.com/pay',
-      formData: {
-        merchantAccount: this.merchantAccount,
-        merchantAuthType: 'SimpleSignature',
-        merchantSignature: signature,
-        orderReference,
-        orderDate,
-        amount,
-        currency: purchase.currency,
-        productName: purchase.productName,
-        productPrice: purchase.productPrice,
-        productId: purchase.productId,
-        productType,
-        paymentType: PaymentType.FULL,
-        returnUrl: this.returnUrl,
-        serviceUrl: this.serviceUrl,
-      },
-    });
-
     return {
       orderReference,
       status: PaymentStatus.Pending,
