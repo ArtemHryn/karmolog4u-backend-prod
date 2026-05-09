@@ -13,6 +13,7 @@ import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from 'src/common/decorators/isPublic.decorator';
 import { AuthService } from './auth.service';
+import { OPTIONAL_AUTH_KEY } from 'src/common/decorators/optional-auth.decorator';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -30,6 +31,12 @@ export class AuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
+
+    const isOptionalAuth = this.reflector.getAllAndOverride<boolean>(
+      OPTIONAL_AUTH_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+
     if (isPublic) {
       // 💡 See this condition
       return true;
@@ -38,6 +45,24 @@ export class AuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
     // const secret = this.configService.get<string>('JWT_SECRET');
+
+    // OPTIONAL AUTH ROUTES
+    if (isOptionalAuth) {
+      if (!token) {
+        return true;
+      }
+
+      try {
+        const user = await this.authService.verifyUserCredentials(token);
+
+        request['user'] = user;
+        request['accessToken'] = token;
+      } catch {
+        return true;
+      }
+
+      return true;
+    }
 
     if (!token) {
       throw new UnauthorizedException('Відсутній токен!');

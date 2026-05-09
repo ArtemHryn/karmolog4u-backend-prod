@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, ObjectId } from 'mongoose';
 import * as crypto from 'crypto';
 import { Types } from 'mongoose';
 import {
@@ -24,6 +24,18 @@ import { UserEntity } from 'src/user/dto/user-entity.dto';
 import { PaymentStatus } from './emun/payment-status.enum';
 import { RedisPubSubService } from 'src/redis/redis-pubsub.service';
 import { Observable } from 'rxjs';
+import { v4 as uuid } from 'uuid';
+
+interface SignatureDataInterface {
+  orderReference: string;
+  orderDate: number;
+  amount: number;
+  currency: string;
+  productName: string;
+  productId: ObjectId;
+  productPrice: number;
+  productType: string;
+}
 
 @Injectable()
 export class PaymentsService {
@@ -31,6 +43,7 @@ export class PaymentsService {
   private merchantSecretKey: string;
   private returnUrl: string;
   private serviceUrl: string;
+  private currency: string;
   constructor(
     @InjectModel(Purchase.name)
     private purchaseModel: Model<PurchaseDocument>,
@@ -49,23 +62,34 @@ export class PaymentsService {
     this.merchantSecretKey = this.configService.getOrThrow('WFP_SECRET');
     this.returnUrl = this.configService.getOrThrow('WFP_RETURN_URL');
     this.serviceUrl = this.configService.getOrThrow('WFP_CALLBACK_URL');
+    this.currency = this.configService.get('CURRENCY') ?? 'EUR';
   }
 
   // if user email not equal to dto.email do by email, if user email equal to dto.email do by userId
   // add promocode
   async createPayment(dto: any, user?: any) {
     // find product
+
     const product = await this.productService.getProductDetails(dto.itemId);
     if (!product) {
-      throw new BadRequestException('Product not found');
+      throw new BadRequestException('Продукт не знайдено');
     }
+
     let amount = product.price;
 
     // check for active discount
     const discount = await this.discountService.findDiscount({
       refId: product._id,
     });
-    if (discount) {
+
+    const now = Date.now();
+
+    const isUseDiscount =
+      Boolean(discount) &&
+      new Date(discount.start).getTime() <= now &&
+      now <= new Date(discount.expiredAt).getTime();
+
+    if (isUseDiscount) {
       amount = product.price - (product.price * discount.discount) / 100;
     }
 
@@ -78,10 +102,10 @@ export class PaymentsService {
       if (validPromocode) {
         amount = amount - (amount * validPromocode.promoDiscount) / 100;
       } else {
-        throw new BadRequestException('Invalid promo code');
+        throw new BadRequestException('Некоректний промокод');
       }
     }
-    const orderReference = `order_${Date.now()}`;
+    const orderReference = `order_${uuid()}`;
 
     //check type of product and set targetModule
     const productType = await this.productService.getProductTypeById(
@@ -89,7 +113,7 @@ export class PaymentsService {
     );
 
     if (!productType) {
-      throw new BadRequestException('Invalid product type');
+      throw new BadRequestException('Продукта не знайдено');
     }
 
     // if user is authenticated, we can link the purchase to their account
@@ -108,21 +132,22 @@ export class PaymentsService {
       });
       if (productPurchase) {
         throw new BadRequestException(
-          'You have already purchased this product. Please check your purchases.',
+          'Ви вже придбали цей товар. Будь ласка, перевірте свої покупки.',
         );
       }
 
       purchase = await this.purchaseModel.create({
         orderReference,
-        productName: product.name,
+        productName: product.name.uk,
         productId: product._id,
         productPrice: product.price,
         productType: productType,
         paymentType: PaymentType.FULL,
-        currency: 'EUR',
+        currency: this.currency,
         userId: user._id,
         clientEmail: user.email,
         clientPhone: user.phone,
+        amount,
       });
     } else {
       // guest purchase - we won't link it to a user account, but we can still store email and phone for contact
@@ -134,13 +159,13 @@ export class PaymentsService {
 
       purchase = await this.purchaseModel.create({
         orderReference,
-        productName: product.name,
+        productName: product.name.uk,
         productId: product._id,
         productPrice: product.price,
         productType: productType,
         paymentType: PaymentType.FULL,
         amount,
-        currency: 'EUR',
+        currency: this.currency,
         clientEmail: dto.email,
         clientPhone: dto.phone,
       });
@@ -152,10 +177,33 @@ export class PaymentsService {
       orderReference,
       orderDate,
       amount,
+      currency: this.currency,
       productName: purchase.productName,
       productId: purchase.productId,
       productPrice: purchase.productPrice,
       productType,
+    });
+
+    console.log({
+      orderReference,
+      status: PaymentStatus.Pending,
+      paymentUrl: 'https://secure.wayforpay.com/pay',
+      formData: {
+        merchantAccount: this.merchantAccount,
+        merchantAuthType: 'SimpleSignature',
+        merchantSignature: signature,
+        orderReference,
+        orderDate,
+        amount,
+        currency: purchase.currency,
+        productName: purchase.productName,
+        productPrice: purchase.productPrice,
+        productId: purchase.productId,
+        productType,
+        paymentType: PaymentType.FULL,
+        returnUrl: this.returnUrl,
+        serviceUrl: this.serviceUrl,
+      },
     });
 
     return {
@@ -290,7 +338,7 @@ export class PaymentsService {
       productType,
       paymentType: PaymentType.FULL,
       amount,
-      currency: 'EUR',
+      currency: this.currency,
       userId: user._id,
       clientEmail: user.email,
       clientPhone: user.mobPhone,
@@ -302,6 +350,7 @@ export class PaymentsService {
       orderReference,
       orderDate,
       amount,
+      currency: this.currency,
       productName: purchase.productName,
       productId: purchase.productId,
       productPrice: purchase.productPrice,
@@ -371,11 +420,6 @@ export class PaymentsService {
     let purchase: PurchaseDocument;
 
     if (dto.month) {
-
-      
-
-
-
     }
 
     purchase = await this.purchaseModel.create({
@@ -385,7 +429,7 @@ export class PaymentsService {
       productPrice: course.price,
       productType,
       amount,
-      currency: 'EUR',
+      currency: this.currency,
       userId: user._id,
       clientEmail: user.email,
       clientPhone: user.mobPhone,
@@ -397,6 +441,7 @@ export class PaymentsService {
       orderReference,
       orderDate,
       amount,
+      currency: this.currency,
       productName: purchase.productName,
       productId: purchase.productId,
       productPrice: purchase.productPrice,
@@ -492,7 +537,7 @@ export class PaymentsService {
     return expectedSignature === body.merchantSignature;
   }
 
-  private generateSignature(data: any): string {
+  private generateSignature(data: SignatureDataInterface): string {
     const str = [
       this.merchantAccount,
       this.serviceUrl,
@@ -556,7 +601,7 @@ export class PaymentsService {
     const existingUser = await this.userModel.findOne({ email: dto.email });
     if (existingUser) {
       throw new BadRequestException(
-        'An account with this email already exists. Please log in to purchase this product.',
+        'Обліковий запис із цією електронною адресою вже існує. Будь ласка, увійдіть, щоб придбати цей товар.',
       );
     }
   }
@@ -571,15 +616,15 @@ export class PaymentsService {
       switch (existingPurchase.status) {
         case PurchaseStatus.PENDING:
           throw new BadRequestException(
-            'There is already a pending purchase for this email and product. Please complete it before creating a new one.',
+            'Для цієї електронної адреси та продукту вже є покупка, що очікує на розгляд. Будь ласка, завершіть її, перш ніж створювати нову.',
           );
         case PurchaseStatus.DECLINED:
           throw new BadRequestException(
-            'Your previous purchase for this product was declined. Please try again or contact support.',
+            'Вашу попередню покупку цього товару було відхилено. Будь ласка, спробуйте ще раз або зверніться до служби підтримки.',
           );
         case PurchaseStatus.APPROVED:
           throw new BadRequestException(
-            'You have already purchased this product with this email. Please check your purchases.',
+            'Ви вже придбали цей товар, використовуючи цю електронну адресу. Будь ласка, перевірте свої покупки.',
           );
       }
     }

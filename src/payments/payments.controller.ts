@@ -7,19 +7,21 @@ import { CreatePaymentDto } from './dto/create-purchase.dto';
 import { User } from 'src/common/decorators/user.decorator';
 import { UserEntity } from 'src/user/dto/user-entity.dto';
 import { PaymentCallbackDto } from './dto/payment-callback.dto';
+import { OptionalAuth } from 'src/common/decorators/optional-auth.decorator';
 
 @ApiTags('Payments')
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly service: PaymentsService) {}
 
+  @OptionalAuth()
   @Post('product/create')
   @ApiOperation({ summary: 'Create payment for product' })
   @ApiBody({ type: CreatePaymentDto })
   @ApiResponse({ status: 201, description: 'Payment created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid data' })
-  create(@Body() dto: CreatePaymentDto, @User() user?: UserEntity) {
-    return this.service.createPayment(dto, user);
+  create(@Body() body: CreatePaymentDto, @User() user?: UserEntity) {
+    return this.service.createPayment(body, user);
   }
 
   @Post('education/createSSK')

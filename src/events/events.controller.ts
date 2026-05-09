@@ -2,7 +2,7 @@ import { Controller, Get, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Role } from 'src/role/role.enum';
 import { Roles } from 'src/role/roles.decorator';
-import { EventsServices } from './events.service';
+import { EventsServices } from './event.service';
 import { GetAllEventsDto } from './dto/get-all-events.dto';
 
 @ApiBearerAuth()
