@@ -184,6 +184,8 @@ export class PaymentsService {
       productType,
     });
 
+
+    //test
     console.log({
       orderReference,
       status: PaymentStatus.Pending,
